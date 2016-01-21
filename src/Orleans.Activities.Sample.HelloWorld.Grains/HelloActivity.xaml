@@ -1,0 +1,118 @@
+﻿<Activity mc:Ignorable="sap sap2010 sads" x:Class="Orleans.Activities.Sample.HelloWorld.Grains.HelloActivity" sap2010:ExpressionActivityEditor.ExpressionActivityEditor="C#" sap2010:WorkflowViewState.IdRef="Orleans.Activities.Sample.HelloWorld.Grains.HelloActivity_1"
+ xmlns="http://schemas.microsoft.com/netfx/2009/xaml/activities"
+ xmlns:local="clr-namespace:Orleans.Activities.Sample.HelloWorld.Grains"
+ xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+ xmlns:mca="clr-namespace:Microsoft.CSharp.Activities;assembly=System.Activities"
+ xmlns:oa="clr-namespace:Orleans.Activities;assembly=Orleans.Activities"
+ xmlns:sads="http://schemas.microsoft.com/netfx/2010/xaml/activities/debugger"
+ xmlns:sap="http://schemas.microsoft.com/netfx/2009/xaml/activities/presentation"
+ xmlns:sap2010="http://schemas.microsoft.com/netfx/2010/xaml/activities/presentation"
+ xmlns:scg="clr-namespace:System.Collections.Generic;assembly=mscorlib"
+ xmlns:sco="clr-namespace:System.Collections.ObjectModel;assembly=mscorlib"
+ xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <TextExpression.NamespacesForImplementation>
+    <sco:Collection x:TypeArguments="x:String">
+      <x:String>System</x:String>
+      <x:String>System.Collections.Generic</x:String>
+      <x:String>System.Data</x:String>
+      <x:String>System.Linq</x:String>
+      <x:String>System.Text</x:String>
+    </sco:Collection>
+  </TextExpression.NamespacesForImplementation>
+  <TextExpression.ReferencesForImplementation>
+    <sco:Collection x:TypeArguments="AssemblyReference">
+      <AssemblyReference>System</AssemblyReference>
+      <AssemblyReference>Microsoft.CSharp</AssemblyReference>
+      <AssemblyReference>System.Core</AssemblyReference>
+      <AssemblyReference>System.Data</AssemblyReference>
+      <AssemblyReference>System.Data.DataSetExtensions</AssemblyReference>
+      <AssemblyReference>System.Xml</AssemblyReference>
+      <AssemblyReference>System.Xml.Linq</AssemblyReference>
+      <AssemblyReference>Orleans.Activities.Sample.HelloWorld.GrainInterfaces</AssemblyReference>
+      <AssemblyReference>Orleans.Activities</AssemblyReference>
+      <AssemblyReference>Newtonsoft.Json</AssemblyReference>
+      <AssemblyReference>Orleans</AssemblyReference>
+      <AssemblyReference>System.Collections.Immutable</AssemblyReference>
+      <AssemblyReference>System.Reflection.Metadata</AssemblyReference>
+      <AssemblyReference>Microsoft.CodeAnalysis</AssemblyReference>
+      <AssemblyReference>Microsoft.CodeAnalysis.CSharp</AssemblyReference>
+      <AssemblyReference>OrleansCodeGenerator</AssemblyReference>
+      <AssemblyReference>System.Activities</AssemblyReference>
+      <AssemblyReference>System.Runtime.DurableInstancing</AssemblyReference>
+      <AssemblyReference>System.ServiceModel</AssemblyReference>
+      <AssemblyReference>System.ServiceModel.Activities</AssemblyReference>
+      <AssemblyReference>System.Xaml</AssemblyReference>
+      <AssemblyReference>mscorlib</AssemblyReference>
+      <AssemblyReference>Orleans.Activities.Sample.HelloWorld.Grains</AssemblyReference>
+    </sco:Collection>
+  </TextExpression.ReferencesForImplementation>
+  <oa:WorkflowActivity x:TypeArguments="local:IHelloAffector, local:IHelloEffector" sap2010:WorkflowViewState.IdRef="WorkflowActivity`2_1">
+    <oa:ReceiveRequestSendResponseScope sap2010:WorkflowViewState.IdRef="ReceiveRequestSendResponseScope_2">
+      <Sequence sap2010:WorkflowViewState.IdRef="Sequence_2">
+        <Sequence.Variables>
+          <Variable x:TypeArguments="x:String" Name="clientSaid" />
+          <Variable x:TypeArguments="x:String" Name="iSay" />
+        </Sequence.Variables>
+        <oa:ReceiveRequest x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="ReceiveRequest`1_2" OperationName="IHelloAffector.GreetClient">
+          <oa:ReceiveRequest.RequestResult>
+            <OutArgument x:TypeArguments="x:String">
+              <mca:CSharpReference x:TypeArguments="x:String">clientSaid</mca:CSharpReference>
+            </OutArgument>
+          </oa:ReceiveRequest.RequestResult>
+        </oa:ReceiveRequest>
+        <oa:SendRequestReceiveResponseScope sap2010:WorkflowViewState.IdRef="SendRequestReceiveResponseScope_1">
+          <Sequence sap2010:WorkflowViewState.IdRef="Sequence_3">
+            <oa:SendRequest x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="SendRequest`1_1" OperationName="IHelloEffector.WhatShouldISay">
+              <oa:SendRequest.RequestParameter>
+                <InArgument x:TypeArguments="x:String">
+                  <mca:CSharpValue x:TypeArguments="x:String">clientSaid</mca:CSharpValue>
+                </InArgument>
+              </oa:SendRequest.RequestParameter>
+            </oa:SendRequest>
+            <oa:ReceiveResponse x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="ReceiveResponse`1_1">
+              <oa:ReceiveResponse.ResponseResult>
+                <OutArgument x:TypeArguments="x:String">
+                  <mca:CSharpReference x:TypeArguments="x:String">iSay</mca:CSharpReference>
+                </OutArgument>
+              </oa:ReceiveResponse.ResponseResult>
+            </oa:ReceiveResponse>
+          </Sequence>
+        </oa:SendRequestReceiveResponseScope>
+        <oa:SendResponse x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="SendResponse`1_2" Idempotent="True" ThrowIfReloaded="False">
+          <oa:SendResponse.ResponseParameter>
+            <InArgument x:TypeArguments="x:String">
+              <mca:CSharpValue x:TypeArguments="x:String">$"You said: '{clientSaid}', I say: '{iSay}'"</mca:CSharpValue>
+            </InArgument>
+          </oa:SendResponse.ResponseParameter>
+        </oa:SendResponse>
+      </Sequence>
+    </oa:ReceiveRequestSendResponseScope>
+    <sads:DebugSymbol.Symbol>d3FaOlxQcml2YXRlXFByb2plY3RzXE9ybGVhbnNcT3JsZWFucy5BY3Rpdml0aWVzXHNyY1xPcmxlYW5zLkFjdGl2aXRpZXMuU2FtcGxlLkhlbGxvV29ybGQuR3JhaW5zXEhlbGxvQWN0aXZpdHkueGFtbA0xA1sZAgEBMgVZKgIBAjMHWBICAQM4CT4dAgEXPwlQLgIBCFEJVxsCAQQ7DztfAgEYVA9UeQIBBUALTxYCAQ5BDUceAgETSA1OIgIBD0QTRFsCARRLE0tdAgEQ</sads:DebugSymbol.Symbol>
+  </oa:WorkflowActivity>
+  <sap2010:WorkflowViewState.ViewStateManager>
+    <sap2010:ViewStateManager>
+      <sap2010:ViewStateData Id="ReceiveRequest`1_2" sap:VirtualizedContainerService.HintSize="363,89" />
+      <sap2010:ViewStateData Id="SendRequest`1_1" sap:VirtualizedContainerService.HintSize="315,89" />
+      <sap2010:ViewStateData Id="ReceiveResponse`1_1" sap:VirtualizedContainerService.HintSize="315,62" />
+      <sap2010:ViewStateData Id="Sequence_3" sap:VirtualizedContainerService.HintSize="337,315">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="SendRequestReceiveResponseScope_1" sap:VirtualizedContainerService.HintSize="363,403" />
+      <sap2010:ViewStateData Id="SendResponse`1_2" sap:VirtualizedContainerService.HintSize="363,108" />
+      <sap2010:ViewStateData Id="Sequence_2" sap:VirtualizedContainerService.HintSize="385,804">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="ReceiveRequestSendResponseScope_2" sap:VirtualizedContainerService.HintSize="411,892" />
+      <sap2010:ViewStateData Id="WorkflowActivity`2_1" sap:VirtualizedContainerService.HintSize="437,980" />
+      <sap2010:ViewStateData Id="Orleans.Activities.Sample.HelloWorld.Grains.HelloActivity_1" sap:VirtualizedContainerService.HintSize="477,1060" />
+    </sap2010:ViewStateManager>
+  </sap2010:WorkflowViewState.ViewStateManager>
+</Activity>

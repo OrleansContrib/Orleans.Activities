@@ -1,0 +1,56 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<sap:ActivityDesigner x:Class="Orleans.Activities.Designers.ReceiveRequestSendResponseScopeDesigner"
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:sap="clr-namespace:System.Activities.Presentation;assembly=System.Activities.Presentation"
+  xmlns:sa="clr-namespace:System.Activities;assembly=System.Activities">
+
+  <sap:ActivityDesigner.Resources>
+    <ResourceDictionary>
+      
+      <DataTemplate x:Key="CollapsedActivityViewTemplate">
+        <Label Padding="0,0,0,0" FontStyle="Italic"
+          Foreground="{x:Static SystemColors.GrayTextBrush}" HorizontalAlignment="Center"
+          VerticalAlignment="Center">Double-click to view</Label>
+      </DataTemplate>
+
+      <DataTemplate x:Key="ExpandedCommentOutTemplate">
+        <Border BorderThickness ="1">
+          <sap:WorkflowItemPresenter
+            AutomationProperties.AutomationId="Body"
+            Item="{Binding Path=ModelItem.Body, Mode=TwoWay}"
+            AllowedItemType="{x:Type sa:Activity}"
+            HintText="Drop activity here"
+            Margin="5,5,5,5" />
+        </Border>
+      </DataTemplate>
+      
+      <Style x:Key="CommentOutStyle" TargetType="{x:Type ContentPresenter}">
+        <Setter Property="ContentTemplate" Value="{DynamicResource CollapsedActivityViewTemplate}" />
+        <Style.Triggers>
+          <DataTrigger Binding="{Binding Path=ShowExpanded}" Value="true">
+            <Setter Property="ContentTemplate" Value="{DynamicResource ExpandedCommentOutTemplate}" />
+          </DataTrigger>
+        </Style.Triggers>
+      </Style>
+      
+    </ResourceDictionary>
+  </sap:ActivityDesigner.Resources>
+  
+  <sap:ActivityDesigner.Icon>
+    <DrawingBrush>
+      <DrawingBrush.Drawing>
+        <ImageDrawing>
+          <ImageDrawing.Rect>
+            <Rect Location="0,0" Size="25,25" ></Rect>
+          </ImageDrawing.Rect>
+          <ImageDrawing.ImageSource>
+            <BitmapImage UriSource="ReceiveRequestSendResponseScope.png" />
+          </ImageDrawing.ImageSource>
+        </ImageDrawing>
+      </DrawingBrush.Drawing>
+    </DrawingBrush>
+  </sap:ActivityDesigner.Icon>
+  
+  <ContentPresenter Style="{DynamicResource CommentOutStyle}" Content="{Binding}" />
+</sap:ActivityDesigner>

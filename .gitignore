@@ -231,3 +231,12 @@ _Pvt_Extensions
 
 # FAKE - F# Make
 .fake/
+
+# Visual Paradigm
+.vpprefdata/
+*.vpp~*
+*.vpp.working
+*.vpp.working-journal
+*.lock
+*.vux
+tmp/*

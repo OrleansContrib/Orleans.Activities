@@ -1,0 +1,221 @@
+﻿<Activity mc:Ignorable="sap sap2010 sads" x:Class="Orleans.Activities.Test.Activities.Dummy" sap2010:ExpressionActivityEditor.ExpressionActivityEditor="C#" sap2010:WorkflowViewState.IdRef="Orleans.Activities.Test.Activities.Dummy_1"
+ xmlns="http://schemas.microsoft.com/netfx/2009/xaml/activities"
+ xmlns:local="clr-namespace:Orleans.Activities.Test.Activities"
+ xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+ xmlns:mca="clr-namespace:Microsoft.CSharp.Activities;assembly=System.Activities"
+ xmlns:oa="clr-namespace:Orleans.Activities;assembly=Orleans.Activities"
+ xmlns:s="clr-namespace:System;assembly=mscorlib"
+ xmlns:sads="http://schemas.microsoft.com/netfx/2010/xaml/activities/debugger"
+ xmlns:sap="http://schemas.microsoft.com/netfx/2009/xaml/activities/presentation"
+ xmlns:sap2010="http://schemas.microsoft.com/netfx/2010/xaml/activities/presentation"
+ xmlns:scg="clr-namespace:System.Collections.Generic;assembly=mscorlib"
+ xmlns:sco="clr-namespace:System.Collections.ObjectModel;assembly=mscorlib"
+ xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <TextExpression.NamespacesForImplementation>
+    <sco:Collection x:TypeArguments="x:String">
+      <x:String>System</x:String>
+      <x:String>System.Collections.Generic</x:String>
+      <x:String>System.Data</x:String>
+      <x:String>System.Linq</x:String>
+      <x:String>System.Text</x:String>
+    </sco:Collection>
+  </TextExpression.NamespacesForImplementation>
+  <TextExpression.ReferencesForImplementation>
+    <sco:Collection x:TypeArguments="AssemblyReference">
+      <AssemblyReference>Microsoft.CSharp</AssemblyReference>
+      <AssemblyReference>System</AssemblyReference>
+      <AssemblyReference>System.Activities</AssemblyReference>
+      <AssemblyReference>System.Core</AssemblyReference>
+      <AssemblyReference>System.Data</AssemblyReference>
+      <AssemblyReference>System.Drawing</AssemblyReference>
+      <AssemblyReference>System.Runtime.Serialization</AssemblyReference>
+      <AssemblyReference>System.ServiceModel</AssemblyReference>
+      <AssemblyReference>System.ServiceModel.Activities</AssemblyReference>
+      <AssemblyReference>System.Xaml</AssemblyReference>
+      <AssemblyReference>System.Xml</AssemblyReference>
+      <AssemblyReference>System.Xml.Linq</AssemblyReference>
+      <AssemblyReference>Orleans.Activities</AssemblyReference>
+      <AssemblyReference>mscorlib</AssemblyReference>
+      <AssemblyReference>Orleans.Activities.Test.Activities</AssemblyReference>
+    </sco:Collection>
+  </TextExpression.ReferencesForImplementation>
+  <oa:WorkflowActivity x:TypeArguments="local:IGrainAffector, local:IGrainEffector" sap2010:WorkflowViewState.IdRef="WorkflowActivity`2_1">
+    <Sequence>
+      <Sequence.Variables>
+        <Variable x:TypeArguments="x:String" Name="result" />
+        <Variable x:TypeArguments="x:Boolean" Name="isReloaded" />
+        <Variable x:TypeArguments="x:TimeSpan" Name="retryDelay" />
+      </Sequence.Variables>
+      <oa:ReceiveRequestSendResponseScope>
+        <Sequence>
+          <oa:ReceiveRequest OperationName="IGrainAffector.OperationWithoutParamsAsync" sap2010:WorkflowViewState.IdRef="ReceiveRequest_2" />
+          <oa:SendResponse Idempotent="False" ThrowIfReloaded="False" sap2010:WorkflowViewState.IdRef="SendResponse_2" />
+          <sap2010:WorkflowViewState.IdRef>Sequence_7</sap2010:WorkflowViewState.IdRef>
+        </Sequence>
+        <sap2010:WorkflowViewState.IdRef>ReceiveRequestSendResponseScope_3</sap2010:WorkflowViewState.IdRef>
+      </oa:ReceiveRequestSendResponseScope>
+      <oa:ReceiveRequestSendResponseScope>
+        <Sequence>
+          <oa:ReceiveRequest x:TypeArguments="x:String" OperationName="IGrainAffector.OperationWithParamsAsync">
+            <oa:ReceiveRequest.RequestResult>
+              <OutArgument x:TypeArguments="x:String">
+                <mca:CSharpReference x:TypeArguments="x:String">result</mca:CSharpReference>
+              </OutArgument>
+            </oa:ReceiveRequest.RequestResult>
+            <sap2010:WorkflowViewState.IdRef>ReceiveRequest`1_2</sap2010:WorkflowViewState.IdRef>
+          </oa:ReceiveRequest>
+          <oa:SendResponse x:TypeArguments="x:String" Idempotent="False" ResponseParameter="param" ThrowIfReloaded="False" sap2010:WorkflowViewState.IdRef="SendResponse`1_2" />
+          <sap2010:WorkflowViewState.IdRef>Sequence_8</sap2010:WorkflowViewState.IdRef>
+        </Sequence>
+        <sap2010:WorkflowViewState.IdRef>ReceiveRequestSendResponseScope_4</sap2010:WorkflowViewState.IdRef>
+      </oa:ReceiveRequestSendResponseScope>
+      <oa:SendRequestReceiveResponseScope>
+        <Sequence>
+          <oa:SendRequest OperationName="IGrainEffector.OnOperationWithoutParamsAsync" sap2010:WorkflowViewState.IdRef="SendRequest_2" />
+          <oa:ReceiveResponse sap2010:WorkflowViewState.IdRef="ReceiveResponse_2" />
+          <sap2010:WorkflowViewState.IdRef>Sequence_9</sap2010:WorkflowViewState.IdRef>
+        </Sequence>
+        <sap2010:WorkflowViewState.IdRef>SendRequestReceiveResponseScope_3</sap2010:WorkflowViewState.IdRef>
+      </oa:SendRequestReceiveResponseScope>
+      <oa:SendRequestReceiveResponseScope>
+        <Sequence>
+          <oa:SendRequest x:TypeArguments="x:String" OperationName="IGrainEffector.OnOperationWithParamsAsync" RequestParameter="param" sap2010:WorkflowViewState.IdRef="SendRequest`1_2" />
+          <oa:ReceiveResponse x:TypeArguments="x:String">
+            <oa:ReceiveResponse.ResponseResult>
+              <OutArgument x:TypeArguments="x:String">
+                <mca:CSharpReference x:TypeArguments="x:String">result</mca:CSharpReference>
+              </OutArgument>
+            </oa:ReceiveResponse.ResponseResult>
+            <sap2010:WorkflowViewState.IdRef>ReceiveResponse`1_2</sap2010:WorkflowViewState.IdRef>
+          </oa:ReceiveResponse>
+          <sap2010:WorkflowViewState.IdRef>Sequence_10</sap2010:WorkflowViewState.IdRef>
+        </Sequence>
+        <sap2010:WorkflowViewState.IdRef>SendRequestReceiveResponseScope_4</sap2010:WorkflowViewState.IdRef>
+      </oa:SendRequestReceiveResponseScope>
+      <oa:GetIsReloaded>
+        <oa:GetIsReloaded.IsReloaded>
+          <OutArgument x:TypeArguments="x:Boolean">
+            <mca:CSharpReference x:TypeArguments="x:Boolean">isReloaded</mca:CSharpReference>
+          </OutArgument>
+        </oa:GetIsReloaded.IsReloaded>
+        <sap2010:WorkflowViewState.IdRef>GetIsReloaded_2</sap2010:WorkflowViewState.IdRef>
+      </oa:GetIsReloaded>
+      <oa:RetryDelay DelayMaxValue="{x:Null}" DelayMultiplicator="{x:Null}" DelayStartValue="{x:Null}">
+        <oa:RetryDelay.DelayVariable>
+          <InOutArgument x:TypeArguments="x:TimeSpan">
+            <mca:CSharpReference x:TypeArguments="x:TimeSpan">retryDelay</mca:CSharpReference>
+          </InOutArgument>
+        </oa:RetryDelay.DelayVariable>
+        <sap2010:WorkflowViewState.IdRef>RetryDelay_2</sap2010:WorkflowViewState.IdRef>
+      </oa:RetryDelay>
+      <oa:Timeout Delay="{x:Null}">
+        <oa:Timeout.Expire>
+          <InArgument x:TypeArguments="s:DateTime">
+            <mca:CSharpValue x:TypeArguments="s:DateTime">DateTime.UtcNow</mca:CSharpValue>
+          </InArgument>
+        </oa:Timeout.Expire>
+        <sap2010:WorkflowViewState.IdRef>Timeout_2</sap2010:WorkflowViewState.IdRef>
+      </oa:Timeout>
+      <sap2010:WorkflowViewState.IdRef>Sequence_11</sap2010:WorkflowViewState.IdRef>
+    </Sequence>
+    <sads:DebugSymbol.Symbol>d2BaOlxQcml2YXRlXFByb2plY3RzXE9ybGVhbnNcT3JsZWFucy5BY3Rpdml0aWVzXHNyY1xPcmxlYW5zLkFjdGl2aXRpZXMuVGVzdC5BY3Rpdml0aWVzXER1bW15LnhhbWwcKgN6GQIBASsFeBACAQIxBzgsAgEyOQdHLAIBKUgHTywCASBQB14sAgESXwdmGgIBDWcHbhcCAQhvB3YUAgEDMgk2FAIBMzoJRRQCASpiDWJeAgEOag1qXwIBCXINclwCAQQzCzOOAQIBNTQLNHoCATQ7C0IfAgEtQwtDsQECAStJCU0UAgEmUQlcFAIBGD4RPl0CAS5DXENjAgEsSgtKigECAShLC0tVAgEnUgtSvQECAR5TC1ogAgEZUoEBUogBAgEfVhFWXQIBGg==</sads:DebugSymbol.Symbol>
+  </oa:WorkflowActivity>
+  <sap2010:WorkflowViewState.ViewStateManager>
+    <sap2010:ViewStateManager>
+      <sap2010:ViewStateData Id="ReceiveRequest_2" sap:VirtualizedContainerService.HintSize="304,63" />
+      <sap2010:ViewStateData Id="SendResponse_2" sap:VirtualizedContainerService.HintSize="304,82" />
+      <sap2010:ViewStateData Id="Sequence_7" sap:VirtualizedContainerService.HintSize="326,309">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="ReceiveRequestSendResponseScope_3" sap:VirtualizedContainerService.HintSize="371,51">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <x:Boolean x:Key="IsExpanded">False</x:Boolean>
+            <x:Boolean x:Key="IsPinned">False</x:Boolean>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="ReceiveRequest`1_2" sap:VirtualizedContainerService.HintSize="323,89" />
+      <sap2010:ViewStateData Id="SendResponse`1_2" sap:VirtualizedContainerService.HintSize="323,108" />
+      <sap2010:ViewStateData Id="Sequence_8" sap:VirtualizedContainerService.HintSize="345,361">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="ReceiveRequestSendResponseScope_4" sap:VirtualizedContainerService.HintSize="371,449">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+            <x:Boolean x:Key="IsPinned">False</x:Boolean>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="SendRequest_2" sap:VirtualizedContainerService.HintSize="304,63" />
+      <sap2010:ViewStateData Id="ReceiveResponse_2" sap:VirtualizedContainerService.HintSize="304,22" />
+      <sap2010:ViewStateData Id="Sequence_9" sap:VirtualizedContainerService.HintSize="326,249">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="SendRequestReceiveResponseScope_3" sap:VirtualizedContainerService.HintSize="371,51">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <x:Boolean x:Key="IsExpanded">False</x:Boolean>
+            <x:Boolean x:Key="IsPinned">False</x:Boolean>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="SendRequest`1_2" sap:VirtualizedContainerService.HintSize="315,89" />
+      <sap2010:ViewStateData Id="ReceiveResponse`1_2" sap:VirtualizedContainerService.HintSize="315,62" />
+      <sap2010:ViewStateData Id="Sequence_10" sap:VirtualizedContainerService.HintSize="337,315">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="SendRequestReceiveResponseScope_4" sap:VirtualizedContainerService.HintSize="371,403">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+            <x:Boolean x:Key="IsPinned">False</x:Boolean>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="GetIsReloaded_2" sap:VirtualizedContainerService.HintSize="371,62" />
+      <sap2010:ViewStateData Id="RetryDelay_2" sap:VirtualizedContainerService.HintSize="371,156">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+            <x:Boolean x:Key="IsPinned">False</x:Boolean>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="Timeout_2" sap:VirtualizedContainerService.HintSize="371,104">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+            <x:Boolean x:Key="IsPinned">False</x:Boolean>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="Sequence_11" sap:VirtualizedContainerService.HintSize="393,1640">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="WorkflowActivity`2_1" sap:VirtualizedContainerService.HintSize="419,1728" />
+      <sap2010:ViewStateData Id="Orleans.Activities.Test.Activities.Dummy_1" sap:VirtualizedContainerService.HintSize="459,1808" />
+    </sap2010:ViewStateManager>
+  </sap2010:WorkflowViewState.ViewStateManager>
+</Activity>

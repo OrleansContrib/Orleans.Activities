@@ -1,0 +1,79 @@
+﻿<Activity mc:Ignorable="sap sap2010 sads" x:Class="Orleans.Activities.Test.Activities.EffectorOperationWithThrow" sap2010:ExpressionActivityEditor.ExpressionActivityEditor="C#"
+ xmlns="http://schemas.microsoft.com/netfx/2009/xaml/activities"
+ xmlns:local="clr-namespace:Orleans.Activities.Test.Activities"
+ xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+ xmlns:mca="clr-namespace:Microsoft.CSharp.Activities;assembly=System.Activities"
+ xmlns:oa="clr-namespace:Orleans.Activities;assembly=Orleans.Activities"
+ xmlns:s="clr-namespace:System;assembly=mscorlib"
+ xmlns:sads="http://schemas.microsoft.com/netfx/2010/xaml/activities/debugger"
+ xmlns:sap="http://schemas.microsoft.com/netfx/2009/xaml/activities/presentation"
+ xmlns:sap2010="http://schemas.microsoft.com/netfx/2010/xaml/activities/presentation"
+ xmlns:scg="clr-namespace:System.Collections.Generic;assembly=mscorlib"
+ xmlns:sco="clr-namespace:System.Collections.ObjectModel;assembly=mscorlib"
+ xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <TextExpression.NamespacesForImplementation>
+    <sco:Collection x:TypeArguments="x:String">
+      <x:String>System</x:String>
+      <x:String>System.Collections.Generic</x:String>
+      <x:String>System.Data</x:String>
+      <x:String>System.Linq</x:String>
+      <x:String>System.Text</x:String>
+    </sco:Collection>
+  </TextExpression.NamespacesForImplementation>
+  <TextExpression.ReferencesForImplementation>
+    <sco:Collection x:TypeArguments="AssemblyReference">
+      <AssemblyReference>Microsoft.CSharp</AssemblyReference>
+      <AssemblyReference>System</AssemblyReference>
+      <AssemblyReference>System.Activities</AssemblyReference>
+      <AssemblyReference>System.Core</AssemblyReference>
+      <AssemblyReference>System.Data</AssemblyReference>
+      <AssemblyReference>System.Drawing</AssemblyReference>
+      <AssemblyReference>System.Runtime.Serialization</AssemblyReference>
+      <AssemblyReference>System.ServiceModel</AssemblyReference>
+      <AssemblyReference>System.ServiceModel.Activities</AssemblyReference>
+      <AssemblyReference>System.Xaml</AssemblyReference>
+      <AssemblyReference>System.Xml</AssemblyReference>
+      <AssemblyReference>System.Xml.Linq</AssemblyReference>
+      <AssemblyReference>GrainInterfaces</AssemblyReference>
+      <AssemblyReference>Orleans.Activities</AssemblyReference>
+      <AssemblyReference>mscorlib</AssemblyReference>
+      <AssemblyReference>Orleans.Activities.Test.Activities</AssemblyReference>
+    </sco:Collection>
+  </TextExpression.ReferencesForImplementation>
+  <oa:WorkflowActivity x:TypeArguments="local:IGrainAffector, local:IGrainEffector">
+    <oa:SendRequestReceiveResponseScope>
+      <Sequence>
+        <oa:SendRequest OperationName="IGrainEffector.OnOperationThrowsEndAsync" sap2010:WorkflowViewState.IdRef="SendRequest_1" />
+        <Throw>
+          <InArgument x:TypeArguments="s:Exception">
+            <mca:CSharpValue x:TypeArguments="s:Exception">new TestException("Activity")</mca:CSharpValue>
+          </InArgument>
+          <sap2010:WorkflowViewState.IdRef>Throw_1</sap2010:WorkflowViewState.IdRef>
+        </Throw>
+        <oa:ReceiveResponse sap2010:WorkflowViewState.IdRef="ReceiveResponse_1" />
+        <sap2010:WorkflowViewState.IdRef>Sequence_1</sap2010:WorkflowViewState.IdRef>
+      </Sequence>
+      <sap2010:WorkflowViewState.IdRef>SendRequestReceiveResponseScope_1</sap2010:WorkflowViewState.IdRef>
+    </oa:SendRequestReceiveResponseScope>
+    <sap2010:WorkflowViewState.IdRef>WorkflowActivity`2_1</sap2010:WorkflowViewState.IdRef>
+    <sads:DebugSymbol.Symbol>d3FaOlxQcml2YXRlXEluY29taW5nXE9ybGVhbnNcT3JsZWFucy5BY3Rpdml0aWVzXE9ybGVhbnMuQWN0aXZpdGllcy5UZXN0LkFjdGl2aXRpZXNcRWZmZWN0b3JPcGVyYXRpb25XaXRoVGhyb3cueGFtbAcrAzwZAgEBLAU5KgIBAi0HNxICAQMuCS6EAQIBBy8JNBECAQU1CTVTAgEEMQ0xawIBBg==</sads:DebugSymbol.Symbol>
+  </oa:WorkflowActivity>
+  <sap2010:WorkflowViewState.IdRef>Orleans.Activities.Test.Activities.EffectorOperationWithThrow_1</sap2010:WorkflowViewState.IdRef>
+  <sap2010:WorkflowViewState.ViewStateManager>
+    <sap2010:ViewStateManager>
+      <sap2010:ViewStateData Id="SendRequest_1" sap:VirtualizedContainerService.HintSize="301,61" />
+      <sap2010:ViewStateData Id="Throw_1" sap:VirtualizedContainerService.HintSize="301,22" />
+      <sap2010:ViewStateData Id="ReceiveResponse_1" sap:VirtualizedContainerService.HintSize="301,22" />
+      <sap2010:ViewStateData Id="Sequence_1" sap:VirtualizedContainerService.HintSize="323,309">
+        <sap:WorkflowViewStateService.ViewState>
+          <scg:Dictionary x:TypeArguments="x:String, x:Object">
+            <x:Boolean x:Key="IsExpanded">True</x:Boolean>
+          </scg:Dictionary>
+        </sap:WorkflowViewStateService.ViewState>
+      </sap2010:ViewStateData>
+      <sap2010:ViewStateData Id="SendRequestReceiveResponseScope_1" sap:VirtualizedContainerService.HintSize="349,397" />
+      <sap2010:ViewStateData Id="WorkflowActivity`2_1" sap:VirtualizedContainerService.HintSize="375,485" />
+      <sap2010:ViewStateData Id="Orleans.Activities.Test.Activities.EffectorOperationWithThrow_1" sap:VirtualizedContainerService.HintSize="415,565" />
+    </sap2010:ViewStateManager>
+  </sap2010:WorkflowViewState.ViewStateManager>
+</Activity>
