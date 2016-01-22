@@ -40,7 +40,7 @@ namespace Orleans.Activities
     }
 
     /// <summary>
-    /// Receives an incoming request by executing the request result delegate created by the appropriate TAffector operation.
+    /// Receives an incoming request by executing the request result delegate created by the appropriate TWorkflowInterface operation.
     /// The receiving delegate is only executed if this activity is able to accept the incoming request.
     /// </summary>
     [Designer(typeof(ReceiveRequestDesigner))]
@@ -67,7 +67,7 @@ namespace Orleans.Activities
             requestResultEvaluator = TaskFuncEvaluator.CreateActivityDelegate();
             Constraints.Add(OperationActivityHelper.VerifyParentIsWorkflowActivity());
             Constraints.Add(OperationActivityHelper.VerifyIsOperationNameSet());
-            Constraints.Add(OperationActivityHelper.SetAffectorOperationNames());
+            Constraints.Add(OperationActivityHelper.SetWorkflowInterfaceOperationNames());
             Constraints.Add(ReceiveRequestSendResponseScopeHelper.VerifyParentIsReceiveRequestSendResponseScope());
         }
         
@@ -104,7 +104,7 @@ namespace Orleans.Activities
     }
 
     /// <summary>
-    /// Receives an incoming request by executing the request result delegate created by the appropriate TAffector operation, and sets the RequestResult of the execution.
+    /// Receives an incoming request by executing the request result delegate created by the appropriate TWorkflowInterface operation, and sets the RequestResult of the execution.
     /// The receiving delegate is only executed if this activity is able to accept the incoming request.
     /// </summary>
     /// <typeparam name="TRequestResult"></typeparam>
@@ -125,7 +125,7 @@ namespace Orleans.Activities
 
         [RequiredArgument]
         [Category(Constants.RequiredCategoryName)]
-        [Description("The result of the Func<Task<TRequestResult>> delegate of the incoming TAffector operation will be stored here.")]
+        [Description("The result of the Func<Task<TRequestResult>> delegate of the incoming TWorkflowInterface operation will be stored here.")]
         public OutArgument<TRequestResult> RequestResult { get; set; }
 
         private ActivityFunc<Func<Task<TRequestResult>>, TRequestResult> requestResultEvaluator;
@@ -138,7 +138,7 @@ namespace Orleans.Activities
             requestResultEvaluator = TaskFuncEvaluator<TRequestResult>.CreateActivityDelegate();
             Constraints.Add(OperationActivityHelper.VerifyParentIsWorkflowActivity());
             Constraints.Add(OperationActivityHelper.VerifyIsOperationNameSet());
-            Constraints.Add(OperationActivityHelper.SetAffectorOperationNames());
+            Constraints.Add(OperationActivityHelper.SetWorkflowInterfaceOperationNames());
             Constraints.Add(ReceiveRequestSendResponseScopeHelper.VerifyParentIsReceiveRequestSendResponseScope());
         }
 

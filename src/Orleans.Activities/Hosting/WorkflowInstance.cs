@@ -69,7 +69,7 @@ namespace Orleans.Activities.Hosting
     {
         #region protected/private fields
 
-        protected IWorkflowHost host;
+        protected IWorkflowInstanceCallback host;
 
         private DurableReminderExtension durableReminderExtension;
 
@@ -77,7 +77,7 @@ namespace Orleans.Activities.Hosting
 
         #region ctor
 
-        public WorkflowInstance(IWorkflowHost host, Activity workflowDefinition, WorkflowIdentity definitionIdentity)
+        public WorkflowInstance(IWorkflowInstanceCallback host, Activity workflowDefinition, WorkflowIdentity definitionIdentity)
             : base(workflowDefinition, definitionIdentity)
         {
             this.host = host;

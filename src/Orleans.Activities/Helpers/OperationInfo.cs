@@ -9,7 +9,7 @@ using System.Reflection;
 namespace Orleans.Activities.Helpers
 {
     /// <summary>
-    /// Generates operation names for valid TAffector or TEffector interfaces.
+    /// Generates operation names for valid TWorkflowInterface or TWorkflowCallbackInterface interfaces.
     /// </summary>
     public static class OperationInfo
     {
@@ -18,7 +18,7 @@ namespace Orleans.Activities.Helpers
     }
 
     /// <summary>
-    /// Generates operation names for valid TAffector or TEffector interfaces.
+    /// Generates operation names for valid TWorkflowInterface or TWorkflowCallbackInterface interfaces.
     /// </summary>
     /// <typeparam name="T"></typeparam>
     public static class OperationInfo<T>

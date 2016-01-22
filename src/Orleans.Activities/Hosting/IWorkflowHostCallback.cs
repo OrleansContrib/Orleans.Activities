@@ -12,7 +12,7 @@ namespace Orleans.Activities.Hosting
     /// <summary>
     /// Infrastructure related methods on the WorkflowGrain side of the communication between the WorkflowGrain and the WorkflowHost.
     /// </summary>
-    public interface IEffectorInfrastructure
+    public interface IWorkflowHostCallbackInfrastructure
     {
         Guid PrimaryKey { get; }
 
@@ -28,7 +28,7 @@ namespace Orleans.Activities.Hosting
     /// <summary>
     /// Control related methods on the WorkflowGrain side of the communication between the WorkflowGrain and the WorkflowHost.
     /// </summary>
-    public interface IEffectorControl
+    public interface IWorkflowHostCallbackControl
     {
         IParameters Parameters { get; }
 
@@ -43,7 +43,7 @@ namespace Orleans.Activities.Hosting
     /// <summary>
     /// Outgoing operation related methods on the WorkflowGrain side of the communication between the WorkflowGrain and the WorkflowHost.
     /// </summary>
-    public interface IEffectorOperations
+    public interface IWorkflowHostCallbackOperations
     {
         Task<Func<Task<TResponseResult>>> OnOperationAsync<TRequestParameter, TResponseResult>(string operationName, TRequestParameter requestParameter)
             where TRequestParameter : class
@@ -58,6 +58,6 @@ namespace Orleans.Activities.Hosting
     /// <summary>
     /// The WorkflowGrain side of the communication between the WorkflowGrain and the WorkflowHost.
     /// </summary>
-    public interface IEffector : IEffectorInfrastructure, IEffectorControl, IEffectorOperations
+    public interface IWorkflowHostCallback : IWorkflowHostCallbackInfrastructure, IWorkflowHostCallbackControl, IWorkflowHostCallbackOperations
     { }
 }

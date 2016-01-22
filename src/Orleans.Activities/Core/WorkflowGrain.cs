@@ -22,11 +22,11 @@ namespace Orleans.Activities
 
     /// <summary>
     /// Base class for workflow backed grains.
-    /// <para>IMPORTANT: See TAffector and TEffector type parameters' description! These types must be interfaces and must have methods with required signatures!</para>
-    /// <para>IMPORTANT: The WorkflowGrain implementation must explicitly implement the TEffector interface!</para>
+    /// <para>IMPORTANT: See TWorkflowInterface and TWorkflowCallbackInterface type parameters' description! These types must be interfaces and must have methods with required signatures!</para>
+    /// <para>IMPORTANT: The WorkflowGrain implementation must explicitly implement the TWorkflowCallbackInterface interface!</para>
     /// </summary>
-    /// <typeparam name="TWorkflowState"></typeparam>
-    /// <typeparam name="TAffector">Defines the interface that contains the operations that the backing workflow can accept, ie. the incoming requests.
+    /// <typeparam name="TGrainState"></typeparam>
+    /// <typeparam name="TWorkflowInterface">Defines the interface that contains the operations that the backing workflow can accept, ie. the incoming requests.
     /// These operations shouldn't be the same as the grain's public grain interface, it can contain more or less operations.
     /// And the signature of these operations are never the same as the grain's public grain interface's methods, they can have 1 parameter and can have 1 return value
     /// (ie. booth are optional, but wrapped in Func&lt;Task&gt; and Task).
@@ -36,7 +36,7 @@ namespace Orleans.Activities
     /// <para>Task&lt;...&gt; OperationNameAsync(Func&lt;Task&gt; requestResult)</para>
     /// <para>Task OperationNameAsync(Func&lt;Task&gt; requestResult)</para>
     /// </typeparam>
-    /// <typeparam name="TEffector">Defines the interface that contains the operations that the backing workflow can call, ie. the outgoing requests.
+    /// <typeparam name="TWorkflowCallbackInterface">Defines the interface that contains the operations that the backing workflow can call, ie. the outgoing requests.
     /// These operations shouldn't be the same as the public grain interfaces this grain will call on other grains, it can contain more or less operations.
     /// And the signature of these operations are never the same as the public grain interfaces' methods this grain will call on other grains, they can have 1 parameter and can have 1 return value
     /// (ie. booth are optional, but return value wrapped in Task&lt;Func&lt;Task&gt;&gt;).
@@ -46,16 +46,16 @@ namespace Orleans.Activities
     /// <para>Task&lt;Func&lt;Task&lt;...&gt;&gt;&gt; OnOperationNameAsync()</para>
     /// <para>Task&lt;Func&lt;Task&gt;&gt; OnOperationNameAsync()</para>
     /// </typeparam>
-    public abstract class WorkflowGrain<TWorkflowState, TAffector, TEffector> : Grain<TWorkflowState>, IRemindable
-        where TWorkflowState : GrainState, IWorkflowState
-        where TAffector : class
-        where TEffector : class
+    public abstract class WorkflowGrain<TGrainState, TWorkflowInterface, TWorkflowCallbackInterface> : Grain<TGrainState>, IRemindable
+        where TGrainState : GrainState, IWorkflowState
+        where TWorkflowInterface : class
+        where TWorkflowCallbackInterface : class
     {
         #region private fields
 
-        private IAffector workflowHost;
+        private IWorkflowHost workflowHost;
 
-        private TAffector workflowHostAffector;
+        private TWorkflowInterface workflowInterfaceProxy;
 
         #endregion
 
@@ -64,17 +64,17 @@ namespace Orleans.Activities
         protected WorkflowGrain(Func<WorkflowIdentity, Activity> workflowDefinitionFactory, WorkflowIdentity workflowDefinitionIdentity)
         {
             // TODO
-            // it's not possible to force at compile time that the WorkflowGrain implementation should implement TEffector
+            // it's not possible to force at compile time that the WorkflowGrain implementation should implement TWorkflowCallbackInterface
             // it would be great to check all the WorkflowGrain implementations at assembly load time (Orleans bootstrap? DI? module initilizer .cctor?)
-            // AffectorProxy<> and EffectorProxy<> cctor also executes checks on TAffector and TEffector method signatures, but called only at first usage and not load time
+            // WorkflowInterfaceProxy<> and WorkflowCallbackInterfaceProxy<> cctor also executes checks on TWorkflowInterface and TWorkflowCallbackInterface method signatures, but called only at first usage and not load time
             // Fody/ModuleInit: https://github.com/fody/moduleinit
             // Module Initializer: http://einaregilsson.com/module-initializers-in-csharp/
 
-            if (!(this is TEffector))
-                throw new InvalidProgramException($"Type '{GetType().GetFriendlyName()}' must explicitly implement interface '{typeof(TEffector).GetFriendlyName()}'!");
+            if (!(this is TWorkflowCallbackInterface))
+                throw new InvalidProgramException($"Type '{GetType().GetFriendlyName()}' must explicitly implement interface '{typeof(TWorkflowCallbackInterface).GetFriendlyName()}'!");
 
-            workflowHost = new WorkflowHost(new WorkflowGrainEffector(this), workflowDefinitionFactory, workflowDefinitionIdentity);
-            workflowHostAffector = AffectorProxy<TAffector>.CreateProxy(workflowHost);
+            workflowHost = new WorkflowHost(new WorkflowHostCallback(this), workflowDefinitionFactory, workflowDefinitionIdentity);
+            workflowInterfaceProxy = WorkflowInterfaceProxy<TWorkflowInterface>.CreateProxy(workflowHost);
         }
 
         private IParameters parameters;
@@ -109,18 +109,18 @@ namespace Orleans.Activities
 
         #endregion
 
-        #region IEffector members (wrapper to hide IEffector interface implementation)
+        #region IWorkflowHostCallback members (wrapper to hide IWorkflowHostCallback interface implementation)
 
-        private class WorkflowGrainEffector : IEffector
+        private class WorkflowHostCallback : IWorkflowHostCallback
         {
-            private WorkflowGrain<TWorkflowState, TAffector, TEffector> grain;
+            private WorkflowGrain<TGrainState, TWorkflowInterface, TWorkflowCallbackInterface> grain;
 
-            private IEffectorOperations grainEffector;
+            private IWorkflowHostCallbackOperations workflowCallbackInterfaceProxy;
 
-            public WorkflowGrainEffector(WorkflowGrain<TWorkflowState, TAffector, TEffector> grain)
+            public WorkflowHostCallback(WorkflowGrain<TGrainState, TWorkflowInterface, TWorkflowCallbackInterface> grain)
             {
                 this.grain = grain;
-                this.grainEffector = EffectorProxy<TEffector>.CreateProxy(grain as TEffector);
+                this.workflowCallbackInterfaceProxy = WorkflowCallbackInterfaceProxy<TWorkflowCallbackInterface>.CreateProxy(grain as TWorkflowCallbackInterface);
             }
 
             public Guid PrimaryKey => grain.GetPrimaryKey();
@@ -170,18 +170,18 @@ namespace Orleans.Activities
             public Task<Func<Task<TResponseResult>>> OnOperationAsync<TRequestParameter, TResponseResult>(string operationName, TRequestParameter requestParameter)
                     where TRequestParameter : class
                     where TResponseResult : class =>
-                grainEffector.OnOperationAsync<TRequestParameter, TResponseResult>(operationName, requestParameter);
+                workflowCallbackInterfaceProxy.OnOperationAsync<TRequestParameter, TResponseResult>(operationName, requestParameter);
 
             public Task<Func<Task>> OnOperationAsync<TRequestParameter>(string operationName, TRequestParameter requestParameter)
                     where TRequestParameter : class  =>
-                grainEffector.OnOperationAsync<TRequestParameter>(operationName, requestParameter);
+                workflowCallbackInterfaceProxy.OnOperationAsync<TRequestParameter>(operationName, requestParameter);
 
             public Task<Func<Task<TResponseResult>>> OnOperationAsync<TResponseResult>(string operationName)
                     where TResponseResult : class =>
-                grainEffector.OnOperationAsync<TResponseResult>(operationName);
+                workflowCallbackInterfaceProxy.OnOperationAsync<TResponseResult>(operationName);
 
             public Task<Func<Task>> OnOperationAsync(string operationName) =>
-                grainEffector.OnOperationAsync(operationName);
+                workflowCallbackInterfaceProxy.OnOperationAsync(operationName);
         }
 
         #endregion
@@ -190,12 +190,12 @@ namespace Orleans.Activities
         /// The control functions of the workflow is accessible through this property.
         /// <para>Under normal circumstances there is no need to access these functions.</para>
         /// </summary>
-        protected IAffectorControl WorkflowControl => workflowHost;
+        protected IWorkflowHostControl WorkflowControl => workflowHost;
 
         /// <summary>
-        /// The TAffector operations of the workflow are accessible through this property.
+        /// The TWorkflowInterface operations of the workflow are accessible through this property.
         /// </summary>
-        protected TAffector WorkflowAffector => workflowHostAffector;
+        protected TWorkflowInterface WorkflowInterface => workflowInterfaceProxy;
 
         /// <summary>
         /// In a typical implementation of this method a <see cref="TrackingParticipant"/> implementation can be added to the workflow to log the steps that are executed.

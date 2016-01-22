@@ -37,7 +37,7 @@ namespace Orleans.Activities
             }
         }
 
-        // This activity is responsible to await the outgoing TEffector operation's task in case ReceiveResponse is unable to do this.
+        // This activity is responsible to await the outgoing TWorkflowCallbackInterface operation's task in case ReceiveResponse is unable to do this.
         // This is necessary in case of a fault propagation, that can be the result of an unhandled exception.
         private sealed class ConditionalOperationTaskWaiter : NativeActivity
         {

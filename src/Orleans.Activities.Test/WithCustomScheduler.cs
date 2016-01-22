@@ -65,7 +65,7 @@ namespace Orleans.Activities.Test
         public WorkflowIdentity WorkflowDefinitionIdentity { get; set; }
     }
 
-    public class Grain : IEffector, IDisposable
+    public class Grain : IWorkflowHostCallback, IDisposable
     {
         private Type workflowDefinitionType;
 
@@ -82,8 +82,8 @@ namespace Orleans.Activities.Test
         public Exception TerminationException { get; private set; }
         public AsyncManualResetEvent Written { get; private set; }
 
-        public IAffector Affector { get; private set; }
-        public IWorkflowHost Host { get; private set; }
+        public IWorkflowHost Affector { get; private set; }
+        public IWorkflowInstanceCallback Host { get; private set; }
 
         public Grain(Type workflowDefinitionType)
             : this(workflowDefinitionType, Guid.NewGuid())
@@ -133,7 +133,7 @@ namespace Orleans.Activities.Test
                 timer.Cancel();
         }
 
-        #region IEffector members
+        #region IWorkflowHostCallback members
 
         public Guid PrimaryKey { get; }
 

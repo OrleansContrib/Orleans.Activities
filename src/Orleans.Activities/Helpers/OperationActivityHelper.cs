@@ -73,8 +73,8 @@ namespace Orleans.Activities.Helpers
 
         private enum TypeParameterIndex
         {
-            Affector = 0,
-            Effector = 1,
+            WorkflowInterface = 0,
+            WorkflowCallbackInterface = 1,
         }
 
         private sealed class OperationNamesSetter : CodeActivity
@@ -95,9 +95,9 @@ namespace Orleans.Activities.Helpers
             }
         }
 
-        public static Constraint SetAffectorOperationNames() => SetOperationNames(TypeParameterIndex.Affector);
+        public static Constraint SetWorkflowInterfaceOperationNames() => SetOperationNames(TypeParameterIndex.WorkflowInterface);
 
-        public static Constraint SetEffectorOperationNames() => SetOperationNames(TypeParameterIndex.Effector);
+        public static Constraint SetWorkflowCallbackInterfaceOperationNames() => SetOperationNames(TypeParameterIndex.WorkflowCallbackInterface);
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Maintainability", "CA1506:AvoidExcessiveClassCoupling")]
         private static Constraint SetOperationNames(TypeParameterIndex typeParameterIndex)

@@ -68,7 +68,7 @@ namespace Orleans.Activities
                 context.GetSendRequestReceiveResponseScopeExecutionPropertyWithoutResult();
             executionProperty.AssertIsStarted();
 
-            // Schedules an awaiter for the outgoing request, ie. the appropriate TEffector operation.
+            // Schedules an awaiter for the outgoing request, ie. the appropriate TWorkflowCallbackInterface operation.
             context.ScheduleFunc(responseResultWaiter, executionProperty.OnOperationTask, WaiterCompletionCallback);
             executionProperty.OnOperationTaskWaiterIsScheduled();
         }
@@ -101,7 +101,7 @@ namespace Orleans.Activities
     {
         [RequiredArgument]
         [Category(Constants.RequiredCategoryName)]
-        [Description("The result of the Func<Task<TResponseResult>> delegate of the outgoing TEffector operation will be stored here.")]
+        [Description("The result of the Func<Task<TResponseResult>> delegate of the outgoing TWorkflowCallbackInterface operation will be stored here.")]
         public OutArgument<TResponseResult> ResponseResult { get; set; }
 
         private ActivityFunc<Task<Func<Task<TResponseResult>>>, Func<Task<TResponseResult>>> responseResultWaiter;
@@ -135,7 +135,7 @@ namespace Orleans.Activities
                 context.GetSendRequestReceiveResponseScopeExecutionPropertyWithResult<TResponseResult>();
             executionProperty.AssertIsStarted();
 
-            // Schedules an awaiter for the outgoing request, ie. the appropriate TEffector operation.
+            // Schedules an awaiter for the outgoing request, ie. the appropriate TWorkflowCallbackInterface operation.
             context.ScheduleFunc(responseResultWaiter, executionProperty.OnOperationTask, WaiterCompletionCallback);
             executionProperty.OnOperationTaskWaiterIsScheduled();
         }

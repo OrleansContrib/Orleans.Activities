@@ -9,41 +9,41 @@ using System.Reflection;
 namespace Orleans.Activities.Helpers
 {
     /// <summary>
-    /// Validates the TEffector interface's methods.
+    /// Validates the TWorkflowCallbackInterface interface's methods.
     /// </summary>
-    /// <typeparam name="TEffector"></typeparam>
-    public static class EffectorInfo<TEffector>
+    /// <typeparam name="TWorkflowCallbackInterface"></typeparam>
+    public static class WorkflowCallbackInterfaceInfo<TWorkflowCallbackInterface>
     {
-        public static bool IsValidEffectorInterface { get; }
+        public static bool IsValidWorkflowCallbackInterface { get; }
         public static string ValidationMessage { get; }
 
-        static EffectorInfo()
+        static WorkflowCallbackInterfaceInfo()
         {
             List<string> validationMessages = new List<string>();
 
-            if (!typeof(TEffector).IsInterface)
-                validationMessages.Add($"TEffector type '{typeof(TEffector).GetFriendlyName()}' must be an interface!");
+            if (!typeof(TWorkflowCallbackInterface).IsInterface)
+                validationMessages.Add($"TWorkflowCallbackInterface type '{typeof(TWorkflowCallbackInterface).GetFriendlyName()}' must be an interface!");
 
             // Valid method signatures:
             // Task<Func<Task<...>>> ...(... requestParameter)
             // Task<Func<Task>> ...(... requestParameter)
             // Task<Func<Task<...>>> ...()
             // Task<Func<Task>> ...()
-            foreach (MethodInfo method in OperationInfo<TEffector>.OperationMethods)
+            foreach (MethodInfo method in OperationInfo<TWorkflowCallbackInterface>.OperationMethods)
             {
                 ParameterInfo[] parameters = method.GetParameters();
                 if (parameters.Length > 1)
-                    validationMessages.Add($"TEffector '{method.DeclaringType.GetFriendlyName()}' method '{method.Name}' can have max. 1 parameter (of any type)!");
+                    validationMessages.Add($"TWorkflowCallbackInterface '{method.DeclaringType.GetFriendlyName()}' method '{method.Name}' can have max. 1 parameter (of any type)!");
                 Type returnType = method.ReturnType;
                 if (returnType != typeof(Task<Func<Task>>)
                     && (!returnType.IsGenericTypeOf(typeof(Task<>))
                         || !returnType.GetGenericArguments()[0].IsGenericTypeOf(typeof(Func<>))
                         || !returnType.GetGenericArguments()[0].GetGenericArguments()[0].IsGenericTypeOf(typeof(Task<>))))
-                    validationMessages.Add($"TEffector '{method.DeclaringType.GetFriendlyName()}' method '{method.Name}' return type must be Task<Func<Task>> or Task<Func<Task<...>>>!");
+                    validationMessages.Add($"TWorkflowCallbackInterface '{method.DeclaringType.GetFriendlyName()}' method '{method.Name}' return type must be Task<Func<Task>> or Task<Func<Task<...>>>!");
             }
 
-            IsValidEffectorInterface = validationMessages.Count() == 0;
-            if (!IsValidEffectorInterface)
+            IsValidWorkflowCallbackInterface = validationMessages.Count() == 0;
+            if (!IsValidWorkflowCallbackInterface)
             {
                 StringBuilder sb = new StringBuilder();
                 foreach (string validationMessage in validationMessages)

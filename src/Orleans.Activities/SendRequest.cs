@@ -26,7 +26,7 @@ namespace Orleans.Activities
     }
 
     /// <summary>
-    /// Sends an outgoing request by calling the appropriate TEffector operation.
+    /// Sends an outgoing request by calling the appropriate TWorkflowCallbackInterface operation.
     /// </summary>
     [Designer(typeof(SendRequestDesigner))]
     [ToolboxBitmap(typeof(SendRequest), nameof(SendRequest) + ".png")]
@@ -47,7 +47,7 @@ namespace Orleans.Activities
             OperationNames = new ObservableCollection<string>();
             Constraints.Add(OperationActivityHelper.VerifyParentIsWorkflowActivity());
             Constraints.Add(OperationActivityHelper.VerifyIsOperationNameSet());
-            Constraints.Add(OperationActivityHelper.SetEffectorOperationNames());
+            Constraints.Add(OperationActivityHelper.SetWorkflowCallbackInterfaceOperationNames());
             Constraints.Add(SendRequestReceiveResponseScopeHelper.VerifyParentIsSendRequestReceiveResponseScope());
         }
 
@@ -65,7 +65,7 @@ namespace Orleans.Activities
     }
 
     /// <summary>
-    /// Sends an outgoing request by calling the appropriate TEffector operation with RequestParameter.
+    /// Sends an outgoing request by calling the appropriate TWorkflowCallbackInterface operation with RequestParameter.
     /// </summary>
     /// <typeparam name="TRequestParameter"></typeparam>
     [Designer(typeof(SendRequestGenericDesigner))]
@@ -85,7 +85,7 @@ namespace Orleans.Activities
 
         [RequiredArgument]
         [Category(Constants.RequiredCategoryName)]
-        [Description("The parameter of the outgoing TEffector operation.")]
+        [Description("The parameter of the outgoing TWorkflowCallbackInterface operation.")]
         public InArgument<TRequestParameter> RequestParameter { get; set; }
 
         public SendRequest()
@@ -93,7 +93,7 @@ namespace Orleans.Activities
             OperationNames = new ObservableCollection<string>();
             Constraints.Add(OperationActivityHelper.VerifyParentIsWorkflowActivity());
             Constraints.Add(OperationActivityHelper.VerifyIsOperationNameSet());
-            Constraints.Add(OperationActivityHelper.SetEffectorOperationNames());
+            Constraints.Add(OperationActivityHelper.SetWorkflowCallbackInterfaceOperationNames());
             Constraints.Add(SendRequestReceiveResponseScopeHelper.VerifyParentIsSendRequestReceiveResponseScope());
         }
 

@@ -46,14 +46,14 @@
       <AssemblyReference>Orleans.Activities.Sample.HelloWorld.Grains</AssemblyReference>
     </sco:Collection>
   </TextExpression.ReferencesForImplementation>
-  <oa:WorkflowActivity x:TypeArguments="local:IHelloAffector, local:IHelloEffector" sap2010:WorkflowViewState.IdRef="WorkflowActivity`2_1">
+  <oa:WorkflowActivity x:TypeArguments="local:IHelloWorkflowInterface, local:IHelloWorkflowCallbackInterface" sap2010:WorkflowViewState.IdRef="WorkflowActivity`2_1">
     <oa:ReceiveRequestSendResponseScope sap2010:WorkflowViewState.IdRef="ReceiveRequestSendResponseScope_2">
       <Sequence sap2010:WorkflowViewState.IdRef="Sequence_2">
         <Sequence.Variables>
           <Variable x:TypeArguments="x:String" Name="clientSaid" />
           <Variable x:TypeArguments="x:String" Name="iSay" />
         </Sequence.Variables>
-        <oa:ReceiveRequest x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="ReceiveRequest`1_2" OperationName="IHelloAffector.GreetClient">
+        <oa:ReceiveRequest x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="ReceiveRequest`1_2" OperationName="IHelloWorkflowInterface.GreetClient">
           <oa:ReceiveRequest.RequestResult>
             <OutArgument x:TypeArguments="x:String">
               <mca:CSharpReference x:TypeArguments="x:String">clientSaid</mca:CSharpReference>
@@ -62,7 +62,7 @@
         </oa:ReceiveRequest>
         <oa:SendRequestReceiveResponseScope sap2010:WorkflowViewState.IdRef="SendRequestReceiveResponseScope_1">
           <Sequence sap2010:WorkflowViewState.IdRef="Sequence_3">
-            <oa:SendRequest x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="SendRequest`1_1" OperationName="IHelloEffector.WhatShouldISay">
+            <oa:SendRequest x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="SendRequest`1_1" OperationName="IHelloWorkflowCallbackInterface.WhatShouldISay">
               <oa:SendRequest.RequestParameter>
                 <InArgument x:TypeArguments="x:String">
                   <mca:CSharpValue x:TypeArguments="x:String">clientSaid</mca:CSharpValue>

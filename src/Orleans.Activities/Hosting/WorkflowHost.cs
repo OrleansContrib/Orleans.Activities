@@ -36,7 +36,7 @@ namespace Orleans.Activities.Hosting
     // - when WorkflowInstance gets idle, it calls OnNotifyIdle(), that by default it sets the idle async autoresetevent,
     //   but during (re)activation, it doesn't set the idle async autoresetevent, it completes the activation's TaskCompletionSource
     // - in case of an unhandled exception in the WorkflowInstance, OnUnhandledExceptionAsync() will be called, that by default calls the grain to eg. log it,
-    //   but during (re)activation and grain affector operation, it stores the first exception, and OnNotifyIdle() will send it to the activation's or operation's TaskCompletionSource
+    //   but during (re)activation and workflow interface operation, it stores the first exception, and OnNotifyIdle() will send it to the activation's or operation's TaskCompletionSource
 
     /// <summary>
     /// WorkflowHost and WorkflowInstance are the main classes responsible to execute System.Activities workflows above an Orleans like single threaded reentrant scheduler.
@@ -45,7 +45,7 @@ namespace Orleans.Activities.Hosting
     /// those are part of the grain implementation without depending on any workflow related functionality.
     /// <para>For implementation details see the detailed comments in the source code!</para>
     /// </summary>
-    public class WorkflowHost : IAffector, IWorkflowHost
+    public class WorkflowHost : IWorkflowHost, IWorkflowInstanceCallback
     {
         #region private helper classes
 
@@ -92,7 +92,7 @@ namespace Orleans.Activities.Hosting
 
         #region protected/private fields
 
-        protected IEffector grain;
+        protected IWorkflowHostCallback grain;
         protected Func<WorkflowIdentity, Activity> workflowDefinitionFactory;
         protected WorkflowIdentity workflowDefinitionIdentity;
 
@@ -106,7 +106,7 @@ namespace Orleans.Activities.Hosting
 
         #region ctor
 
-        public WorkflowHost(IEffector grain, Func<WorkflowIdentity, Activity> workflowDefinitionFactory, WorkflowIdentity workflowDefinitionIdentity)
+        public WorkflowHost(IWorkflowHostCallback grain, Func<WorkflowIdentity, Activity> workflowDefinitionFactory, WorkflowIdentity workflowDefinitionIdentity)
         {
             this.grain = grain;
             this.workflowDefinitionFactory = workflowDefinitionFactory;
@@ -115,7 +115,7 @@ namespace Orleans.Activities.Hosting
 
         #endregion
 
-        #region IAffector/IAffectorInfrastructure members
+        #region IWorkflowHost/IWorkflowHostInfrastructure members
 
         public async Task ActivateAsync()
         {
@@ -143,7 +143,7 @@ namespace Orleans.Activities.Hosting
 
         #endregion
 
-        #region IAffector/IAffectorControl members
+        #region IWorkflowHost/IWorkflowHostControl members
 
         public WorkflowInstanceState WorkflowInstanceState
         {
@@ -173,7 +173,7 @@ namespace Orleans.Activities.Hosting
 
         #endregion
 
-        #region IAffector/IAffectorOperations members
+        #region IWorkflowHost/IWorkflowHostOperations members
 
         public Task<TResponseParameter> OperationAsync<TRequestResult, TResponseParameter>(string operationName, Func<Task<TRequestResult>> requestResult)
                 where TRequestResult : class
@@ -193,7 +193,7 @@ namespace Orleans.Activities.Hosting
 
         #endregion
 
-        #region IAffector members helper methods
+        #region IWorkflowHost members helper methods
 
         // It waits for scheduling the resumption, and than waits for the response from the SendResponse activity, through the TaskCompletionSource.
         private async Task ResumeOperationBookmarkAsync(string operationName, object requestResult)
@@ -427,7 +427,7 @@ namespace Orleans.Activities.Hosting
 
         #endregion
 
-        #region IWorkflowHost members
+        #region IWorkflowInstanceCallback members
 
         public Guid PrimaryKey => grain.PrimaryKey;
 
@@ -469,7 +469,7 @@ namespace Orleans.Activities.Hosting
                 () => instance.ScheduleBookmarkResumptionAsync(bookmark, value),
                 (_result) => _result == BookmarkResumptionResult.Success);
 
-        // It's common with IAffector.
+        // It's common with IWorkflowHost.
         //public Task AbortAsync(Exception reason);
 
         public Task<Func<Task<TResponseResult>>> OnOperationAsync<TRequestParameter, TResponseResult>(string operationName, TRequestParameter requestParameter)

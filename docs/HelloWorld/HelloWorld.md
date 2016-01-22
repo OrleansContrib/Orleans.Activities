@@ -19,9 +19,9 @@ public interface IHello : IGrainWithGuidKey
 
 ## Grain
 
-Before the grain, you have to define 3 things: State, Affector and Effector interfaces
+Before the grain, you have to define 3 things: Grain State, Workflow Interface and Workflow Callback Interface
 
-### State
+### Grain State
 
 Workflows always have a state. Even if they never persist it. You can use the `WorkflowState` base class or implement the `IWorkflowState` interface.
 
@@ -30,7 +30,7 @@ public class HelloGrainState : WorkflowState
 { }
 ```
 
-### Affector interface
+### Workflow Interface
 
 These are the operations that the grain calls on the workflow, these operations should __NOT__ be the same as the public grain interface methods (see `IHello`)!
 
@@ -40,13 +40,13 @@ There are 2 restrictions on the methods:
 * the return type must be `Task` or `Task<anything>`
 
 ```c#
-public interface IHelloAffector
+public interface IHelloWorkflowInterface
 {
   Task<string> GreetClient(Func<Task<string>> clientSaid);
 }
 ```
 
-### Effector interface
+### Workflow Callback Interface
 
 These are the operations that the workflow calls back on the grain.
 
@@ -56,7 +56,7 @@ There are 2 restrictions on the methods:
 * the return type must be `Task<Func<Task<anything>>>` or `Task<Func<Task>>` (executed when the workflow accepts the response)
 
 ```c#
-public interface IHelloEffector
+public interface IHelloWorkflowCallbackInterface
 {
   Task<Func<Task<string>>> WhatShouldISay(string clientSaid);
 }
@@ -64,12 +64,13 @@ public interface IHelloEffector
 
 ### Grain
 
-The class definition, where we define the TState, TAffector and TEffector type parameters.
+The class definition, where we define the TGrainState, TWorkflowInterface and TWorkflowCallbackInterface type parameters.
 
-__NOTE:__ The grain must implement (if possible explicitly) the effector interface (see `IHelloEffector`).
+__NOTE:__ The grain must implement (if possible explicitly) the TWorkflowCallbackInterface interface (see `IHelloWorkflowCallbackInterface`).
 
 ```c#
-public sealed class HelloGrain : WorkflowGrain<HelloGrainState, IHelloAffector, IHelloEffector>, IHello, IHelloEffector
+public sealed class HelloGrain : WorkflowGrain<HelloGrainState, IHelloWorkflowInterface, IHelloWorkflowCallbackInterface>,
+  IHello, IHelloWorkflowCallbackInterface
 ```
 
 Constructor, in this example without Dependency Injection, just define the activity factory and leave the workflow definition identity null.
@@ -110,7 +111,7 @@ public async Task<string> SayHello(string greeting)
 {
   try
   {
-    return await WorkflowAffector.GreetClient(() =>
+    return await WorkflowInterface.GreetClient(() =>
       Task.FromResult(greeting));
   }
   catch (RepeatedOperationException<string> e)
@@ -125,7 +126,7 @@ This is the explicit implementation of the effector interface's only method, tha
 The return value delegate executed when the workflow accepts the outgoing call's response.
 
 ```c#
-Task<Func<Task<string>>> IHelloEffector.WhatShouldISay(string clientSaid) =>
+Task<Func<Task<string>>> IHelloWorkflowCallbackInterface.WhatShouldISay(string clientSaid) =>
   Task.FromResult<Func<Task<string>>>(() =>
     Task.FromResult(string.IsNullOrEmpty(clientSaid) ? "Who are you?" : "Hello!"));
 ```

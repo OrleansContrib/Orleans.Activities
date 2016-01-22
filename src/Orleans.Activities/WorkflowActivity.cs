@@ -14,19 +14,19 @@ using Orleans.Activities.Helpers;
 namespace Orleans.Activities
 {
     /// <summary>
-    /// The de facto "root" activity to get the TAffector and TEffector types.
+    /// The de facto "root" activity to get the TWorkflowInterface and TWorkflowCallbackInterface types.
     /// <para>Due to the limitations of the designer, the base class of the XAML designed activity, ie. the workflow must be Activity.
     /// If we use the general ReceiveRequest, SendResponse, SendRequest, ReceiveResponse activities, a WorkflowActivity must be the top activity under the workflow's "root" activity.
-    /// See <see cref="WorkflowGrain{TWorkflowState, TAffector, TEffector}"/> for the description of the type parameters.</para>  
+    /// See <see cref="WorkflowGrain{TWorkflowState, TWorkflowInterface, TWorkflowCallbackInterface}"/> for the description of the type parameters.</para>  
     /// </summary>
-    /// <typeparam name="TAffector"></typeparam>
-    /// <typeparam name="TEffector"></typeparam>
+    /// <typeparam name="TWorkflowInterface"></typeparam>
+    /// <typeparam name="TWorkflowCallbackInterface"></typeparam>
     [ContentProperty(nameof(Body))]
     [Designer(typeof(WorkflowActivityDesigner))]
-    [ToolboxBitmap(typeof(WorkflowActivity<,>), nameof(WorkflowActivity<TAffector, TEffector>) + ".png")]
-    public sealed class WorkflowActivity<TAffector, TEffector> : NativeActivity, IWorkflowActivity<TAffector, TEffector>
-        where TAffector : class
-        where TEffector : class
+    [ToolboxBitmap(typeof(WorkflowActivity<,>), nameof(WorkflowActivity<TWorkflowInterface, TWorkflowCallbackInterface>) + ".png")]
+    public sealed class WorkflowActivity<TWorkflowInterface, TWorkflowCallbackInterface> : NativeActivity, IWorkflowActivity<TWorkflowInterface, TWorkflowCallbackInterface>
+        where TWorkflowInterface : class
+        where TWorkflowCallbackInterface : class
     {
         [DefaultValue(null)]
         [Browsable(false)]
@@ -34,8 +34,8 @@ namespace Orleans.Activities
 
         public WorkflowActivity()
         {
-            Constraints.Add(WorkflowActivityHelper.VerifyAffector<TAffector>());
-            Constraints.Add(WorkflowActivityHelper.VerifyEffector<TEffector>());
+            Constraints.Add(WorkflowActivityHelper.VerifyWorkflowInterface<TWorkflowInterface>());
+            Constraints.Add(WorkflowActivityHelper.VerifyWorkflowCallbackInterface<TWorkflowCallbackInterface>());
         }
 
         protected override void CacheMetadata(NativeActivityMetadata metadata)

@@ -12,7 +12,7 @@ namespace Orleans.Activities
 {
     /// <summary>
     /// Base class for WorkflowGrain states.
-    /// <para>Usage is not mandatory, <see cref="WorkflowGrain{TWorkflowState, TAffector, TEffector}"/> requires only to implement <see cref="IWorkflowState"/> interface.</para>
+    /// <para>Usage is not mandatory, <see cref="WorkflowGrain{TGrainState, TWorkflowInterface, TWorkflowCallbackInterface}"/> requires only to implement <see cref="IWorkflowState"/> interface.</para>
     /// </summary>
     public class WorkflowState : GrainState, IWorkflowState
     {

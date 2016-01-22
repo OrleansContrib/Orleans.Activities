@@ -23,7 +23,7 @@ namespace Orleans.Activities.Extensions
 
     /// <summary>
     /// This extension is always created by the workflow host.
-    /// It participates in the workflow persistence, and SendResponse activity stores the idempotent TAffector operation responses in it.
+    /// It participates in the workflow persistence, and SendResponse activity stores the idempotent TWorkflowInterface operation responses in it.
     /// WorkflowHost throws the RepeatedOperationException with the help of it.
     /// </summary>
     public class PreviousResponseParameterExtension : PersistenceParticipant

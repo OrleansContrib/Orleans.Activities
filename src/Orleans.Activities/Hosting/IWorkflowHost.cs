@@ -5,42 +5,53 @@ using System.Text;
 using System.Threading.Tasks;
 
 using System.Activities;
-using System.Runtime.DurableInstancing;
-using System.Xml.Linq;
+using System.Activities.Hosting;
 using Orleans.Activities.Configuration;
 
 namespace Orleans.Activities.Hosting
 {
     /// <summary>
-    /// The WorkflowHost side of the communication between the WorkflowHost and the WorkflowInstance.
+    /// Infrastructure related methods on the WorkflowHost side of the communication between the WorkflowGrain and the WorkflowHost.
     /// </summary>
-    public interface IWorkflowHost
+    public interface IWorkflowHostInfrastructure
     {
-        Guid PrimaryKey { get; }
-        IParameters Parameters { get; }
+        Task ActivateAsync();
+        Task DeactivateAsync();
 
-        Task SaveAsync(IDictionary<XName, InstanceValue> instanceValues);
-
-        void OnNotifyIdle();
-        // source can be null
-        Task OnUnhandledExceptionAsync(Exception exception, Activity source);
-        // outputArguments and terminationException can be null
-        Task OnCompletedAsync(ActivityInstanceState completionState, IDictionary<string, object> outputArguments, Exception terminationException);
-
-        Task<BookmarkResumptionResult> ResumeBookmarkAsync(Bookmark bookmark, object value, TimeSpan timeout);
-        Task AbortAsync(Exception reason);
-
-        Task<Func<Task<TResponseResult>>> OnOperationAsync<TRequestParameter, TResponseResult>(string operationName, TRequestParameter requestParameter)
-            where TRequestParameter : class
-            where TResponseResult : class;
-        Task<Func<Task>> OnOperationAsync<TRequestParameter>(string operationName, TRequestParameter requestParameter)
-            where TRequestParameter : class;
-        Task<Func<Task<TResponseResult>>> OnOperationAsync<TResponseResult>(string operationName)
-            where TResponseResult : class;
-        Task<Func<Task>> OnOperationAsync(string operationName);
-
-        Task RegisterOrUpdateReminderAsync(string reminderName, TimeSpan dueTime);
-        Task UnregisterReminderAsync(string reminderName);
-        Task<IEnumerable<string>> GetRemindersAsync();
+        Task ReminderAsync(string reminderName);
     }
+
+    /// <summary>
+    /// Control related methods on the WorkflowHost side of the communication between the WorkflowGrain and the WorkflowHost.
+    /// </summary>
+    public interface IWorkflowHostControl
+    {
+        WorkflowInstanceState WorkflowInstanceState { get; }
+        ActivityInstanceState GetCompletionState(out IDictionary<string, object> outputArguments, out Exception terminationException);
+
+        Task AbortAsync(Exception reason);
+        Task CancelAsync();
+        Task TerminateAsync(Exception reason);
+    }
+
+    /// <summary>
+    /// Incoming operation related methods on the WorkflowHost side of the communication between the WorkflowGrain and the WorkflowHost.
+    /// </summary>
+    public interface IWorkflowHostOperations
+    {
+        Task<TResponseParameter> OperationAsync<TRequestResult, TResponseParameter>(string operationName, Func<Task<TRequestResult>> requestResult)
+            where TRequestResult : class
+            where TResponseParameter : class;
+        Task OperationAsync<TRequestResult>(string operationName, Func<Task<TRequestResult>> requestResult)
+            where TRequestResult : class;
+        Task<TResponseParameter> OperationAsync<TResponseParameter>(string operationName, Func<Task> requestResult)
+            where TResponseParameter : class;
+        Task OperationAsync(string operationName, Func<Task> requestResult);
+    }
+
+    /// <summary>
+    /// The WorkflowHost side of the communication between the WorkflowGrain and the WorkflowHost.
+    /// </summary>
+    public interface IWorkflowHost : IWorkflowHostInfrastructure, IWorkflowHostControl, IWorkflowHostOperations
+    { }
 }

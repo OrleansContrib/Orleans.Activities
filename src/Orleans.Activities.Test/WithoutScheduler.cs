@@ -43,7 +43,7 @@ namespace Orleans.Activities.Test
         Task SayHello44(Func<Task> requestResult);
     }
 
-    public class Affector : IAffectorOperations
+    public class Affector : IWorkflowHostOperations
     {
         public Task<TResponseParameter> OperationAsync<TRequestResult, TResponseParameter>(string operationName, Func<Task<TRequestResult>> requestResult)
             where TRequestResult : class
@@ -160,21 +160,21 @@ namespace Orleans.Activities.Test
         }
 
         [TestMethod]
-        public void AffectorProxy()
+        public void WorkflowInterfaceProxy()
         {
-            ITestAffector2 proxy = AffectorProxy<ITestAffector2>.CreateProxy(new Affector());
+            ITestAffector2 proxy = WorkflowInterfaceProxy<ITestAffector2>.CreateProxy(new Affector());
             proxy.SayHello1(null);
             proxy.SayHello2(null);
             proxy.SayHello3(null);
             proxy.SayHello4(null);
             proxy.SayHello44(null);
-            proxy = AffectorProxy<ITestAffector2>.CreateProxy(new Affector());
+            proxy = WorkflowInterfaceProxy<ITestAffector2>.CreateProxy(new Affector());
             proxy.SayHello1(null);
             proxy.SayHello2(null);
             proxy.SayHello3(null);
             proxy.SayHello4(null);
             proxy.SayHello44(null);
-            ITestAffectorBase proxyBase = AffectorProxy<ITestAffectorBase>.CreateProxy(new Affector());
+            ITestAffectorBase proxyBase = WorkflowInterfaceProxy<ITestAffectorBase>.CreateProxy(new Affector());
             proxyBase.SayHello1(null);
             proxyBase.SayHello2(null);
             proxyBase.SayHello3(null);
@@ -182,9 +182,9 @@ namespace Orleans.Activities.Test
         }
 
         [TestMethod]
-        public void EffectorProxy()
+        public void WorkflowCallbackInterfaceProxy()
         {
-            IEffectorOperations proxy = EffectorProxy<ITestEffector2>.CreateProxy(new Effector());
+            IWorkflowHostCallbackOperations proxy = WorkflowCallbackInterfaceProxy<ITestEffector2>.CreateProxy(new Effector());
 
             proxy.OnOperationAsync<string, string>("ITestEffectorBase.SayHello1", "foo").Result();
             proxy.OnOperationAsync<string>("ITestEffectorBase.SayHello2", "foo").Result();
