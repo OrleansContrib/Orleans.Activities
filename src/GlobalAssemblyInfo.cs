@@ -4,5 +4,5 @@ using System.Reflection;
 [assembly: AssemblyProduct("Orleans.Activities - https://github.com/lmagyar/Orleans.Activities")]
 [assembly: AssemblyCopyright("Copyright © https://github.com/lmagyar 2016")]
 
-[assembly: AssemblyVersion("0.1.0.0")]
-[assembly: AssemblyInformationalVersion("0.1.0")]
+[assembly: AssemblyVersion("0.2.0.0")]
+[assembly: AssemblyInformationalVersion("0.2.0-alpha")]
