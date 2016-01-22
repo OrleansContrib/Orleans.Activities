@@ -8,7 +8,7 @@ using Orleans.Activities.Helpers;
 
 namespace Orleans.Activities.Test.Activities
 {
-    public interface IGrainEffector
+    public interface IWorkflowCallbackInterface
     {
         Task<Func<Task<string>>> OnOperationWithParamsAsync(string receiveResult);
         Task<Func<Task>> OnOperationWithoutParamsAsync();

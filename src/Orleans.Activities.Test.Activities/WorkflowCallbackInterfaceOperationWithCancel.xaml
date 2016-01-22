@@ -1,4 +1,4 @@
-﻿<Activity mc:Ignorable="sap sap2010 sads" x:Class="Orleans.Activities.Test.Activities.EffectorOperationWithCancel" sap2010:ExpressionActivityEditor.ExpressionActivityEditor="C#" sap2010:WorkflowViewState.IdRef="Orleans.Activities.Test.Activities.EffectorOperationWithCancel_1"
+﻿<Activity mc:Ignorable="sap sap2010 sads" x:Class="Orleans.Activities.Test.Activities.WorkflowCallbackInterfaceOperationWithCancel" sap2010:ExpressionActivityEditor.ExpressionActivityEditor="C#" sap2010:WorkflowViewState.IdRef="Orleans.Activities.Test.Activities.WorkflowCallbackInterfaceOperationWithCancel_1"
  xmlns="http://schemas.microsoft.com/netfx/2009/xaml/activities"
  xmlns:local="clr-namespace:Orleans.Activities.Test.Activities"
  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -39,10 +39,10 @@
       <AssemblyReference>Orleans.Activities.Test.Activities</AssemblyReference>
     </sco:Collection>
   </TextExpression.ReferencesForImplementation>
-  <oa:WorkflowActivity x:TypeArguments="local:IGrainAffector, local:IGrainEffector" sap2010:WorkflowViewState.IdRef="WorkflowActivity`2_1">
+  <oa:WorkflowActivity x:TypeArguments="local:IWorkflowInterface, local:IWorkflowCallbackInterface" sap2010:WorkflowViewState.IdRef="WorkflowActivity`2_1">
     <oa:SendRequestReceiveResponseScope sap2010:WorkflowViewState.IdRef="SendRequestReceiveResponseScope_1">
       <Sequence sap2010:WorkflowViewState.IdRef="Sequence_1">
-        <oa:SendRequest sap2010:WorkflowViewState.IdRef="SendRequest_1" OperationName="IGrainEffector.OnOperationWithoutParamsAsync" />
+        <oa:SendRequest sap2010:WorkflowViewState.IdRef="SendRequest_1" OperationName="IWorkflowCallbackInterface.OnOperationWithoutParamsAsync" />
         <Delay sap2010:WorkflowViewState.IdRef="Delay_1">
           <InArgument x:TypeArguments="x:TimeSpan">
             <mca:CSharpValue x:TypeArguments="x:TimeSpan">TimeSpan.FromSeconds(1)</mca:CSharpValue>
@@ -67,7 +67,7 @@
       </sap2010:ViewStateData>
       <sap2010:ViewStateData Id="SendRequestReceiveResponseScope_1" sap:VirtualizedContainerService.HintSize="349,397" />
       <sap2010:ViewStateData Id="WorkflowActivity`2_1" sap:VirtualizedContainerService.HintSize="375,485" />
-      <sap2010:ViewStateData Id="Orleans.Activities.Test.Activities.EffectorOperationWithCancel_1" sap:VirtualizedContainerService.HintSize="415,565" />
+      <sap2010:ViewStateData Id="Orleans.Activities.Test.Activities.WorkflowCallbackInterfaceOperationWithCancel_1" sap:VirtualizedContainerService.HintSize="415,565" />
     </sap2010:ViewStateManager>
   </sap2010:WorkflowViewState.ViewStateManager>
 </Activity>

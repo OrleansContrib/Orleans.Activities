@@ -1,4 +1,4 @@
-﻿<Activity mc:Ignorable="sap sap2010 sads" x:Class="Orleans.Activities.Test.Activities.EffectorOperation" sap2010:ExpressionActivityEditor.ExpressionActivityEditor="C#" sap2010:WorkflowViewState.IdRef="Orleans.Activities.Test.Activities.EffectorOperation_1"
+﻿<Activity mc:Ignorable="sap sap2010 sads" x:Class="Orleans.Activities.Test.Activities.WorkflowCallbackInterfaceOperation" sap2010:ExpressionActivityEditor.ExpressionActivityEditor="C#" sap2010:WorkflowViewState.IdRef="Orleans.Activities.Test.Activities.WorkflowCallbackInterfaceOperation_1"
  xmlns="http://schemas.microsoft.com/netfx/2009/xaml/activities"
  xmlns:local="clr-namespace:Orleans.Activities.Test.Activities"
  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -39,11 +39,11 @@
       <AssemblyReference>Orleans.Activities.Test.Activities</AssemblyReference>
     </sco:Collection>
   </TextExpression.ReferencesForImplementation>
-  <oa:WorkflowActivity x:TypeArguments="local:IGrainAffector, local:IGrainEffector" sap2010:WorkflowViewState.IdRef="WorkflowActivity`2_1">
+  <oa:WorkflowActivity x:TypeArguments="local:IWorkflowInterface, local:IWorkflowCallbackInterface" sap2010:WorkflowViewState.IdRef="WorkflowActivity`2_1">
     <Parallel>
       <oa:SendRequestReceiveResponseScope>
         <Sequence>
-          <oa:SendRequest OperationName="IGrainEffector.OnOperationWithoutParamsAsync" sap2010:WorkflowViewState.IdRef="SendRequest_1" />
+          <oa:SendRequest OperationName="IWorkflowCallbackInterface.OnOperationWithoutParamsAsync" sap2010:WorkflowViewState.IdRef="SendRequest_1" />
           <oa:ReceiveResponse sap2010:WorkflowViewState.IdRef="ReceiveResponse_1" />
           <sap2010:WorkflowViewState.IdRef>Sequence_3</sap2010:WorkflowViewState.IdRef>
         </Sequence>
@@ -54,7 +54,7 @@
           <Sequence.Variables>
             <Variable x:TypeArguments="x:String" Name="responseResult" />
           </Sequence.Variables>
-          <oa:SendRequest x:TypeArguments="x:String" OperationName="IGrainEffector.OnOperationWithParamsAsync" RequestParameter="requestParameter" sap2010:WorkflowViewState.IdRef="SendRequest`1_2" />
+          <oa:SendRequest x:TypeArguments="x:String" OperationName="IWorkflowCallbackInterface.OnOperationWithParamsAsync" RequestParameter="requestParameter" sap2010:WorkflowViewState.IdRef="SendRequest`1_2" />
           <oa:ReceiveResponse x:TypeArguments="x:String">
             <oa:ReceiveResponse.ResponseResult>
               <OutArgument x:TypeArguments="x:String">
@@ -102,7 +102,7 @@
       <sap2010:ViewStateData Id="SendRequestReceiveResponseScope_3" sap:VirtualizedContainerService.HintSize="360,500" />
       <sap2010:ViewStateData Id="Parallel_1" sap:VirtualizedContainerService.HintSize="863,546" />
       <sap2010:ViewStateData Id="WorkflowActivity`2_1" sap:VirtualizedContainerService.HintSize="889,634" />
-      <sap2010:ViewStateData Id="Orleans.Activities.Test.Activities.EffectorOperation_1" sap:VirtualizedContainerService.HintSize="929,714" />
+      <sap2010:ViewStateData Id="Orleans.Activities.Test.Activities.WorkflowCallbackInterfaceOperation_1" sap:VirtualizedContainerService.HintSize="929,714" />
     </sap2010:ViewStateManager>
   </sap2010:WorkflowViewState.ViewStateManager>
 </Activity>

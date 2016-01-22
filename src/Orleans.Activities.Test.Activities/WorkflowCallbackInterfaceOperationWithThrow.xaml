@@ -1,4 +1,4 @@
-﻿<Activity mc:Ignorable="sap sap2010 sads" x:Class="Orleans.Activities.Test.Activities.EffectorOperationWithThrow" sap2010:ExpressionActivityEditor.ExpressionActivityEditor="C#"
+﻿<Activity mc:Ignorable="sap sap2010 sads" x:Class="Orleans.Activities.Test.Activities.WorkflowCallbackInterfaceOperationWithThrow" sap2010:ExpressionActivityEditor.ExpressionActivityEditor="C#"
  xmlns="http://schemas.microsoft.com/netfx/2009/xaml/activities"
  xmlns:local="clr-namespace:Orleans.Activities.Test.Activities"
  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -40,10 +40,10 @@
       <AssemblyReference>Orleans.Activities.Test.Activities</AssemblyReference>
     </sco:Collection>
   </TextExpression.ReferencesForImplementation>
-  <oa:WorkflowActivity x:TypeArguments="local:IGrainAffector, local:IGrainEffector">
+  <oa:WorkflowActivity x:TypeArguments="local:IWorkflowInterface, local:IWorkflowCallbackInterface">
     <oa:SendRequestReceiveResponseScope>
       <Sequence>
-        <oa:SendRequest OperationName="IGrainEffector.OnOperationThrowsEndAsync" sap2010:WorkflowViewState.IdRef="SendRequest_1" />
+        <oa:SendRequest OperationName="IWorkflowCallbackInterface.OnOperationThrowsEndAsync" sap2010:WorkflowViewState.IdRef="SendRequest_1" />
         <Throw>
           <InArgument x:TypeArguments="s:Exception">
             <mca:CSharpValue x:TypeArguments="s:Exception">new TestException("Activity")</mca:CSharpValue>
@@ -58,7 +58,7 @@
     <sap2010:WorkflowViewState.IdRef>WorkflowActivity`2_1</sap2010:WorkflowViewState.IdRef>
     <sads:DebugSymbol.Symbol>d3FaOlxQcml2YXRlXEluY29taW5nXE9ybGVhbnNcT3JsZWFucy5BY3Rpdml0aWVzXE9ybGVhbnMuQWN0aXZpdGllcy5UZXN0LkFjdGl2aXRpZXNcRWZmZWN0b3JPcGVyYXRpb25XaXRoVGhyb3cueGFtbAcrAzwZAgEBLAU5KgIBAi0HNxICAQMuCS6EAQIBBy8JNBECAQU1CTVTAgEEMQ0xawIBBg==</sads:DebugSymbol.Symbol>
   </oa:WorkflowActivity>
-  <sap2010:WorkflowViewState.IdRef>Orleans.Activities.Test.Activities.EffectorOperationWithThrow_1</sap2010:WorkflowViewState.IdRef>
+  <sap2010:WorkflowViewState.IdRef>Orleans.Activities.Test.Activities.WorkflowCallbackInterfaceOperationWithThrow_1</sap2010:WorkflowViewState.IdRef>
   <sap2010:WorkflowViewState.ViewStateManager>
     <sap2010:ViewStateManager>
       <sap2010:ViewStateData Id="SendRequest_1" sap:VirtualizedContainerService.HintSize="301,61" />
@@ -73,7 +73,7 @@
       </sap2010:ViewStateData>
       <sap2010:ViewStateData Id="SendRequestReceiveResponseScope_1" sap:VirtualizedContainerService.HintSize="349,397" />
       <sap2010:ViewStateData Id="WorkflowActivity`2_1" sap:VirtualizedContainerService.HintSize="375,485" />
-      <sap2010:ViewStateData Id="Orleans.Activities.Test.Activities.EffectorOperationWithThrow_1" sap:VirtualizedContainerService.HintSize="415,565" />
+      <sap2010:ViewStateData Id="Orleans.Activities.Test.Activities.WorkflowCallbackInterfaceOperationWithThrow_1" sap:VirtualizedContainerService.HintSize="415,565" />
     </sap2010:ViewStateManager>
   </sap2010:WorkflowViewState.ViewStateManager>
 </Activity>

@@ -39,7 +39,7 @@
       <AssemblyReference>Orleans.Activities.Test.Activities</AssemblyReference>
     </sco:Collection>
   </TextExpression.ReferencesForImplementation>
-  <oa:WorkflowActivity x:TypeArguments="local:IGrainAffector, local:IGrainEffector" sap2010:WorkflowViewState.IdRef="WorkflowActivity`2_1">
+  <oa:WorkflowActivity x:TypeArguments="local:IWorkflowInterface, local:IWorkflowCallbackInterface" sap2010:WorkflowViewState.IdRef="WorkflowActivity`2_1">
     <Sequence>
       <Sequence.Variables>
         <Variable x:TypeArguments="x:String" Name="result" />
@@ -48,7 +48,7 @@
       </Sequence.Variables>
       <oa:ReceiveRequestSendResponseScope>
         <Sequence>
-          <oa:ReceiveRequest OperationName="IGrainAffector.OperationWithoutParamsAsync" sap2010:WorkflowViewState.IdRef="ReceiveRequest_2" />
+          <oa:ReceiveRequest OperationName="IWorkflowInterface.OperationWithoutParamsAsync" sap2010:WorkflowViewState.IdRef="ReceiveRequest_2" />
           <oa:SendResponse Idempotent="False" ThrowIfReloaded="False" sap2010:WorkflowViewState.IdRef="SendResponse_2" />
           <sap2010:WorkflowViewState.IdRef>Sequence_7</sap2010:WorkflowViewState.IdRef>
         </Sequence>
@@ -56,7 +56,7 @@
       </oa:ReceiveRequestSendResponseScope>
       <oa:ReceiveRequestSendResponseScope>
         <Sequence>
-          <oa:ReceiveRequest x:TypeArguments="x:String" OperationName="IGrainAffector.OperationWithParamsAsync">
+          <oa:ReceiveRequest x:TypeArguments="x:String" OperationName="IWorkflowInterface.OperationWithParamsAsync">
             <oa:ReceiveRequest.RequestResult>
               <OutArgument x:TypeArguments="x:String">
                 <mca:CSharpReference x:TypeArguments="x:String">result</mca:CSharpReference>
@@ -71,7 +71,7 @@
       </oa:ReceiveRequestSendResponseScope>
       <oa:SendRequestReceiveResponseScope>
         <Sequence>
-          <oa:SendRequest OperationName="IGrainEffector.OnOperationWithoutParamsAsync" sap2010:WorkflowViewState.IdRef="SendRequest_2" />
+          <oa:SendRequest OperationName="IWorkflowCallbackInterface.OnOperationWithoutParamsAsync" sap2010:WorkflowViewState.IdRef="SendRequest_2" />
           <oa:ReceiveResponse sap2010:WorkflowViewState.IdRef="ReceiveResponse_2" />
           <sap2010:WorkflowViewState.IdRef>Sequence_9</sap2010:WorkflowViewState.IdRef>
         </Sequence>
@@ -79,7 +79,7 @@
       </oa:SendRequestReceiveResponseScope>
       <oa:SendRequestReceiveResponseScope>
         <Sequence>
-          <oa:SendRequest x:TypeArguments="x:String" OperationName="IGrainEffector.OnOperationWithParamsAsync" RequestParameter="param" sap2010:WorkflowViewState.IdRef="SendRequest`1_2" />
+          <oa:SendRequest x:TypeArguments="x:String" OperationName="IWorkflowCallbackInterface.OnOperationWithParamsAsync" RequestParameter="param" sap2010:WorkflowViewState.IdRef="SendRequest`1_2" />
           <oa:ReceiveResponse x:TypeArguments="x:String">
             <oa:ReceiveResponse.ResponseResult>
               <OutArgument x:TypeArguments="x:String">

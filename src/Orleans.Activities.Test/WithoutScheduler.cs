@@ -10,40 +10,40 @@ using Orleans.Activities.AsyncEx;
 
 namespace Orleans.Activities.Test
 {
-    public interface ITestGrainAffector : Affector1A.ITestAffector, Affector1B.ITestAffector { }
-    namespace Affector1A
+    public interface ITestWorkflowInterface : TestWorkflowInterface1A.ITestWorkflowInterface, TestWorkflowInterface1B.ITestWorkflowInterface { }
+    namespace TestWorkflowInterface1A
     {
-        public interface ITestAffector
+        public interface ITestWorkflowInterface
         {
-            Task TestAffectorOperationAsync();
+            Task TestWorkflowInterfaceOperationAsync();
         }
     }
-    namespace Affector1B
+    namespace TestWorkflowInterface1B
     {
-        public interface ITestAffector
+        public interface ITestWorkflowInterface
         {
-            Task TestAffectorOperationAsync();
+            Task TestWorkflowInterfaceOperationAsync();
         }
     }
-    public interface ITestGrainEffector : ITestEffector1 { }
-    public interface ITestEffector1
+    public interface ITestWorkflowCallbackInterface : ITestWorkflowCallbackInterface1 { }
+    public interface ITestWorkflowCallbackInterface1
     {
-        Task TestEffectorOperationAsync();
+        Task TestWorkflowCallbackInterfaceOperationAsync();
     }
 
-    public interface ITestAffectorBase
+    public interface ITestWorkflowInterfaceBase
     {
         Task<string> SayHello1(Func<Task<string>> requestResult);
         Task SayHello2(Func<Task<string>> requestResult);
         Task<string> SayHello3(Func<Task> requestResult);
         Task SayHello4(Func<Task> requestResult);
     }
-    public interface ITestAffector2 : ITestAffectorBase
+    public interface ITestWorkflowInterface2 : ITestWorkflowInterfaceBase
     {
         Task SayHello44(Func<Task> requestResult);
     }
 
-    public class Affector : IWorkflowHostOperations
+    public class WorkflowInterface : IWorkflowHostOperations
     {
         public Task<TResponseParameter> OperationAsync<TRequestResult, TResponseParameter>(string operationName, Func<Task<TRequestResult>> requestResult)
             where TRequestResult : class
@@ -74,47 +74,47 @@ namespace Orleans.Activities.Test
         }
     }
 
-    public interface ITestEffectorBase
+    public interface ITestWorkflowCallbackInterfaceBase
     {
         Task<Func<Task<string>>> SayHello1(string requestParameter);
         Task<Func<Task>> SayHello2(string requestParameter);
         Task<Func<Task<string>>> SayHello3();
         Task<Func<Task>> SayHello4();
     }
-    public interface ITestEffector2 : ITestEffectorBase
+    public interface ITestWorkflowCallbackInterface2 : ITestWorkflowCallbackInterfaceBase
     {
         Task<Func<Task>> SayHello44();
     }
 
-    public class Effector : ITestEffector2
+    public class WorkflowCallbackInterface : ITestWorkflowCallbackInterface2
     {
-        Task<Func<Task<string>>> ITestEffectorBase.SayHello1(string requestParameter)
+        Task<Func<Task<string>>> ITestWorkflowCallbackInterfaceBase.SayHello1(string requestParameter)
         {
-            Console.WriteLine($"ITestEffectorBase.SayHello1í({requestParameter})");
+            Console.WriteLine($"ITestWorkflowCallbackInterfaceBase.SayHello1({requestParameter})");
             return Task.FromResult<Func<Task<string>>>(() => TaskConstants.StringEmpty);
         }
 
-        Task<Func<Task>> ITestEffectorBase.SayHello2(string requestParameter)
+        Task<Func<Task>> ITestWorkflowCallbackInterfaceBase.SayHello2(string requestParameter)
         {
-            Console.WriteLine($"ITestEffectorBase.SayHello2({requestParameter})");
+            Console.WriteLine($"ITestWorkflowCallbackInterfaceBase.SayHello2({requestParameter})");
             return Task.FromResult<Func<Task>>(() => TaskConstants.BooleanFalse);
         }
 
-        Task<Func<Task<string>>> ITestEffectorBase.SayHello3()
+        Task<Func<Task<string>>> ITestWorkflowCallbackInterfaceBase.SayHello3()
         {
-            Console.WriteLine("ITestEffectorBase.SayHello3");
+            Console.WriteLine("ITestWorkflowCallbackInterfaceBase.SayHello3");
             return Task.FromResult<Func<Task<string>>>(() => TaskConstants.StringEmpty);
         }
 
-        Task<Func<Task>> ITestEffectorBase.SayHello4()
+        Task<Func<Task>> ITestWorkflowCallbackInterfaceBase.SayHello4()
         {
-            Console.WriteLine("ITestEffectorBase.SayHello4");
+            Console.WriteLine("ITestWorkflowCallbackInterfaceBase.SayHello4");
             return Task.FromResult<Func<Task>>(() => Task.FromResult(false));
         }
 
-        Task<Func<Task>> ITestEffector2.SayHello44()
+        Task<Func<Task>> ITestWorkflowCallbackInterface2.SayHello44()
         {
-            Console.WriteLine("ITestEffector2.SayHello44");
+            Console.WriteLine("ITestWorkflowCallbackInterface2.SayHello44");
             return Task.FromResult<Func<Task>>(() => Task.FromResult(false));
         }
     }
@@ -153,28 +153,28 @@ namespace Orleans.Activities.Test
         [TestMethod]
         public void TypeExtensions()
         {
-            foreach (var name in OperationInfo.GetOperationNames(typeof(IWorkflowActivity<ITestGrainAffector, ITestGrainEffector>).GetGenericArguments()[0]))
+            foreach (var name in OperationInfo.GetOperationNames(typeof(IWorkflowActivity<ITestWorkflowInterface, ITestWorkflowCallbackInterface>).GetGenericArguments()[0]))
                 Console.WriteLine(name);
-            foreach (var name in OperationInfo.GetOperationNames(typeof(IWorkflowActivity<ITestGrainAffector, ITestGrainEffector>).GetGenericArguments()[1]))
+            foreach (var name in OperationInfo.GetOperationNames(typeof(IWorkflowActivity<ITestWorkflowInterface, ITestWorkflowCallbackInterface>).GetGenericArguments()[1]))
                 Console.WriteLine(name);
         }
 
         [TestMethod]
         public void WorkflowInterfaceProxy()
         {
-            ITestAffector2 proxy = WorkflowInterfaceProxy<ITestAffector2>.CreateProxy(new Affector());
+            ITestWorkflowInterface2 proxy = WorkflowInterfaceProxy<ITestWorkflowInterface2>.CreateProxy(new WorkflowInterface());
             proxy.SayHello1(null);
             proxy.SayHello2(null);
             proxy.SayHello3(null);
             proxy.SayHello4(null);
             proxy.SayHello44(null);
-            proxy = WorkflowInterfaceProxy<ITestAffector2>.CreateProxy(new Affector());
+            proxy = WorkflowInterfaceProxy<ITestWorkflowInterface2>.CreateProxy(new WorkflowInterface());
             proxy.SayHello1(null);
             proxy.SayHello2(null);
             proxy.SayHello3(null);
             proxy.SayHello4(null);
             proxy.SayHello44(null);
-            ITestAffectorBase proxyBase = WorkflowInterfaceProxy<ITestAffectorBase>.CreateProxy(new Affector());
+            ITestWorkflowInterfaceBase proxyBase = WorkflowInterfaceProxy<ITestWorkflowInterfaceBase>.CreateProxy(new WorkflowInterface());
             proxyBase.SayHello1(null);
             proxyBase.SayHello2(null);
             proxyBase.SayHello3(null);
@@ -184,13 +184,13 @@ namespace Orleans.Activities.Test
         [TestMethod]
         public void WorkflowCallbackInterfaceProxy()
         {
-            IWorkflowHostCallbackOperations proxy = WorkflowCallbackInterfaceProxy<ITestEffector2>.CreateProxy(new Effector());
+            IWorkflowHostCallbackOperations proxy = WorkflowCallbackInterfaceProxy<ITestWorkflowCallbackInterface2>.CreateProxy(new WorkflowCallbackInterface());
 
-            proxy.OnOperationAsync<string, string>("ITestEffectorBase.SayHello1", "foo").Result();
-            proxy.OnOperationAsync<string>("ITestEffectorBase.SayHello2", "foo").Result();
-            proxy.OnOperationAsync<string>("ITestEffectorBase.SayHello3").Result();
-            proxy.OnOperationAsync("ITestEffectorBase.SayHello4").Result();
-            proxy.OnOperationAsync("ITestEffector2.SayHello44").Result();
+            proxy.OnOperationAsync<string, string>("ITestWorkflowCallbackInterfaceBase.SayHello1", "foo").Result();
+            proxy.OnOperationAsync<string>("ITestWorkflowCallbackInterfaceBase.SayHello2", "foo").Result();
+            proxy.OnOperationAsync<string>("ITestWorkflowCallbackInterfaceBase.SayHello3").Result();
+            proxy.OnOperationAsync("ITestWorkflowCallbackInterfaceBase.SayHello4").Result();
+            proxy.OnOperationAsync("ITestWorkflowCallbackInterface2.SayHello44").Result();
         }
     }
 }

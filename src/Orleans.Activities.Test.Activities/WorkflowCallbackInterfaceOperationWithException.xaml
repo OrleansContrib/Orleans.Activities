@@ -1,4 +1,4 @@
-﻿<Activity mc:Ignorable="sap sap2010 sads" x:Class="Orleans.Activities.Test.Activities.EffectorOperationWithException" sap2010:ExpressionActivityEditor.ExpressionActivityEditor="C#" sap2010:WorkflowViewState.IdRef="Orleans.Activities.Test.Activities.EffectorOperationWithException_1"
+﻿<Activity mc:Ignorable="sap sap2010 sads" x:Class="Orleans.Activities.Test.Activities.WorkflowCallbackInterfaceOperationWithException" sap2010:ExpressionActivityEditor.ExpressionActivityEditor="C#" sap2010:WorkflowViewState.IdRef="Orleans.Activities.Test.Activities.WorkflowCallbackInterfaceOperationWithException_1"
  xmlns="http://schemas.microsoft.com/netfx/2009/xaml/activities"
  xmlns:local="clr-namespace:Orleans.Activities.Test.Activities"
  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -40,11 +40,11 @@
       <AssemblyReference>Orleans.Activities.Test.Activities</AssemblyReference>
     </sco:Collection>
   </TextExpression.ReferencesForImplementation>
-  <oa:WorkflowActivity x:TypeArguments="local:IGrainAffector, local:IGrainEffector" sap2010:WorkflowViewState.IdRef="WorkflowActivity`2_1">
+  <oa:WorkflowActivity x:TypeArguments="local:IWorkflowInterface, local:IWorkflowCallbackInterface" sap2010:WorkflowViewState.IdRef="WorkflowActivity`2_1">
     <Sequence sap2010:WorkflowViewState.IdRef="Sequence_3">
       <oa:SendRequestReceiveResponseScope DisplayName="SendRequestReceiveResponseScope-ReceiveProtected" sap2010:WorkflowViewState.IdRef="SendRequestReceiveResponseScope_1">
         <Sequence sap2010:WorkflowViewState.IdRef="Sequence_1">
-          <oa:SendRequest sap2010:WorkflowViewState.IdRef="SendRequest_1" OperationName="IGrainEffector.OnOperationThrowsBeginAsync" />
+          <oa:SendRequest sap2010:WorkflowViewState.IdRef="SendRequest_1" OperationName="IWorkflowCallbackInterface.OnOperationThrowsBeginAsync" />
           <TryCatch sap2010:WorkflowViewState.IdRef="TryCatch_1">
             <TryCatch.Try>
               <oa:ReceiveResponse sap2010:WorkflowViewState.IdRef="ReceiveResponse_1" />
@@ -70,7 +70,7 @@
         <TryCatch.Try>
           <oa:SendRequestReceiveResponseScope DisplayName="SendRequestReceiveResponseScope-ScopeProtected">
             <Sequence>
-              <oa:SendRequest OperationName="IGrainEffector.OnOperationThrowsBeginAsync" sap2010:WorkflowViewState.IdRef="SendRequest_3" />
+              <oa:SendRequest OperationName="IWorkflowCallbackInterface.OnOperationThrowsBeginAsync" sap2010:WorkflowViewState.IdRef="SendRequest_3" />
               <oa:ReceiveResponse sap2010:WorkflowViewState.IdRef="ReceiveResponse_3" />
               <sap2010:WorkflowViewState.IdRef>Sequence_4</sap2010:WorkflowViewState.IdRef>
             </Sequence>
@@ -97,7 +97,7 @@
       </TryCatch>
       <oa:SendRequestReceiveResponseScope sap2010:WorkflowViewState.IdRef="SendRequestReceiveResponseScope_2">
         <Sequence sap2010:WorkflowViewState.IdRef="Sequence_2">
-          <oa:SendRequest sap2010:WorkflowViewState.IdRef="SendRequest_2" OperationName="IGrainEffector.OnOperationThrowsEndAsync" />
+          <oa:SendRequest sap2010:WorkflowViewState.IdRef="SendRequest_2" OperationName="IWorkflowCallbackInterface.OnOperationThrowsEndAsync" />
           <oa:ReceiveResponse sap2010:WorkflowViewState.IdRef="ReceiveResponse_2" />
         </Sequence>
       </oa:SendRequestReceiveResponseScope>
@@ -164,7 +164,7 @@
         </sap:WorkflowViewStateService.ViewState>
       </sap2010:ViewStateData>
       <sap2010:ViewStateData Id="WorkflowActivity`2_1" sap:VirtualizedContainerService.HintSize="514,1771" />
-      <sap2010:ViewStateData Id="Orleans.Activities.Test.Activities.EffectorOperationWithException_1" sap:VirtualizedContainerService.HintSize="554,1851" />
+      <sap2010:ViewStateData Id="Orleans.Activities.Test.Activities.WorkflowCallbackInterfaceOperationWithException_1" sap:VirtualizedContainerService.HintSize="554,1851" />
     </sap2010:ViewStateManager>
   </sap2010:WorkflowViewState.ViewStateManager>
 </Activity>
