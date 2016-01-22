@@ -82,8 +82,8 @@ namespace Orleans.Activities.Test
         public Exception TerminationException { get; private set; }
         public AsyncManualResetEvent Written { get; private set; }
 
-        public IWorkflowHost Affector { get; private set; }
-        public IWorkflowInstanceCallback Host { get; private set; }
+        public IWorkflowHost WorkflowHost { get; private set; }
+        public IWorkflowInstanceCallback WorkflowInstanceCallback { get; private set; }
 
         public Grain(Type workflowDefinitionType)
             : this(workflowDefinitionType, Guid.NewGuid())
@@ -102,8 +102,8 @@ namespace Orleans.Activities.Test
         public void Initialize()
         {
             WorkflowHost wf = new WorkflowHost(this, (wfdi) => Activator.CreateInstance(workflowDefinitionType) as Activity, null);
-            Affector = wf;
-            Host = wf;
+            WorkflowHost = wf;
+            WorkflowInstanceCallback = wf;
 
             state = new WorkflowState();
 
@@ -162,7 +162,7 @@ namespace Orleans.Activities.Test
             TaskTimer timer;
             if (timers.TryGetValue(reminderName, out timer))
                 timer.Cancel();
-            timers[reminderName] = new TaskTimer(() => Affector.ReminderAsync(reminderName), dueTime, period);
+            timers[reminderName] = new TaskTimer(() => WorkflowHost.ReminderAsync(reminderName), dueTime, period);
             return TaskConstants.Completed;
         }
 
@@ -487,14 +487,14 @@ namespace Orleans.Activities.Test
                 grain.Initialize();
 
                 Console.WriteLine("ActivateAsync...");
-                await grain.Affector.ActivateAsync();
+                await grain.WorkflowHost.ActivateAsync();
 
                 Console.WriteLine("Delay...");
                 // the workflow is gone idle on the delay activity, we must wait to let it to get to the bookmark, to avoid "NotFound"
                 await Task.Delay(TimeSpan.FromSeconds(1));
 
                 Console.WriteLine("ResumeBookmarkAsync...");
-                BookmarkResumptionResult result = await grain.Host.ResumeBookmarkAsync(new System.Activities.Bookmark("Bookmark1"), null, TimeSpan.FromSeconds(1));
+                BookmarkResumptionResult result = await grain.WorkflowInstanceCallback.ResumeBookmarkAsync(new System.Activities.Bookmark("Bookmark1"), null, TimeSpan.FromSeconds(1));
                 Assert.AreEqual(BookmarkResumptionResult.Success, result);
 
                 Console.WriteLine("Completed.WaitAsync...");
@@ -514,18 +514,18 @@ namespace Orleans.Activities.Test
                 grain.Initialize();
 
                 Console.WriteLine("ActivateAsync... -1/" + grain.WorkflowStatesCount);
-                await grain.Affector.ActivateAsync();
+                await grain.WorkflowHost.ActivateAsync();
 
                 Console.WriteLine("Delay...");
                 // the workflow is gone idle on the delay activity, we must wait to let it to get to the bookmark, to avoid "NotFound"
                 await Task.Delay(TimeSpan.FromSeconds(1));
 
                 Console.WriteLine("ResumeBookmarkAsync Bookmark1...");
-                BookmarkResumptionResult result = await grain.Host.ResumeBookmarkAsync(new System.Activities.Bookmark("Bookmark1"), null, TimeSpan.FromSeconds(1));
+                BookmarkResumptionResult result = await grain.WorkflowInstanceCallback.ResumeBookmarkAsync(new System.Activities.Bookmark("Bookmark1"), null, TimeSpan.FromSeconds(1));
                 Assert.AreEqual(BookmarkResumptionResult.Success, result);
 
                 Console.WriteLine("ResumeBookmarkAsync Bookmark3...");
-                result = await grain.Host.ResumeBookmarkAsync(new System.Activities.Bookmark("Bookmark3"), null, TimeSpan.FromSeconds(1));
+                result = await grain.WorkflowInstanceCallback.ResumeBookmarkAsync(new System.Activities.Bookmark("Bookmark3"), null, TimeSpan.FromSeconds(1));
                 Assert.AreEqual(BookmarkResumptionResult.Success, result);
 
                 Console.WriteLine("Completed.WaitAsync...");
@@ -536,7 +536,7 @@ namespace Orleans.Activities.Test
                 await grain.Written.WaitAsync(1);
                 IDictionary<string, object> outputArguments;
                 Exception terminationException;
-                ActivityInstanceState state = grain.Affector.GetCompletionState(out outputArguments, out terminationException);
+                ActivityInstanceState state = grain.WorkflowHost.GetCompletionState(out outputArguments, out terminationException);
                 Console.WriteLine("---DONE--- " + state.ToString());
                 Assert.AreEqual(5, grain.WorkflowStatesCount);
 
@@ -546,23 +546,23 @@ namespace Orleans.Activities.Test
                 grain.Initialize();
                 grain.LoadWorkflowState(1);
                 Console.WriteLine("ActivateAsync... 1/" + grain.WorkflowStatesCount);
-                await grain.Affector.ActivateAsync();
+                await grain.WorkflowHost.ActivateAsync();
 
                 Console.WriteLine("Recreate from bookmark3 again...");
                 grain.Initialize();
                 grain.LoadWorkflowState(1);
                 Console.WriteLine("ActivateAsync... 1/" + grain.WorkflowStatesCount);
-                await grain.Affector.ActivateAsync();
+                await grain.WorkflowHost.ActivateAsync();
 
                 Console.WriteLine("Recreate from runable persist state...");
                 grain.Initialize();
                 grain.LoadWorkflowState(2);
                 await grain.RegisterOrUpdateReminderAsync("{urn:orleans.activities/1.0/properties/reminders}Reactivation", TimeSpan.FromSeconds(1), TimeSpan.FromMinutes(2));
                 Console.WriteLine("ActivateAsync... 2/" + grain.WorkflowStatesCount);
-                await grain.Affector.ActivateAsync();
+                await grain.WorkflowHost.ActivateAsync();
 
                 Console.WriteLine("ResumeBookmarkAsync Bookmark3...");
-                result = await grain.Host.ResumeBookmarkAsync(new System.Activities.Bookmark("Bookmark3"), null, TimeSpan.FromSeconds(1));
+                result = await grain.WorkflowInstanceCallback.ResumeBookmarkAsync(new System.Activities.Bookmark("Bookmark3"), null, TimeSpan.FromSeconds(1));
                 Assert.AreEqual(BookmarkResumptionResult.Success, result);
 
                 Console.WriteLine("Completed.WaitAsync...");
@@ -571,7 +571,7 @@ namespace Orleans.Activities.Test
                 await grain.Completed.WaitAsync(1);
                 Console.WriteLine("Written.WaitAsync...");
                 await grain.Written.WaitAsync(1);
-                state = grain.Affector.GetCompletionState(out outputArguments, out terminationException);
+                state = grain.WorkflowHost.GetCompletionState(out outputArguments, out terminationException);
                 Console.WriteLine("---DONE--- " + state.ToString());
                 Assert.AreEqual(7, grain.WorkflowStatesCount);
 
@@ -580,18 +580,18 @@ namespace Orleans.Activities.Test
                 grain.Parameters = new Parameters(idlePersistenceMode: IdlePersistenceMode.OnStart | IdlePersistenceMode.OnPersistableIdle | IdlePersistenceMode.OnCompleted);
                 grain.Initialize();
                 Console.WriteLine("ActivateAsync... -1/" + grain.WorkflowStatesCount);
-                await grain.Affector.ActivateAsync();
+                await grain.WorkflowHost.ActivateAsync();
 
                 Console.WriteLine("Delay...");
                 // the workflow is gone idle on the delay activity, we must wait to let it to get to the bookmark, to avoid "NotFound"
                 await Task.Delay(TimeSpan.FromSeconds(1));
 
                 Console.WriteLine("ResumeBookmarkAsync Bookmark1...");
-                result = await grain.Host.ResumeBookmarkAsync(new System.Activities.Bookmark("Bookmark1"), null, TimeSpan.FromSeconds(1));
+                result = await grain.WorkflowInstanceCallback.ResumeBookmarkAsync(new System.Activities.Bookmark("Bookmark1"), null, TimeSpan.FromSeconds(1));
                 Assert.AreEqual(BookmarkResumptionResult.Success, result);
 
                 Console.WriteLine("ResumeBookmarkAsync Bookmark3...");
-                result = await grain.Host.ResumeBookmarkAsync(new System.Activities.Bookmark("Bookmark3"), null, TimeSpan.FromSeconds(1));
+                result = await grain.WorkflowInstanceCallback.ResumeBookmarkAsync(new System.Activities.Bookmark("Bookmark3"), null, TimeSpan.FromSeconds(1));
                 Assert.AreEqual(BookmarkResumptionResult.Success, result);
 
                 Console.WriteLine("Completed.WaitAsync...");
@@ -600,7 +600,7 @@ namespace Orleans.Activities.Test
                 await grain.Completed.WaitAsync(1);
                 Console.WriteLine("Written.WaitAsync...");
                 await grain.Written.WaitAsync(1);
-                state = grain.Affector.GetCompletionState(out outputArguments, out terminationException);
+                state = grain.WorkflowHost.GetCompletionState(out outputArguments, out terminationException);
                 Console.WriteLine("---DONE--- " + state.ToString());
                 Assert.AreEqual(12, grain.WorkflowStatesCount);
 
@@ -610,10 +610,10 @@ namespace Orleans.Activities.Test
                 grain.Initialize();
                 grain.LoadWorkflowState(1);
                 Console.WriteLine("ActivateAsync... 1/" + grain.WorkflowStatesCount);
-                await grain.Affector.ActivateAsync();
+                await grain.WorkflowHost.ActivateAsync();
 
                 Console.WriteLine("ResumeBookmarkAsync Bookmark3...");
-                result = await grain.Host.ResumeBookmarkAsync(new System.Activities.Bookmark("Bookmark3"), null, TimeSpan.FromSeconds(1));
+                result = await grain.WorkflowInstanceCallback.ResumeBookmarkAsync(new System.Activities.Bookmark("Bookmark3"), null, TimeSpan.FromSeconds(1));
                 Assert.AreEqual(BookmarkResumptionResult.Success, result);
 
                 Console.WriteLine("Completed.WaitAsync...");
@@ -622,7 +622,7 @@ namespace Orleans.Activities.Test
                 await grain.Completed.WaitAsync(1);
                 Console.WriteLine("Written.WaitAsync...");
                 await grain.Written.WaitAsync(1);
-                state = grain.Affector.GetCompletionState(out outputArguments, out terminationException);
+                state = grain.WorkflowHost.GetCompletionState(out outputArguments, out terminationException);
                 Console.WriteLine("---DONE--- " + state.ToString());
                 Assert.AreEqual(13, grain.WorkflowStatesCount);
             });
@@ -662,7 +662,7 @@ namespace Orleans.Activities.Test
                 try
                 {
                     Console.WriteLine("ActivateAsync...");
-                    await grain.Affector.ActivateAsync();
+                    await grain.WorkflowHost.ActivateAsync();
                     Assert.AreEqual(0, grain.WorkflowStatesCount);
                 }
                 catch (Exception e)
@@ -670,10 +670,10 @@ namespace Orleans.Activities.Test
                     Console.WriteLine("...Exception thrown " + e.GetType());
                     Assert.AreEqual(typeof(TestException), e.GetType());
                 }
-                //Assert.AreEqual(WorkflowInstanceState.Aborted, grain.Affector.WorkflowInstanceState);
+                //Assert.AreEqual(WorkflowInstanceState.Aborted, grain.WorkflowHost.WorkflowInstanceState);
                 try
                 {
-                    var x = grain.Affector.WorkflowInstanceState;
+                    var x = grain.WorkflowHost.WorkflowInstanceState;
                 }
                 catch (Exception e)
                 {
@@ -701,7 +701,7 @@ namespace Orleans.Activities.Test
                 {
                     Console.WriteLine("ActivateAsync...");
                     grain.Completed.Reset();
-                    await grain.Affector.ActivateAsync();
+                    await grain.WorkflowHost.ActivateAsync();
                 }
                 catch (Exception e)
                 {
@@ -734,7 +734,7 @@ namespace Orleans.Activities.Test
                 {
                     Console.WriteLine("ActivateAsync...");
                     grain.Completed.Reset();
-                    await grain.Affector.ActivateAsync();
+                    await grain.WorkflowHost.ActivateAsync();
                 }
                 catch (Exception e)
                 {
@@ -763,10 +763,10 @@ namespace Orleans.Activities.Test
                 grain.Initialize();
 
                 Console.WriteLine("ActivateAsync...");
-                await grain.Affector.ActivateAsync();
+                await grain.WorkflowHost.ActivateAsync();
 
                 Console.WriteLine("ResumeBookmarkAsync...");
-                BookmarkResumptionResult result = await grain.Host.ResumeBookmarkAsync(new System.Activities.Bookmark("Bookmark1"), null, TimeSpan.FromSeconds(1));
+                BookmarkResumptionResult result = await grain.WorkflowInstanceCallback.ResumeBookmarkAsync(new System.Activities.Bookmark("Bookmark1"), null, TimeSpan.FromSeconds(1));
                 Assert.AreEqual(BookmarkResumptionResult.Success, result);
 
                 Console.WriteLine("UnhandledException.WaitAsync...");
@@ -790,10 +790,10 @@ namespace Orleans.Activities.Test
                 grain.Initialize();
 
                 Console.WriteLine("ActivateAsync...");
-                await grain.Affector.ActivateAsync();
+                await grain.WorkflowHost.ActivateAsync();
 
                 Console.WriteLine("ResumeBookmarkAsync...");
-                BookmarkResumptionResult result = await grain.Host.ResumeBookmarkAsync(new System.Activities.Bookmark("Bookmark1"), null, TimeSpan.FromSeconds(1));
+                BookmarkResumptionResult result = await grain.WorkflowInstanceCallback.ResumeBookmarkAsync(new System.Activities.Bookmark("Bookmark1"), null, TimeSpan.FromSeconds(1));
                 Assert.AreEqual(BookmarkResumptionResult.Success, result);
 
                 Console.WriteLine("UnhandledException.WaitAsync...");
@@ -825,10 +825,10 @@ namespace Orleans.Activities.Test
                 grain.Initialize();
 
                 Console.WriteLine("ActivateAsync...");
-                await grain.Affector.ActivateAsync();
+                await grain.WorkflowHost.ActivateAsync();
 
                 Console.WriteLine("ResumeBookmarkAsync...");
-                BookmarkResumptionResult result = await grain.Host.ResumeBookmarkAsync(new System.Activities.Bookmark("Bookmark1"), null, TimeSpan.FromSeconds(1));
+                BookmarkResumptionResult result = await grain.WorkflowInstanceCallback.ResumeBookmarkAsync(new System.Activities.Bookmark("Bookmark1"), null, TimeSpan.FromSeconds(1));
                 Assert.AreEqual(BookmarkResumptionResult.Success, result);
 
                 Console.WriteLine("UnhandledException.WaitAsync...");
@@ -861,7 +861,7 @@ namespace Orleans.Activities.Test
                 Console.WriteLine("ActivateAsync...");
                 grain.Completed.Reset();
                 grain.Written.Reset();
-                await grain.Affector.ActivateAsync();
+                await grain.WorkflowHost.ActivateAsync();
 
                 Console.WriteLine("Completed.WaitAsync...");
                 await grain.Completed.WaitAsync(1);
@@ -884,12 +884,12 @@ namespace Orleans.Activities.Test
                 grain.Initialize();
 
                 Console.WriteLine("ActivateAsync...");
-                await grain.Affector.ActivateAsync();
+                await grain.WorkflowHost.ActivateAsync();
 
                 Console.WriteLine("AbortAsync...");
-                await grain.Affector.AbortAsync(new TestException());
+                await grain.WorkflowHost.AbortAsync(new TestException());
 
-                Assert.AreEqual(WorkflowInstanceState.Aborted, grain.Affector.WorkflowInstanceState);
+                Assert.AreEqual(WorkflowInstanceState.Aborted, grain.WorkflowHost.WorkflowInstanceState);
                 Assert.AreEqual(false, grain.UnhandledException.IsSet);
                 Assert.AreEqual(false, grain.Completed.IsSet);
                 Assert.AreEqual(false, grain.Written.IsSet);
@@ -905,10 +905,10 @@ namespace Orleans.Activities.Test
                 grain.Initialize();
 
                 Console.WriteLine("ActivateAsync...");
-                await grain.Affector.ActivateAsync();
+                await grain.WorkflowHost.ActivateAsync();
 
                 Console.WriteLine("CancelAsync...");
-                await grain.Affector.CancelAsync();
+                await grain.WorkflowHost.CancelAsync();
 
                 Console.WriteLine("Completed.WaitAsync...");
                 grain.Completed.Reset();
@@ -934,12 +934,12 @@ namespace Orleans.Activities.Test
                 grain.Initialize();
 
                 Console.WriteLine("ActivateAsync...");
-                await grain.Affector.ActivateAsync();
+                await grain.WorkflowHost.ActivateAsync();
 
                 Console.WriteLine("TerminateAsync...");
                 grain.Completed.Reset();
                 grain.Written.Reset();
-                await grain.Affector.TerminateAsync(new TestException());
+                await grain.WorkflowHost.TerminateAsync(new TestException());
 
                 Console.WriteLine("Completed.WaitAsync...");
                 await grain.Completed.WaitAsync(1);
@@ -963,7 +963,7 @@ namespace Orleans.Activities.Test
                 grain.Initialize();
 
                 Console.WriteLine("ActivateAsync...");
-                await grain.Affector.ActivateAsync();
+                await grain.WorkflowHost.ActivateAsync();
 
                 Console.WriteLine("Completed.WaitAsync...");
                 await grain.Completed.WaitAsync(2);
@@ -979,15 +979,15 @@ namespace Orleans.Activities.Test
         }
 
         [TestMethod]
-        public async Task AffectorOperationWithCancellation()
+        public async Task WorkflowInterfaceOperationWithCancellation()
         {
             await RunAsyncWithReentrantSingleThreadedScheduler(async () =>
             {
-                Grain grain = new Grain(typeof(AffectorOperation));
+                Grain grain = new Grain(typeof(WorkflowInterfaceOperation));
                 grain.Initialize();
 
                 Console.WriteLine("ActivateAsync...");
-                await grain.Affector.ActivateAsync();
+                await grain.WorkflowHost.ActivateAsync();
 
                 Console.WriteLine("OperationAsync...");
                 try
@@ -995,13 +995,13 @@ namespace Orleans.Activities.Test
                     await Task.WhenAll(
                         Task.Factory.StartNew(async () =>
                             {
-                                await grain.Affector.OperationAsync("IGrainAffector.OperationWithoutParamsAsync",
+                                await grain.WorkflowHost.OperationAsync("IWorkflowInterface.OperationWithoutParamsAsync",
                                     () => TaskConstants.Completed);
                                 Console.WriteLine("OperationWithoutParamsAsync completed");
                             }).Unwrap(),
                         Task.Factory.StartNew(async () =>
                             {
-                                string response = await grain.Affector.OperationAsync<string, string>("IGrainAffector.OperationWithParamsAsync",
+                                string response = await grain.WorkflowHost.OperationAsync<string, string>("IWorkflowInterface.OperationWithParamsAsync",
                                     () => Task.FromResult("requestResult"));
                                 Console.WriteLine("OperationWithParamsAsync completed, response: " + response);
                             }).Unwrap()
@@ -1029,12 +1029,12 @@ namespace Orleans.Activities.Test
                 grain.Initialize();
                 grain.LoadWorkflowState(1);
                 Console.WriteLine("ActivateAsync... 1/" + grain.WorkflowStatesCount);
-                await grain.Affector.ActivateAsync();
+                await grain.WorkflowHost.ActivateAsync();
 
                 Console.WriteLine("OperationAsync...");
                 try
                 {
-                    string response = await grain.Affector.OperationAsync<string, string>("IGrainAffector.OperationWithParamsAsync",
+                    string response = await grain.WorkflowHost.OperationAsync<string, string>("IWorkflowInterface.OperationWithParamsAsync",
                         () => Task.FromResult("requestResult"));
                     Console.WriteLine("OperationWithParamsAsync completed, response: " + response);
                 }
@@ -1057,21 +1057,21 @@ namespace Orleans.Activities.Test
         }
 
         [TestMethod]
-        public async Task AffectorOperationWithUnhandledException()
+        public async Task WorkflowInterfaceOperationWithUnhandledException()
         {
             await RunAsyncWithReentrantSingleThreadedScheduler(async () =>
             {
-                Grain grain = new Grain(typeof(AffectorOperation));
+                Grain grain = new Grain(typeof(WorkflowInterfaceOperation));
                 grain.Parameters = new Parameters(unhandledExceptionAction: UnhandledExceptionAction.Terminate); // Will not use it, it will abort!
                 grain.Initialize();
 
                 Console.WriteLine("ActivateAsync...");
-                await grain.Affector.ActivateAsync();
+                await grain.WorkflowHost.ActivateAsync();
 
                 Console.WriteLine("OperationAsync...");
                 try
                 {
-                    await grain.Affector.OperationAsync("IGrainAffector.OperationWithoutParamsAsync",
+                    await grain.WorkflowHost.OperationAsync("IWorkflowInterface.OperationWithoutParamsAsync",
                         () => TaskConstants.Completed);
                     Console.WriteLine("OperationWithoutParamsAsync completed");
                 }
@@ -1086,7 +1086,7 @@ namespace Orleans.Activities.Test
                 // Let WF finish the operations after TrySetException().
                 await Task.Yield();
                 Console.WriteLine("---DONE---");
-                Assert.AreEqual(WorkflowInstanceState.Aborted, grain.Affector.WorkflowInstanceState);
+                Assert.AreEqual(WorkflowInstanceState.Aborted, grain.WorkflowHost.WorkflowInstanceState);
                 Assert.AreEqual(false, grain.Completed.IsSet);
                 Assert.AreEqual(1, grain.WorkflowStatesCount);
                 Assert.AreEqual(false, grain.UnhandledException.IsSet);
@@ -1098,35 +1098,35 @@ namespace Orleans.Activities.Test
                 grain.LoadWorkflowState(0);
                 await grain.RegisterOrUpdateReminderAsync("{urn:orleans.activities/1.0/properties/reminders/bookmarks}1", TimeSpan.FromMilliseconds(500), TimeSpan.FromMinutes(2));
                 Console.WriteLine("ActivateAsync... 0/" + grain.WorkflowStatesCount);
-                await grain.Affector.ActivateAsync();
+                await grain.WorkflowHost.ActivateAsync();
 
                 Console.WriteLine("UnhandledException.WaitAsync...");
                 await grain.UnhandledException.WaitAsync(1);
                 Assert.AreEqual(typeof(TestException), grain.UnhandledExceptionException.GetType());
                 Console.WriteLine("---DONE---");
-                Assert.AreEqual(WorkflowInstanceState.Aborted, grain.Affector.WorkflowInstanceState);
+                Assert.AreEqual(WorkflowInstanceState.Aborted, grain.WorkflowHost.WorkflowInstanceState);
                 Assert.AreEqual(1, grain.WorkflowStatesCount);
 
             });
         }
 
         [TestMethod]
-        public async Task AffectorOperationWithExceptionDuringIdempotentPersistence()
+        public async Task WorkflowInterfaceOperationWithExceptionDuringIdempotentPersistence()
         {
             await RunAsyncWithReentrantSingleThreadedScheduler(async () =>
             {
-                Grain grain = new Grain(typeof(AffectorOperation));
+                Grain grain = new Grain(typeof(WorkflowInterfaceOperation));
                 grain.Parameters = new Parameters(unhandledExceptionAction: UnhandledExceptionAction.Terminate); // Will not use it, it will abort!
                 grain.Initialize();
 
                 Console.WriteLine("ActivateAsync...");
-                await grain.Affector.ActivateAsync();
+                await grain.WorkflowHost.ActivateAsync();
 
                 grain.throwDuringPersistence = true;
                 Console.WriteLine("OperationAsync...");
                 try
                 {
-                    string response = await grain.Affector.OperationAsync<string, string>("IGrainAffector.OperationWithParamsAsync",
+                    string response = await grain.WorkflowHost.OperationAsync<string, string>("IWorkflowInterface.OperationWithParamsAsync",
                         () => Task.FromResult("requestResult"));
                     Console.WriteLine("OperationWithParamsAsync completed, response: " + response);
                 }
@@ -1137,7 +1137,7 @@ namespace Orleans.Activities.Test
                 }
 
                 Console.WriteLine("---DONE---");
-                Assert.AreEqual(WorkflowInstanceState.Aborted, grain.Affector.WorkflowInstanceState);
+                Assert.AreEqual(WorkflowInstanceState.Aborted, grain.WorkflowHost.WorkflowInstanceState);
                 Assert.AreEqual(false, grain.Completed.IsSet);
                 Assert.AreEqual(0, grain.WorkflowStatesCount);
                 Assert.AreEqual(false, grain.UnhandledException.IsSet);
@@ -1145,22 +1145,22 @@ namespace Orleans.Activities.Test
         }
 
         [TestMethod]
-        public async Task AffectorOperationWithExceptionDuringImplicitPersistence()
+        public async Task WorkflowInterfaceOperationWithExceptionDuringImplicitPersistence()
         {
             await RunAsyncWithReentrantSingleThreadedScheduler(async () =>
             {
-                Grain grain = new Grain(typeof(AffectorOperation));
+                Grain grain = new Grain(typeof(WorkflowInterfaceOperation));
                 grain.Parameters = new Parameters(unhandledExceptionAction: UnhandledExceptionAction.Terminate); // Will not use it, it will abort!
                 grain.Initialize();
 
                 Console.WriteLine("ActivateAsync...");
-                await grain.Affector.ActivateAsync();
+                await grain.WorkflowHost.ActivateAsync();
 
                 grain.throwDuringPersistence = true;
                 Console.WriteLine("OperationAsync...");
                 try
                 {
-                    await grain.Affector.OperationAsync("IGrainAffector.OperationWithoutParamsAsync",
+                    await grain.WorkflowHost.OperationAsync("IWorkflowInterface.OperationWithoutParamsAsync",
                         () => TaskConstants.Completed);
                     Console.WriteLine("OperationWithoutParamsAsync completed");
                 }
@@ -1171,7 +1171,7 @@ namespace Orleans.Activities.Test
                 }
 
                 Console.WriteLine("---DONE---");
-                Assert.AreEqual(WorkflowInstanceState.Aborted, grain.Affector.WorkflowInstanceState);
+                Assert.AreEqual(WorkflowInstanceState.Aborted, grain.WorkflowHost.WorkflowInstanceState);
                 Assert.AreEqual(false, grain.Completed.IsSet);
                 Assert.AreEqual(0, grain.WorkflowStatesCount);
                 Assert.AreEqual(false, grain.UnhandledException.IsSet);
@@ -1179,7 +1179,7 @@ namespace Orleans.Activities.Test
         }
 
         [TestMethod]
-        public async Task AffectorOperationWithExceptionDuringExplicitPersistence()
+        public async Task WorkflowInterfaceOperationWithExceptionDuringExplicitPersistence()
         {
             await RunAsyncWithReentrantSingleThreadedScheduler(async () =>
             {
@@ -1191,7 +1191,7 @@ namespace Orleans.Activities.Test
                 {
                     grain.throwDuringPersistence = true;
                     Console.WriteLine("ActivateAsync...");
-                    await grain.Affector.ActivateAsync();
+                    await grain.WorkflowHost.ActivateAsync();
                 }
                 catch (Exception e)
                 {
@@ -1200,10 +1200,10 @@ namespace Orleans.Activities.Test
                 }
 
                 Console.WriteLine("---DONE---");
-                //Assert.AreEqual(WorkflowInstanceState.Aborted, grain.Affector.WorkflowInstanceState);
+                //Assert.AreEqual(WorkflowInstanceState.Aborted, grain.WorkflowHost.WorkflowInstanceState);
                 try
                 {
-                    var x = grain.Affector.WorkflowInstanceState;
+                    var x = grain.WorkflowHost.WorkflowInstanceState;
                 }
                 catch (Exception e)
                 {
@@ -1217,7 +1217,7 @@ namespace Orleans.Activities.Test
         }
 
         [TestMethod]
-        public async Task AffectorOperationWithExceptionDuringCompletion()
+        public async Task WorkflowInterfaceOperationWithExceptionDuringCompletion()
         {
             await RunAsyncWithReentrantSingleThreadedScheduler(async () =>
             {
@@ -1226,7 +1226,7 @@ namespace Orleans.Activities.Test
                 grain.Initialize();
 
                 Console.WriteLine("ActivateAsync...");
-                await grain.Affector.ActivateAsync();
+                await grain.WorkflowHost.ActivateAsync();
 
                 Console.WriteLine("Delay...");
                 // the workflow is gone idle on the delay activity, we must wait to let it to get to the bookmark, to avoid "NotFound"
@@ -1236,7 +1236,7 @@ namespace Orleans.Activities.Test
                 Console.WriteLine("ResumeBookmarkAsync...");
                 try
                 {
-                    BookmarkResumptionResult result = await grain.Host.ResumeBookmarkAsync(new System.Activities.Bookmark("Bookmark1"), null, TimeSpan.FromSeconds(1));
+                    BookmarkResumptionResult result = await grain.WorkflowInstanceCallback.ResumeBookmarkAsync(new System.Activities.Bookmark("Bookmark1"), null, TimeSpan.FromSeconds(1));
                     Console.WriteLine("ResumeBookmarkAsync completed");
                 }
                 catch (Exception e)
@@ -1251,21 +1251,21 @@ namespace Orleans.Activities.Test
                 // Let WF abort itself after completed and persistence failed.
                 await Task.Yield();
                 Console.WriteLine("---DONE---");
-                Assert.AreEqual(WorkflowInstanceState.Aborted, grain.Affector.WorkflowInstanceState);
+                Assert.AreEqual(WorkflowInstanceState.Aborted, grain.WorkflowHost.WorkflowInstanceState);
                 Assert.AreEqual(0, grain.WorkflowStatesCount);
             });
         }
 
         [TestMethod]
-        public async Task EffectorOperation()
+        public async Task WorkflowCallbackInterfaceOperation()
         {
             await RunAsyncWithReentrantSingleThreadedScheduler(async () =>
             {
-                Grain grain = new Grain(typeof(EffectorOperation));
+                Grain grain = new Grain(typeof(WorkflowCallbackInterfaceOperation));
                 grain.Initialize();
 
                 Console.WriteLine("ActivateAsync...");
-                await grain.Affector.ActivateAsync();
+                await grain.WorkflowHost.ActivateAsync();
 
                 Console.WriteLine("Completed.WaitAsync...");
                 await grain.Completed.WaitAsync(1);
@@ -1280,16 +1280,16 @@ namespace Orleans.Activities.Test
         }
 
         [TestMethod]
-        public async Task EffectorOperationWithException()
+        public async Task WorkflowCallbackInterfaceOperationWithException()
         {
             await RunAsyncWithReentrantSingleThreadedScheduler(async () =>
             {
-                Grain grain = new Grain(typeof(EffectorOperationWithException));
+                Grain grain = new Grain(typeof(WorkflowCallbackInterfaceOperationWithException));
                 grain.Parameters = new Parameters(unhandledExceptionAction: UnhandledExceptionAction.Terminate);
                 grain.Initialize();
 
                 Console.WriteLine("ActivateAsync...");
-                await grain.Affector.ActivateAsync();
+                await grain.WorkflowHost.ActivateAsync();
 
                 Console.WriteLine("UnhandledException.WaitAsync...");
                 await grain.UnhandledException.WaitAsync(1);
@@ -1306,16 +1306,16 @@ namespace Orleans.Activities.Test
         }
 
         [TestMethod]
-        public async Task EffectorOperationWithThrow()
+        public async Task WorkflowCallbackInterfaceOperationWithThrow()
         {
             await RunAsyncWithReentrantSingleThreadedScheduler(async () =>
             {
-                Grain grain = new Grain(typeof(EffectorOperationWithThrow));
+                Grain grain = new Grain(typeof(WorkflowCallbackInterfaceOperationWithThrow));
                 grain.Parameters = new Parameters(unhandledExceptionAction: UnhandledExceptionAction.Terminate);
                 grain.Initialize();
 
                 Console.WriteLine("ActivateAsync...");
-                await grain.Affector.ActivateAsync();
+                await grain.WorkflowHost.ActivateAsync();
 
                 Console.WriteLine("UnhandledException.WaitAsync...");
                 await grain.UnhandledException.WaitAsync(1);
@@ -1332,19 +1332,19 @@ namespace Orleans.Activities.Test
         }
 
         [TestMethod]
-        public async Task EffectorOperationWithCancel()
+        public async Task WorkflowCallbackInterfaceOperationWithCancel()
         {
             await RunAsyncWithReentrantSingleThreadedScheduler(async () =>
             {
-                Grain grain = new Grain(typeof(EffectorOperationWithCancel));
+                Grain grain = new Grain(typeof(WorkflowCallbackInterfaceOperationWithCancel));
                 grain.Parameters = new Parameters(unhandledExceptionAction: UnhandledExceptionAction.Terminate);
                 grain.Initialize();
 
                 Console.WriteLine("ActivateAsync...");
-                await grain.Affector.ActivateAsync();
+                await grain.WorkflowHost.ActivateAsync();
 
                 Console.WriteLine("CancelAsync...");
-                await grain.Affector.CancelAsync();
+                await grain.WorkflowHost.CancelAsync();
 
                 Console.WriteLine("Completed.WaitAsync...");
                 await grain.Completed.WaitAsync(1);
