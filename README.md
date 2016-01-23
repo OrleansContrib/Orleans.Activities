@@ -4,13 +4,15 @@ Workflow Foundation (.Net 4.x System.Activities workflows) over Orleans framewor
 
 __NOTE:__ This project currently is an __experiment__, not production quality! There is no NuGet package for it.
 
-~~Help Wanted Issues~~ (soon)
+Waffle.io: [![Ready](https://badge.waffle.io/OrleansContrib/Orleans.Activities.svg?label=Phase-Ready&title=Ready)](http://waffle.io/OrleansContrib/Orleans.Activities)
+[![Up for Grabs (filtered view)](https://badge.waffle.io/OrleansContrib/Orleans.Activities.svg?label=Status-Up%20for%20Grabs&title=Up%20for%20Grabs%20%28filtered%20view%29)](http://waffle.io/OrleansContrib/Orleans.Activities?label=Status-Up%20for%20Grabs)
+[![Help Wanted (filtered view)](https://badge.waffle.io/OrleansContrib/Orleans.Activities.svg?label=Status-Help%20Wanted&title=Help%20Wanted%20%28filtered%20view%29)](http://waffle.io/OrleansContrib/Orleans.Activities?label=Status-Help%20Wanted)
 
-~~Documentation~~ (see [HelloWorld](docs/HelloWorld/HelloWorld.md) sample)
+~~Documentation~~ (see [HelloWorld](https://github.com/OrleansContrib/Orleans.Activities/blob/master/docs/HelloWorld/HelloWorld.md) sample)
 
 ## Concept
 
-![Overview](docs/Orleans.Activities-Overview.png)
+![Overview](https://raw.githubusercontent.com/OrleansContrib/Orleans.Activities/master/docs/Orleans.Activities-Overview.png)
 
 This is a very high level view:
 
@@ -54,7 +56,7 @@ Under construction:
 * Tests (currently semi manual, semi automatic MSTest, don't even look at them)
 * More elaborate sample with
   * DI/Autofac
-  * Strategy and Humble Object patterns, to show an arhitecture, where the application logic can be tested independently from Orleans and from Orleans.Activities workflows
+  * Strategy and Humble Object patterns, to show an architecture, where the application logic can be tested independently from Orleans and from Orleans.Activities workflows
 
 Not implemented, help wanted (for design and for implementation):
 
@@ -65,10 +67,10 @@ And there are nearly unlimited issues...
 
 ## Samples
 
-[HelloWorld](docs/HelloWorld/HelloWorld.md)
+[HelloWorld](https://github.com/OrleansContrib/Orleans.Activities/blob/master/docs/HelloWorld/HelloWorld.md)
 
 ## Details
 
 This is still an overview, all the details of the classes are hidden. The goal is to give a map to understand the relations between the classes. See the comments in the source!
 
-![Overview](docs/Orleans.Activities-Details.png)
+![Overview](https://raw.githubusercontent.com/OrleansContrib/Orleans.Activities/master/docs/Orleans.Activities-Details.png)

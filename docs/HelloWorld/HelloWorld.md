@@ -1,10 +1,10 @@
 # Hello World
 
-Based on Orleans [Hello World](http://dotnet.github.io/orleans/Samples-Overview/Hello-World) sample.
+Based on Orleans [Hello World](https://dotnet.github.io/orleans/Samples-Overview/Hello-World) sample.
 
 ## Overview
 
-![SequenceDiagram](SequenceDiagram-Overview.png)
+![SequenceDiagram](https://raw.githubusercontent.com/OrleansContrib/Orleans.Activities/master/docs/HelloWorld/SequenceDiagram-Overview.png)
 
 ## Interface
 
@@ -133,7 +133,7 @@ Task<Func<Task<string>>> IHelloWorkflowCallbackInterface.WhatShouldISay(string c
 
 And see the Workflow. It calls back the grain, and returns the response to the grain at the end.
 
-![HelloActivity.xaml](HelloActivity.png)
+![HelloActivity.xaml](https://raw.githubusercontent.com/OrleansContrib/Orleans.Activities/master/docs/HelloWorld/HelloActivity.png)
 
 That's all. Ctrl+F5, and it works.
 
@@ -141,4 +141,4 @@ That's all. Ctrl+F5, and it works.
 
 If you want to dig deep into the source and understand the detailed events in the background, this sequence diagram can help (this is not a completely valid diagram, but displaying every asnyc details, even the AsyncAutoResetEvent idle-queue, this would be 2 times bigger).
 
-![SequenceDiagram](SequenceDiagram-Details.png)
+![SequenceDiagram](https://raw.githubusercontent.com/OrleansContrib/Orleans.Activities/master/docs/HelloWorld/SequenceDiagram-Details.png)
