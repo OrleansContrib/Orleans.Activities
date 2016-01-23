@@ -131,6 +131,8 @@ Task<Func<Task<string>>> IHelloWorkflowCallbackInterface.WhatShouldISay(string c
     Task.FromResult(string.IsNullOrEmpty(clientSaid) ? "Who are you?" : "Hello!"));
 ```
 
+## Workflow / Activity
+
 And see the Workflow. It calls back the grain, and returns the response to the grain at the end.
 
 ![HelloActivity.xaml](https://raw.githubusercontent.com/OrleansContrib/Orleans.Activities/master/docs/HelloWorld/HelloActivity.png)
