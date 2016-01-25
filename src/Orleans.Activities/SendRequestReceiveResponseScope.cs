@@ -131,7 +131,7 @@ namespace Orleans.Activities
                 // The noPersistHandle will be exited when the activity completes or aborts, because
                 // the handle is an execution property in the background, with a scope on this activity, so it will be removed.
                 // Don't add Exit() to the Completion and/or Fault callback, because if this scope is in an external TryCatch,
-                // this will first Fault, then Cancelled by the external TryCatch (if the fault propagation is handled), causing "unmatched exit" exception.
+                // this will first Fault, then Canceled by the external TryCatch (if the fault propagation is handled), causing "unmatched exit" exception.
                 noPersistHandle.Get(context).Enter(context);
 
                 SendRequestReceiveResponseScopeExecutionProperty executionProperty = sendRequestReceiveResponseScopeExecutionPropertyFactory();

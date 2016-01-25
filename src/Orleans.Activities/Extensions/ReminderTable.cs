@@ -48,13 +48,13 @@ namespace Orleans.Activities.Extensions
         public enum ReminderState : int
         {
             NonExistent = 0,            // not a real, stored state, it is the result of a failed reminders.TryGetValue()
-            RegisterAndSave,            // TimerExtension.OnRegisterTimer() called in NonExistent "state" - fresh new reminder, never saved, can be cancelled during OnIdleAsync()
-            ReregisterAndResave,        // TimerExtension.OnRegisterTimer() called in SaveAndUnregister state - previously saved, can NOT be cancelled during OnIdleAsync()
+            RegisterAndSave,            // TimerExtension.OnRegisterTimer() called in NonExistent "state" - fresh new reminder, never saved, can be canceled during OnIdleAsync()
+            ReregisterAndResave,        // TimerExtension.OnRegisterTimer() called in SaveAndUnregister state - previously saved, can NOT be canceled during OnIdleAsync()
             RegisteredButNotSaved,      // registered during OnIdleAsync(), but not saved yet
             RegisteredButNotResaved,    // registered during OnIdleAsync(), but not resaved yet
             RegisteredAndSaved,         // saved after registration
             SaveAndUnregister,          // TimerExtension.OnCancelTimer() called in RegisteredAndSaved state
-            Unregister,                 // TimerExtension.OnCancelTimer() called in RegisteredButNotSaved state - never saved, can be cancelled during OnIdleAsync()
+            Unregister,                 // TimerExtension.OnCancelTimer() called in RegisteredButNotSaved state - never saved, can be canceled during OnIdleAsync()
         }
 
         // Transitions:           | Register               Unregister           OnPaused                              OnSaving              OnSaved

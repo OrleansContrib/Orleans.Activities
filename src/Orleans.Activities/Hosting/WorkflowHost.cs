@@ -120,7 +120,7 @@ namespace Orleans.Activities.Hosting
         public async Task ActivateAsync()
         {
             // TODO
-            // If it throws, then grain activation is cancelled. When will Orleans try to re-activate it?
+            // If it throws, then grain activation is canceled. When will Orleans try to re-activate it?
             // We should avoid an infinite loop of activation attemps if the workflow can't load state or fails to run after load if persisted in a runnable state.
             // Only on next incoming operation or reminder request should Orleans try to re-activate it!
             await PrepareInstanceAsync();

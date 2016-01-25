@@ -54,7 +54,7 @@ namespace Orleans.Activities.Hosting
     //   due to ActivityExecutor skips the normal Fault propagation, none of the activities can complete the TaskCompletionSource
 
     // It is important to understand, that WFI has 4 states: Runnable, Idle, Complete and Aborted
-    // - Complete has 3 substates: Closed (successfully completed), Cancelled, Faulted (ie. Terminate called on it by unhandled exception or by Terminate activity)
+    // - Complete has 3 substates: Closed (successfully completed), Canceled, Faulted (ie. Terminate called on it by unhandled exception or by Terminate activity)
     // - Aborted is not a "real" state, you can't even save/persist the WFI in this state, it means it's state got invalid (due to an unhandled exception),
     //   and due to this invalid state you have to recreate the instance from the latest known/saved state to Run() it again
 
