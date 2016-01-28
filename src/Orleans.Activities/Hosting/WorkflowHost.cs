@@ -12,6 +12,7 @@ using System.Xml.Linq;
 using Orleans.Activities.AsyncEx;
 using Orleans.Activities.Configuration;
 using Orleans.Activities.Extensions;
+using Orleans.Activities.Helpers;
 
 namespace Orleans.Activities.Hosting
 {
@@ -22,10 +23,11 @@ namespace Orleans.Activities.Hosting
     // - if you want to access another workflow, access the WorkflowGrain that hosts it
 
     // WorkflowHost implementation details
-    // - WorkflowHost is responsible to be non-reentrant single threaded and to (re)start/(re)load (ie. (re)activate) WorkflowInstance if it is aborted,
+    // - WorkflowHost is responsible to (re)start/(re)load (ie. (re)activate) WorkflowInstance if it is aborted,
     //   WorkflowInstance reactivation happens on the next incoming operation (that can be also a default 120s auto-reactivation in a persisted runnable state)
     // - can only be used with a "single threaded", optionally reentrant scheduler,
     //   but WorkflowHost will degrade it always to non-reentrant in case of workflow/activities, this is a WFI (System.Activities.Hosting.WorkflowInstance) design requirement
+    //   but in WFI non-reentrant means, it can't accept requests until it goes idle
     // - it maintains an idle async autoresetevent to queue the incoming operations,
     //   each incoming operation awaits for idle, schedules itself on the WorkflowInstance and calls RunAsync() on it
     // - after the RunAsync() is called on WorkflowInstance it returns immediately, but runs in the "background" until it runs out of work to do
@@ -47,56 +49,13 @@ namespace Orleans.Activities.Hosting
     /// </summary>
     public class WorkflowHost : IWorkflowHost, IWorkflowInstanceCallback
     {
-        #region private helper classes
-
-        // Nongeneric wrapper around a TaskCompletionSource to access TrySetException(exception) and TrySetResult(default(TResult))
-        private abstract class ActiveTaskCompletionSource
-        {
-            public enum ProtectionLevel
-            {
-                UnhandledExceptionOnly,
-                UnhandledExceptionAndNormalCompletion,
-            }
-
-            protected Exception storedException;
-
-            public bool TryStoreException(Exception exception)
-            {
-                if (storedException != null)
-                    return false;
-                storedException = exception;
-                return true;
-            }
-
-            public abstract bool TrySetCompleted();
-        }
-
-        private class ActiveTaskCompletionSource<TResult> : ActiveTaskCompletionSource
-        {
-            private TaskCompletionSource<TResult> taskCompletionSource;
-            private ProtectionLevel protectionLevel;
-
-            public ActiveTaskCompletionSource(TaskCompletionSource<TResult> taskCompletionSource, ProtectionLevel protectionLevel)
-            {
-                this.taskCompletionSource = taskCompletionSource;
-                this.protectionLevel = protectionLevel;
-            }
-
-            public override bool TrySetCompleted() =>
-                storedException != null
-                    ? taskCompletionSource.TrySetException(storedException)
-                    : protectionLevel == ProtectionLevel.UnhandledExceptionAndNormalCompletion && taskCompletionSource.TrySetResult(default(TResult));
-        }
-
-        #endregion
-
         #region protected/private fields
 
         protected IWorkflowHostCallback grain;
         protected Func<WorkflowIdentity, Activity> workflowDefinitionFactory;
         protected WorkflowIdentity workflowDefinitionIdentity;
 
-        private ActiveTaskCompletionSource activeTaskCompletionSource;
+        private ActiveTaskCompletionSources activeTaskCompletionSources;
         private AsyncAutoResetEvent idle;
 
         protected IWorkflowInstance instance;
@@ -123,10 +82,12 @@ namespace Orleans.Activities.Hosting
             // If it throws, then grain activation is canceled. When will Orleans try to re-activate it?
             // We should avoid an infinite loop of activation attemps if the workflow can't load state or fails to run after load if persisted in a runnable state.
             // Only on next incoming operation or reminder request should Orleans try to re-activate it!
+
+            activeTaskCompletionSources = new ActiveTaskCompletionSources();
             await PrepareInstanceAsync();
             idle = new AsyncAutoResetEvent(true);
         }
-        
+
         public Task DeactivateAsync()
         {
             if (instance != null && instance.WorkflowInstanceState != WorkflowInstanceState.Aborted)
@@ -199,9 +160,17 @@ namespace Orleans.Activities.Hosting
         private async Task ResumeOperationBookmarkAsync(string operationName, object requestResult)
         {
             TaskCompletionSource<object> taskCompletionSource = new TaskCompletionSource<object>();
-            await ResumeOperationBookmarkAsync(operationName, taskCompletionSource, requestResult, typeof(void),
-                (responseParameter) => new RepeatedOperationException());
-            await taskCompletionSource.Task;
+            try
+            {
+                activeTaskCompletionSources.Add(taskCompletionSource);
+                await ResumeOperationBookmarkAsync(operationName, taskCompletionSource, requestResult, typeof(void),
+                    (responseParameter) => new RepeatedOperationException());
+                await taskCompletionSource.Task;
+            }
+            finally
+            {
+                activeTaskCompletionSources.Remove(taskCompletionSource);
+            }
         }
 
         // It waits for scheduling the resumption, and than waits for the response from the SendResponse activity, through the TaskCompletionSource.
@@ -209,21 +178,27 @@ namespace Orleans.Activities.Hosting
             where TResponseParameter : class
         {
             TaskCompletionSource<TResponseParameter> taskCompletionSource = new TaskCompletionSource<TResponseParameter>();
-            await ResumeOperationBookmarkAsync(operationName, taskCompletionSource, requestResult, typeof(TResponseParameter),
-                (responseParameter) => new RepeatedOperationException<TResponseParameter>(responseParameter as TResponseParameter));
-            return await taskCompletionSource.Task;
+            try
+            {
+                activeTaskCompletionSources.Add(taskCompletionSource);
+                await ResumeOperationBookmarkAsync(operationName, taskCompletionSource, requestResult, typeof(TResponseParameter),
+                    (responseParameter) => new RepeatedOperationException<TResponseParameter>(responseParameter as TResponseParameter));
+                return await taskCompletionSource.Task;
+            }
+            finally
+            {
+                activeTaskCompletionSources.Remove(taskCompletionSource);
+            }
         }
 
         // If the resumption didn't timed out nor aborted, but not found, it tries to return the previous response parameter if the operation was idempotent,
         // ie. throws RepeatedOperationException, or throws InvalidOperationException if the previous response is not known (didn't happen or not idempotent).
-        private async Task ResumeOperationBookmarkAsync<TResponseParameter>(string operationName, TaskCompletionSource<TResponseParameter> taskCompletionSource, object requestResult, Type responseParameterType,
-                Func<object, RepeatedOperationException> createRepeatedOperationException)
-            where TResponseParameter : class
+        private async Task ResumeOperationBookmarkAsync(string operationName, object taskCompletionSource, object requestResult, Type responseParameterType,
+            Func<object, RepeatedOperationException> createRepeatedOperationException)
         {
             BookmarkResumptionResult result = await ScheduleAndRunInstanceAsync(Parameters.ResumeOperationTimeout,
                 () => instance.ScheduleOperationBookmarkResumptionAsync(operationName, new object[] { taskCompletionSource, requestResult }),
-                (_result) => _result == BookmarkResumptionResult.Success,
-                taskCompletionSource);
+                (_result) => _result == BookmarkResumptionResult.Success);
             WorkflowInstanceState workflowInstanceState = instance.WorkflowInstanceState;
 
             if (result == BookmarkResumptionResult.NotFound
@@ -324,24 +299,18 @@ namespace Orleans.Activities.Hosting
             if (instance.WorkflowInstanceState == WorkflowInstanceState.Runnable)
             {
                 TaskCompletionSource<object> taskCompletionSource = new TaskCompletionSource<object>();
-                await RunInstanceWithActiveTaskCompletionSourceProtectionAsync(taskCompletionSource, ActiveTaskCompletionSource.ProtectionLevel.UnhandledExceptionAndNormalCompletion);
-                await taskCompletionSource.Task;
-            }
-        }
-
-        private async Task RunInstanceWithActiveTaskCompletionSourceProtectionAsync<TResponseParameter>(TaskCompletionSource<TResponseParameter> taskCompletionSource,
-                ActiveTaskCompletionSource.ProtectionLevel protectionLevel)
-            where TResponseParameter : class
-        {
-            try
-            {
-                activeTaskCompletionSource = new ActiveTaskCompletionSource<TResponseParameter>(taskCompletionSource, protectionLevel);
-                await instance.RunAsync();
-            }
-            catch
-            {
-                activeTaskCompletionSource = null;
-                throw;
+                try
+                {
+                    activeTaskCompletionSources.ProtectionLevel = ActiveTaskCompletionSources.TaskCompletionSourceProtectionLevel.UnhandledExceptionAndNormalCompletion;
+                    activeTaskCompletionSources.Add(taskCompletionSource);
+                    await instance.RunAsync();
+                    await taskCompletionSource.Task;
+                }
+                finally
+                {
+                    activeTaskCompletionSources.ProtectionLevel = ActiveTaskCompletionSources.TaskCompletionSourceProtectionLevel.UnhandledExceptionOnly;
+                    activeTaskCompletionSources.Remove(taskCompletionSource);
+                }
             }
         }
 
@@ -402,7 +371,7 @@ namespace Orleans.Activities.Hosting
         }
 
         protected async Task<TResult> ScheduleAndRunInstanceAsync<TResult, TResponseParameter>(TimeSpan timeout, Func<Task<TResult>> asyncFunctionToSchedule,
-                Func<TResult, bool> isScheduleSuccessful, TaskCompletionSource<TResponseParameter> taskCompletionSource)
+                Func<TResult, bool> isScheduleSuccessful)
             where TResponseParameter : class
         {
             ThrowIfNotActivated();
@@ -412,7 +381,7 @@ namespace Orleans.Activities.Hosting
                 await PrepareInstanceAsync();
                 TResult result = await asyncFunctionToSchedule();
                 if (isScheduleSuccessful(result))
-                    await RunInstanceWithActiveTaskCompletionSourceProtectionAsync(taskCompletionSource, ActiveTaskCompletionSource.ProtectionLevel.UnhandledExceptionOnly);
+                    await instance.RunAsync();
                 else
                     idle.Set();
                 return result;
@@ -443,20 +412,14 @@ namespace Orleans.Activities.Hosting
 
         public void OnNotifyIdle()
         {
-            if (activeTaskCompletionSource != null)
-            {
-                ActiveTaskCompletionSource activeTaskCompletionSource = this.activeTaskCompletionSource;
-                this.activeTaskCompletionSource = null;
-                if (activeTaskCompletionSource.TrySetCompleted())
-                    return;
-            }
-            // During ActivateAsync, idle can be null.
+            activeTaskCompletionSources.TrySetCompletedEach();
+            // During ActivateAsync, idle is null.
             idle?.Set();
         }
 
         public Task OnUnhandledExceptionAsync(Exception exception, Activity source)
         {
-            if (activeTaskCompletionSource != null && activeTaskCompletionSource.TryStoreException(exception))
+            if (activeTaskCompletionSources.TryStoreException(exception))
                 return TaskConstants.Completed;
             return grain.OnUnhandledExceptionAsync(exception, source);
         }
