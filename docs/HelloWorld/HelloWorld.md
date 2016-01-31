@@ -4,7 +4,7 @@ Based on Orleans [Hello World](https://dotnet.github.io/orleans/Samples-Overview
 
 ## Overview
 
-![SequenceDiagram](https://raw.githubusercontent.com/OrleansContrib/Orleans.Activities/master/docs/HelloWorld/SequenceDiagram-Overview.png)
+![SequenceDiagram](https://raw.githubusercontent.com/OrleansContrib/Orleans.Activities/master/docs/HelloWorld/HelloWorld-Overview.png)
 
 ## Interface
 
@@ -169,4 +169,4 @@ That's all. Ctrl+F5, and it works.
 
 If you want to dig deep into the source and understand the detailed events in the background, this sequence diagram can help (this is not a completely valid diagram, but displaying every asnyc details, even the AsyncAutoResetEvent idle-queue, this would be 2 times bigger).
 
-![SequenceDiagram](https://raw.githubusercontent.com/OrleansContrib/Orleans.Activities/master/docs/HelloWorld/SequenceDiagram-Details.png)
+![SequenceDiagram](https://raw.githubusercontent.com/OrleansContrib/Orleans.Activities/master/docs/HelloWorld/HelloWorld-Details.png)
