@@ -1574,5 +1574,113 @@ namespace Orleans.Activities.Test
                 Assert.AreEqual(false, grain.UnhandledException.IsSet);
             });
         }
+
+        [TestMethod]
+        public async Task ParallelIncomingRequests()
+        {
+            await RunAsyncWithReentrantSingleThreadedScheduler(async () =>
+            {
+                Grain grain = new Grain(typeof(ParallelIncomingRequests));
+                grain.Initialize();
+
+                Console.WriteLine("ActivateAsync...");
+                await grain.WorkflowHost.ActivateAsync();
+
+                Console.WriteLine("OperationAsync...");
+                await Task.WhenAll(
+                    Task.Factory.StartNew(async () =>
+                    {
+                        await grain.WorkflowHost.OperationAsync("IWorkflowInterface.OperationWithoutParamsAsync",
+                            () => TaskConstants.Completed);
+                        Console.WriteLine("OperationWithoutParamsAsync completed");
+                    }).Unwrap(),
+                    Task.Factory.StartNew(async () =>
+                    {
+                        string response = await grain.WorkflowHost.OperationAsync<string, string>("IWorkflowInterface.OperationWithParamsAsync",
+                            () => Task.FromResult("requestResult"));
+                        Console.WriteLine("OperationWithParamsAsync completed, response: " + response);
+                    }).Unwrap()
+                    );
+                Console.WriteLine("Completed.WaitAsync...");
+                grain.Written.Reset();
+                await grain.Completed.WaitAsync(1);
+                Console.WriteLine("Written.WaitAsync...");
+                await grain.Written.WaitAsync(1);
+                Console.WriteLine("---DONE---");
+
+                try
+                {
+                    string response = await grain.WorkflowHost.OperationAsync<string, string>("IWorkflowInterface.OperationWithParamsAsync",
+                        () => Task.FromResult("requestResult"));
+                    Console.WriteLine("OperationWithParamsAsync completed, response: " + response);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("...Exception thrown " + e.GetType());
+                    Assert.AreEqual(typeof(OperationRepeatedException<string>), e.GetType());
+                    Assert.AreEqual("Response", (e as OperationRepeatedException<string>).PreviousResponseParameter);
+                }
+                try
+                {
+                    await grain.WorkflowHost.OperationAsync("IWorkflowInterface.OperationWithoutParamsAsync",
+                        () => TaskConstants.Completed);
+                    Console.WriteLine("OperationWithoutParamsAsync completed");
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("...Exception thrown " + e.GetType());
+                    Assert.AreEqual(typeof(OperationRepeatedException), e.GetType());
+                }
+
+                Assert.AreEqual(ActivityInstanceState.Closed, grain.CompletionState);
+                Assert.AreEqual(6, grain.WorkflowStatesCount);
+                Assert.AreEqual(false, grain.UnhandledException.IsSet);
+
+
+
+                Console.WriteLine("Recreate from persisted delay state...");
+                grain.Initialize();
+                grain.LoadWorkflowState(4);
+                await grain.RegisterOrUpdateReminderAsync("{urn:orleans.activities/1.0/properties/reminders/bookmarks}1", TimeSpan.FromMilliseconds(500), TimeSpan.FromMinutes(2));
+                await grain.RegisterOrUpdateReminderAsync("{urn:orleans.activities/1.0/properties/reminders/bookmarks}2", TimeSpan.FromMilliseconds(500), TimeSpan.FromMinutes(2));
+                Console.WriteLine("ActivateAsync... 4/" + grain.WorkflowStatesCount);
+                await grain.WorkflowHost.ActivateAsync();
+
+                Console.WriteLine("Completed.WaitAsync...");
+                await grain.Completed.WaitAsync(1);
+                grain.Written.Reset();
+                Console.WriteLine("Written.WaitAsync...");
+                await grain.Written.WaitAsync(1);
+                Console.WriteLine("---DONE---");
+
+                try
+                {
+                    string response = await grain.WorkflowHost.OperationAsync<string, string>("IWorkflowInterface.OperationWithParamsAsync",
+                        () => Task.FromResult("requestResult"));
+                    Console.WriteLine("OperationWithParamsAsync completed, response: " + response);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("...Exception thrown " + e.GetType());
+                    Assert.AreEqual(typeof(OperationRepeatedException<string>), e.GetType());
+                    Assert.AreEqual("Response", (e as OperationRepeatedException<string>).PreviousResponseParameter);
+                }
+                try
+                {
+                    await grain.WorkflowHost.OperationAsync("IWorkflowInterface.OperationWithoutParamsAsync",
+                        () => TaskConstants.Completed);
+                    Console.WriteLine("OperationWithoutParamsAsync completed");
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("...Exception thrown " + e.GetType());
+                    Assert.AreEqual(typeof(OperationRepeatedException), e.GetType());
+                }
+
+                Assert.AreEqual(ActivityInstanceState.Closed, grain.CompletionState);
+                Assert.AreEqual(10, grain.WorkflowStatesCount);
+                Assert.AreEqual(false, grain.UnhandledException.IsSet);
+            });
+        }
     }
 }

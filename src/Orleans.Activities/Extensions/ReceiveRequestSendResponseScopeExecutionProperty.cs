@@ -85,6 +85,9 @@ namespace Orleans.Activities.Extensions
         //[DataMember] If the workflow is reloaded during execution, taskCompletionSource is lost intentionally.
         private TaskCompletionSource<TResult> taskCompletionSource;
 
+        [DataMember]
+        private bool taskCompletionSourceIsInitialized;
+
         // Called by SendResponse.
         public ReceiveRequestSendResponseScopeExecutionProperty(bool idempotent)
             : base(idempotent)
@@ -99,12 +102,14 @@ namespace Orleans.Activities.Extensions
                 throw new ArgumentException($"Operation's taskCompletionSource is '{taskCompletionSource.GetType().GetFriendlyName()}' and not '{typeof(TaskCompletionSource<TResult>).GetFriendlyName()}', use the proper SendResponse or SendResponse<> activity.");
 
             this.taskCompletionSource = taskCompletionSource as TaskCompletionSource<TResult>;
+            taskCompletionSourceIsInitialized = true;
         }
 
         // Called by SendResponse.
         public void AssertIsInitialized()
         {
-            if (string.IsNullOrEmpty(OperationName) || taskCompletionSource == null)
+            // When the workflow is reloaded, the taskCompletionSource is lost (is null), but this is not a problem.
+            if (string.IsNullOrEmpty(OperationName) || !taskCompletionSourceIsInitialized)
                 throw new InvalidOperationException(typeof(ReceiveRequestSendResponseScopeExecutionProperty<TResult>).GetFriendlyName() + " is not initialized, both Initialize() must be called by ReceiveRequest before any SendResponse activity.");
         }
 
