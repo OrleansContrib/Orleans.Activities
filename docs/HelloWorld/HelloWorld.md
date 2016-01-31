@@ -159,7 +159,11 @@ Task<Func<Task<string>>> IHelloWorkflowCallbackInterface.WhatShouldISay(string c
 
 ## Workflow / Activity
 
-And see the Workflow. It calls back the grain, and returns the response to the grain at the end.
+And see the Workflow:
+
+* First it accepts the incoming `GreetClient()` operation, calls back the grain with `WhatShouldISay()` operation, and returns the response to the grain.
+* Then it waits 1 minute for the `FarewellClient()` operation, if it times out, it cancels the operation and completes.
+* Both `GreetClient()` and `FarewellClient()` operations are idempotent, so the responses are persisted (in our concrete example, `FarewellClient()` operation times out, so the fact that it was canceled is persisted).
 
 ![HelloActivity.xaml](https://raw.githubusercontent.com/OrleansContrib/Orleans.Activities/master/docs/HelloWorld/HelloActivity.png)
 
