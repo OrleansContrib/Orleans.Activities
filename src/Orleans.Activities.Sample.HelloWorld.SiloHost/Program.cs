@@ -22,6 +22,7 @@ TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR TH
 */
 
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 using Orleans.Activities.Sample.HelloWorld.GrainInterfaces;
@@ -33,6 +34,24 @@ namespace Orleans.Activities.Sample.HelloWorld.SiloHost
     /// </summary>
     public class Program
     {
+        private static void WriteLine(string message)
+        {
+            ConsoleColor backgroundColor = Console.BackgroundColor;
+            Console.BackgroundColor = ConsoleColor.DarkGray;
+            Console.ForegroundColor = ConsoleColor.White;
+            Console.WriteLine(message);
+            Console.BackgroundColor = backgroundColor;
+        }
+
+        private static void Write(string message)
+        {
+            ConsoleColor backgroundColor = Console.BackgroundColor;
+            Console.BackgroundColor = ConsoleColor.DarkGray;
+            Console.ForegroundColor = ConsoleColor.White;
+            Console.Write(message);
+            Console.BackgroundColor = backgroundColor;
+        }
+
         static void Main(string[] args)
         {
             // The Orleans silo environment is initialized in its own app domain in order to more
@@ -53,16 +72,31 @@ namespace Orleans.Activities.Sample.HelloWorld.SiloHost
             var helloGrain = GrainClient.GrainFactory.GetGrain<IHello>(Guid.NewGuid());
             try
             {
-                Console.WriteLine($"\n\n{helloGrain.SayHello("Good morning, my friend!").Result}\n\n");
-                Console.WriteLine("\n\nLet see idempotent forward recovery...\n\n");
-                Console.WriteLine($"\n\n{helloGrain.SayHello("Ooops").Result}\n\n");
+                WriteLine("\n\nCalling SayHello...\n\n");
+                WriteLine($"\n\n{helloGrain.SayHello("Good morning, my friend!").Result}\n\n");
+
+                WriteLine("Let see idempotent forward recovery, calling SayHello again...\n\n");
+                WriteLine($"\n\n{helloGrain.SayHello("Ooops").Result}\n\n");
+
+                WriteLine("Wait to timeout the waiting for our farewell... (We have to wait at least 1 minute, this is the minimum Reminder time in Orleans.)\n\n");
+                for (int i = 65; i > 0; --i)
+                {
+                    if (i % 5 == 0)
+                        Write(i.ToString());
+                    else
+                        Write(".");
+                    Thread.Sleep(TimeSpan.FromSeconds(1));
+                }
+
+                WriteLine("\n\n\nCalling SayBye...\n\n");
+                WriteLine($"{helloGrain.SayBye().Result}\n\n");
             }
             catch (Exception e)
             {
-                Console.WriteLine($"\n\n{e.ToString()}\n\n");
+                WriteLine($"\n\n{e.ToString()}\n\n");
             }
 
-            Console.WriteLine("Orleans Silo is running.\nPress Enter to terminate...");
+            WriteLine("\n\nOrleans Silo is running.\nPress Enter to terminate...\n\n");
             Console.ReadLine();
 
             hostDomain.DoCallBack(ShutdownSilo);

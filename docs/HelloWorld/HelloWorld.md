@@ -8,12 +8,13 @@ Based on Orleans [Hello World](https://dotnet.github.io/orleans/Samples-Overview
 
 ## Interface
 
-IHello is the same.
+IHello is nearly the same, an optional `SayBye()` method is added.
 
 ```c#
 public interface IHello : IGrainWithGuidKey
 {
   Task<string> SayHello(string greeting);
+  Task<string> SayBye();
 }
 ```
 
@@ -43,6 +44,7 @@ There are 2 restrictions on the methods:
 public interface IHelloWorkflowInterface
 {
   Task<string> GreetClient(Func<Task<string>> clientSaid);
+  Task<string> FarewellClient(Func<Task> request);
 }
 ```
 
@@ -100,7 +102,7 @@ protected override Task OnUnhandledExceptionAsync(Exception exception, Activity 
 }
 ```
 
-The public grain interface method, that does nothing just calls the workflow's only affector operation. A normal grain can store data from the incoming message in the state, call other grains, closure the necessary data into the parameter delegate. After the await it can build a complex response message based on the value the workflow returned and the grain state, or any other information.
+The public `SayHello()` grain interface method, that does nothing just calls the workflow's `GreetClient()` WorkflowInterface operation. A normal grain can store data from the incoming message in the state, call other grains, closure the necessary data into the parameter delegate. After the await, it can build a complex response message based on the value the workflow returned and the grain state, or any other information.
 
 The parameter delegate executed when the workflow accepts the incoming call.
 
@@ -114,14 +116,38 @@ public async Task<string> SayHello(string greeting)
     return await WorkflowInterface.GreetClient(() =>
       Task.FromResult(greeting));
   }
-  catch (RepeatedOperationException<string> e)
+  catch (OperationRepeatedException<string> e)
   {
     return e.PreviousResponseParameter;
   }
 }
 ```
 
-This is the explicit implementation of the effector interface's only method, that does nearly nothing. A normal grain can modify the grain's State, call other grain's operations or do nearly anything a normal grain method can.  
+The public `SayBye()` grain interface method, that also does nothing just calls the workflow's `FarewellClient()` optional WorkflowInterface operation.
+The parameter delegate executed when the workflow accepts the incoming call.
+
+It also shows how to implement optional operation's idempotent canceled responses for the incoming calls. Optional in this case means, that after a timeout the workflow cancels the waiting for the operation. In the canceled case, after the timeout, the parameter delegate won't be executed!
+
+```c#
+public async Task<string> SayBye()
+{
+  try
+  {
+    return await WorkflowInterface.FarewellClient(() =>
+      Task.CompletedTask);
+  }
+  catch (OperationRepeatedException<string> e)
+  {
+    return e.PreviousResponseParameter;
+  }
+  catch (OperationCanceledException)
+  {
+    return "Sorry, we have waited for your farewell, but gave up!";
+  }
+}
+```
+
+This is the explicit implementation of the workflow's `WhatShouldISay()` WorkflowCallbackInterface operation, that does nearly nothing. A normal grain can modify the grain's State, call other grain's operations or do nearly anything a normal grain method can.  
 
 The return value delegate executed when the workflow accepts the outgoing call's response.
 

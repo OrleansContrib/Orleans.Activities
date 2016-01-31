@@ -1,14 +1,26 @@
 # Orleans.Activities
 
+![Orleans logo](https://raw.githubusercontent.com/OrleansContrib/Orleans.Activities/master/src/Orleans.Activities.png)
+
 Workflow Foundation (.Net 4.x System.Activities workflows) over Orleans framework to provide stable, long-running, extremely scalable processes with XAML designer support.
 
-__NOTE:__ This project currently is an __experiment__, not production quality! There is no NuGet package for it.
+__NOTE:__ This project currently is an __experiment__, not production quality! There is no CI nor NuGet package for it.
 
-Waffle.io: [![Ready](https://badge.waffle.io/OrleansContrib/Orleans.Activities.svg?label=Phase-Ready&title=Ready)](http://waffle.io/OrleansContrib/Orleans.Activities)
-[![Up for Grabs (filtered view)](https://badge.waffle.io/OrleansContrib/Orleans.Activities.svg?label=Status-Up%20for%20Grabs&title=Up%20for%20Grabs%20%28filtered%20view%29)](http://waffle.io/OrleansContrib/Orleans.Activities?label=Status-Up%20for%20Grabs)
+[![Issue Stats](http://www.issuestats.com/github/OrleansContrib/Orleans.Activities/badge/pr)](http://www.issuestats.com/github/OrleansContrib/Orleans.Activities)
+[![Issue Stats](http://www.issuestats.com/github/OrleansContrib/Orleans.Activities/badge/issue)](http://www.issuestats.com/github/OrleansContrib/Orleans.Activities)
+
 [![Help Wanted (filtered view)](https://badge.waffle.io/OrleansContrib/Orleans.Activities.svg?label=Status-Help%20Wanted&title=Help%20Wanted%20%28filtered%20view%29)](http://waffle.io/OrleansContrib/Orleans.Activities?label=Status-Help%20Wanted)
+[![Up for Grabs (filtered view)](https://badge.waffle.io/OrleansContrib/Orleans.Activities.svg?label=Status-Up%20for%20Grabs&title=Up%20for%20Grabs%20%28filtered%20view%29)](http://waffle.io/OrleansContrib/Orleans.Activities?label=Status-Up%20for%20Grabs)
+[![Ready](https://badge.waffle.io/OrleansContrib/Orleans.Activities.svg?label=Phase-Ready&title=Ready)](http://waffle.io/OrleansContrib/Orleans.Activities)
+[![In Progress](https://badge.waffle.io/OrleansContrib/Orleans.Activities.svg?label=Phase-In%20Progress&title=In%20Progress)](http://waffle.io/OrleansContrib/Orleans.Activities)
 
 ~~Documentation~~ (see [HelloWorld](https://github.com/OrleansContrib/Orleans.Activities/blob/master/docs/HelloWorld/HelloWorld.md) sample)
+
+[Coding Guidelines](https://github.com/dotnet/corefx/blob/master/Documentation/coding-guidelines/coding-style.md)
+
+[Design Guidelines](https://github.com/dotnet/corefx/blob/master/Documentation/coding-guidelines/framework-design-guidelines-digest.md)
+
+This project is licensed under the [Apache License](https://github.com/OrleansContrib/Orleans.Activities/blob/master/LICENSE).
 
 ## Concept
 
@@ -60,10 +72,11 @@ Under construction:
 
 Not implemented, help wanted (for design and for implementation):
 
-* DynamicUpdateMap support (updating loaded workflows to a newer definition version), though the separation of the application logic (the plain C# delegates) and the process (the diagram) results in a very simple workflow diagram, that has a big chance you won't need to update when it runs 
+* DynamicUpdateMap support (updating loaded workflows to a newer definition version), though the separation of the application logic (the plain C# delegates) and the process (the diagram) results in a very simple workflow diagram, that has a big chance you won't need to update when it runs
 * TransactionScope activity support (see https://github.com/dotnet/orleans/issues/1090)
+* See all [Help Wanted issues](http://waffle.io/OrleansContrib/Orleans.Activities?label=Status-Help%20Wanted) (filtered view)
 
-And there are nearly unlimited issues...
+And there are nearly unlimited [Open issues](http://waffle.io/OrleansContrib/Orleans.Activities)...
 
 ## Samples
 

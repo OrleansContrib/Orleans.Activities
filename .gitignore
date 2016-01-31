@@ -234,6 +234,7 @@ _Pvt_Extensions
 
 # Visual Paradigm
 .vpprefdata/
+*.vpp.bak
 *.vpp~*
 *.vpp.working
 *.vpp.working-journal

@@ -19,11 +19,12 @@ namespace Orleans.Activities.Sample.HelloWorld.Grains
 
     public interface IHelloWorkflowInterface
     {
-        // This is the operation that the grain calls on the workflow, it shouldn't be the same as the IHello grain interface method!
+        // These are the operations that the grain calls on the workflow, these shouldn't be the same as the IHello grain interface method!
         // There are 2 restrictions on the methods:
         // - it must have 1 parameter, with type Func<Task<anything>> or Func<Task> (executed when the workflow accepts the request)
         // - the return type can be Task or Task<anything>
         Task<string> GreetClient(Func<Task<string>> clientSaid);
+        Task<string> FarewellClient(Func<Task> request);
     }
 
     public interface IHelloWorkflowCallbackInterface
@@ -64,9 +65,28 @@ namespace Orleans.Activities.Sample.HelloWorld.Grains
                 return await WorkflowInterface.GreetClient(() =>
                     Task.FromResult(greeting));
             }
-            catch (RepeatedOperationException<string> e)
+            catch (OperationRepeatedException<string> e)
             {
                 return e.PreviousResponseParameter;
+            }
+        }
+
+        // The parameter delegate executed when the workflow accepts the incoming call,
+        // it can modify the grain's State or do nearly anything a normal grain method can (command pattern).
+        public async Task<string> SayBye()
+        {
+            try
+            {
+                return await WorkflowInterface.FarewellClient(() =>
+                    Task.CompletedTask);
+            }
+            catch (OperationRepeatedException<string> e)
+            {
+                return e.PreviousResponseParameter;
+            }
+            catch (OperationCanceledException)
+            {
+                return "Sorry, we have waited for your farewell, but gave up!";
             }
         }
 
