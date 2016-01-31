@@ -164,7 +164,7 @@ namespace Orleans.Activities.Hosting
             {
                 activeTaskCompletionSources.Add(taskCompletionSource);
                 await ResumeOperationBookmarkAsync(operationName, taskCompletionSource, requestResult, typeof(void),
-                    (responseParameter) => new RepeatedOperationException());
+                    (responseParameter, message) => new OperationRepeatedException(message));
                 await taskCompletionSource.Task;
             }
             finally
@@ -182,7 +182,7 @@ namespace Orleans.Activities.Hosting
             {
                 activeTaskCompletionSources.Add(taskCompletionSource);
                 await ResumeOperationBookmarkAsync(operationName, taskCompletionSource, requestResult, typeof(TResponseParameter),
-                    (responseParameter) => new RepeatedOperationException<TResponseParameter>(responseParameter as TResponseParameter));
+                    (responseParameter, message) => new OperationRepeatedException<TResponseParameter>(responseParameter as TResponseParameter, message));
                 return await taskCompletionSource.Task;
             }
             finally
@@ -192,9 +192,9 @@ namespace Orleans.Activities.Hosting
         }
 
         // If the resumption didn't timed out nor aborted, but not found, it tries to return the previous response parameter if the operation was idempotent,
-        // ie. throws RepeatedOperationException, or throws InvalidOperationException if the previous response is not known (didn't happen or not idempotent).
+        // ie. throws OperationRepeatedException, or throws InvalidOperationException if the previous response is not known (didn't happen or not idempotent).
         private async Task ResumeOperationBookmarkAsync(string operationName, object taskCompletionSource, object requestResult, Type responseParameterType,
-            Func<object, RepeatedOperationException> createRepeatedOperationException)
+            Func<object, string, OperationRepeatedException> createOperationRepeatedException)
         {
             BookmarkResumptionResult result = await ScheduleAndRunInstanceAsync(Parameters.ResumeOperationTimeout,
                 () => instance.ScheduleOperationBookmarkResumptionAsync(operationName, new object[] { taskCompletionSource, requestResult }),
@@ -203,7 +203,7 @@ namespace Orleans.Activities.Hosting
 
             if (result == BookmarkResumptionResult.NotFound
                 || result == BookmarkResumptionResult.NotReady && workflowInstanceState == WorkflowInstanceState.Complete)
-                previousResponseParameterExtension.ThrowPreviousResponseParameter(operationName, responseParameterType, createRepeatedOperationException);
+                previousResponseParameterExtension.ThrowPreviousResponseParameter(operationName, responseParameterType, createOperationRepeatedException);
             else if (result == BookmarkResumptionResult.NotReady) // && !Complete
                 // Instance is created but the initialization RunAsync() hasn't been called, this is impossible.
                 throw new InvalidOperationException($"Instance state is '{workflowInstanceState}', instance is not ready to process operation '{operationName}'.");
@@ -412,14 +412,14 @@ namespace Orleans.Activities.Hosting
 
         public void OnNotifyIdle()
         {
-            activeTaskCompletionSources.TrySetCompletedEach();
+            activeTaskCompletionSources.TrySetCompleted();
             // During ActivateAsync, idle is null.
             idle?.Set();
         }
 
         public Task OnUnhandledExceptionAsync(Exception exception, Activity source)
         {
-            if (activeTaskCompletionSources.TryStoreException(exception))
+            if (activeTaskCompletionSources.TrySetException(exception))
                 return TaskConstants.Completed;
             return grain.OnUnhandledExceptionAsync(exception, source);
         }

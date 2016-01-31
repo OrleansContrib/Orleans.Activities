@@ -23,6 +23,7 @@ namespace Orleans.Activities.Hosting
 
         Task<BookmarkResumptionResult> ResumeBookmarkThroughHostAsync(Bookmark bookmark, object value, TimeSpan timeout);
         Task AbortThroughHostAsync(Exception reason);
+        Task<bool> NotifyHostOnUnhandledExceptionAsync(Exception exception, Activity source);
 
         Task<Func<Task<TResponseResult>>> OnOperationAsync<TRequestParameter, TResponseResult>(string operationName, TRequestParameter requestParameter)
             where TRequestParameter : class

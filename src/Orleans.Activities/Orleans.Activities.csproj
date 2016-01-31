@@ -84,6 +84,7 @@
       <DependentUpon>ReceiveRequestSendResponseScope.xaml</DependentUpon>
     </Compile>
     <Compile Include="Extensions\ReceiveRequestSendResponseScopeExecutionProperty.cs" />
+    <Compile Include="Helpers\ActiveTaskCompletionSources.cs" />
     <Compile Include="Helpers\WorkflowActivityHelper.cs" />
     <Compile Include="Helpers\TypeExtensions.cs" />
     <Compile Include="Helpers\WorkflowInterfaceInfo.cs" />
@@ -92,6 +93,8 @@
     <Compile Include="Helpers\ReceiveRequestSendResponseScopeHelper.cs" />
     <Compile Include="Helpers\TaskFuncEvaluator.cs" />
     <Compile Include="Helpers\TaskFuncTaskWaiter.cs" />
+    <Compile Include="Hosting\CancelWorkflow.cs" />
+    <Compile Include="Hosting\NativeActivityContextExtensions.cs" />
     <Compile Include="Hosting\WorkflowInterfaceProxy.cs" />
     <Compile Include="Hosting\WorkflowCallbackInterfaceProxy.cs" />
     <Compile Include="Persistence\InstanceValueDictionarySerializer.cs" />
@@ -238,7 +241,7 @@
     <Compile Include="Persistence\ValueDictionaryView.cs" />
     <Compile Include="ReceiveRequest.cs" />
     <Compile Include="ReceiveResponse.cs" />
-    <Compile Include="Core\RepeatedOperationException.cs" />
+    <Compile Include="Core\OperationRepeatedException.cs" />
     <Compile Include="RetryDelay.cs" />
     <Compile Include="SendRequest.cs" />
     <Compile Include="SendRequestReceiveResponseScope.cs" />

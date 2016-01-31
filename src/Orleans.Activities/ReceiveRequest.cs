@@ -79,6 +79,7 @@ namespace Orleans.Activities
 
         protected override void Execute(NativeActivityContext context)
         {
+            context.GetReceiveRequestSendResponseScopeExecutionProperty().Initialize(OperationName);
             context.CreateBookmark(OperationName, BookmarkResumptionCallback);
         }
         
@@ -89,7 +90,7 @@ namespace Orleans.Activities
             ReceiveRequestExtensions.GetOperationParameters(value, out taskCompletionSource, out requestResultTaskFunc);
 
             // Initializes the execution property held by the scope. SendResponse or the scope will use it (the scope for propagating any exception).
-            context.GetReceiveRequestSendResponseScopeExecutionProperty().Initialize(OperationName, taskCompletionSource);
+            context.GetReceiveRequestSendResponseScopeExecutionProperty().Initialize(taskCompletionSource);
             // Schedules the receiving delegate.
             context.ScheduleAction(requestResultEvaluator, requestResultTaskFunc, EvaluatorCompletionCallback);
         }
@@ -150,6 +151,7 @@ namespace Orleans.Activities
 
         protected override void Execute(NativeActivityContext context)
         {
+            context.GetReceiveRequestSendResponseScopeExecutionProperty().Initialize(OperationName);
             context.CreateBookmark(OperationName, BookmarkResumptionCallback);
         }
 
@@ -160,7 +162,7 @@ namespace Orleans.Activities
             ReceiveRequestExtensions.GetOperationParameters(value, out taskCompletionSource, out requestResultTaskFunc);
 
             // Initializes the execution property held by the scope. SendResponse or the scope will use it (the scope for propagating any exception).
-            context.GetReceiveRequestSendResponseScopeExecutionProperty().Initialize(OperationName, taskCompletionSource);
+            context.GetReceiveRequestSendResponseScopeExecutionProperty().Initialize(taskCompletionSource);
             // Schedules the receiving delegate.
             context.ScheduleFunc(requestResultEvaluator, requestResultTaskFunc, EvaluatorCompletionCallback);
         }

@@ -32,7 +32,8 @@ namespace Orleans.Activities.Hosting
     //   these events are used by DurableReminderExtension, or any notification- or persistence-participant extension
     // - must be hosted with WorkflowHost, because WorkflowHost will recreate it from the latest known/saved state if it aborts
     // - can only be used with a "single threaded", optionally reentrant scheduler,
-    //   but WorkflowHost will degrade it always to non-reentrant in case of workflow/activities, this is a WFI design requirement
+    //   but WorkflowHost will degrade it always to non-reentrant in case of workflow/activities, this is a WFI design requirement,
+    //   but in WFI non-reentrant means, it can't accept requests until it goes idle
     // - after the Run() is called on controller/executor it returns immediately, but runs in the "background" until it runs out of work to do
     // - controller/executor's Run() after running out of work to do will call OnNotifyPaused()
     // - OnNotifyPaused() if necessary calls hosts's OnCompletedAsync() and persists state, and at the end signals WorkflowHost that it is idle (OnNotifyIdle),
@@ -108,6 +109,13 @@ namespace Orleans.Activities.Hosting
 
         public Task AbortThroughHostAsync(Exception reason) =>
             host.AbortAsync(reason);
+
+        public async Task<bool> NotifyHostOnUnhandledExceptionAsync(Exception exception, Activity source) =>
+            await ExecuteWithExceptionTrackingAsync(async () =>
+            {
+                await IfHasPendingThenFlushTrackingRecordsAsync();
+                await host.OnUnhandledExceptionAsync(exception, source);
+            }) == null;
 
         public Task<Func<Task<TResponseResult>>> OnOperationAsync<TRequestParameter, TResponseResult>(string operationName, TRequestParameter requestParameter)
                 where TRequestParameter : class
@@ -506,14 +514,6 @@ namespace Orleans.Activities.Hosting
 
         #region notification
 
-        // Just a helper function.
-        protected Task<Exception> NotifyHostOnUnhandledExceptionAsync(Exception exception, Activity source) =>
-            ExecuteWithExceptionTrackingAsync(async () =>
-            {
-                await IfHasPendingThenFlushTrackingRecordsAsync();
-                await host.OnUnhandledExceptionAsync(exception, source);
-            });
-
         // - after controller/executor Run() has called, when it runs out of work or unhandled exception occurs,
         //   it calls OnNotifyPaused() or OnNotifyUnhandledException() respectively
         // - these methods run fire and forget,
@@ -540,7 +540,7 @@ namespace Orleans.Activities.Hosting
         protected async Task OnNotifyUnhandledExceptionAsync(Exception exception, Activity source, string sourceInstanceId)
         {
             UnhandledExceptionAction unhandledExceptionAction = Parameters.UnhandledExceptionAction;
-            if (await NotifyHostOnUnhandledExceptionAsync(exception, source) != null)
+            if (! await NotifyHostOnUnhandledExceptionAsync(exception, source))
                 // If the host can't handle it, the instance will abort, independently from the configuration.
                 unhandledExceptionAction = UnhandledExceptionAction.Abort;
             // TODO Do we really need to protect againts exceptions below? Theoretically Controller won't throw now.

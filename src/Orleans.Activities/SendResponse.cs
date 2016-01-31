@@ -38,7 +38,7 @@ namespace Orleans.Activities
     public sealed class SendResponse : NativeActivity, ISendResponse
     {
         [Category(Constants.RequiredCategoryName)]
-        [Description("The fact, that the response is already sent, will be persisted. If the client repeats the operation later, it will receive a RepeatedOperationException.")]
+        [Description("The fact, that the response is already sent, will be persisted. If the client repeats the operation later, it will receive a OperationRepeatedException.")]
         public bool Idempotent { get; set; }
 
         [Category(Constants.RequiredCategoryName)]
@@ -63,7 +63,7 @@ namespace Orleans.Activities
         // Called by ReceiveRequestSendResponseScope, to create the ReceiveRequestSendResponseScopeExecutionPropertyFactory with the proper TResponseParameter type.
         // Later ReceiveRequest will set the TaskCompletionSource in it to send back the result or let scope propagate unhandled exceptions.
         Func<ReceiveRequestSendResponseScopeExecutionProperty> ISendResponse.CreateReceiveRequestSendResponseScopeExecutionPropertyFactory() =>
-            () => new ReceiveRequestSendResponseScopeExecutionProperty<object>();
+            () => new ReceiveRequestSendResponseScopeExecutionProperty<object>(Idempotent);
 
         // We must persist before sending the response if we are idempotent, but this will cause double persist if the workflow goes idle after the response is sent.
         // TODO: can we do anything against this???
@@ -112,7 +112,7 @@ namespace Orleans.Activities
         public InArgument<TResponseParameter> ResponseParameter { get; set; }
 
         [Category(Constants.RequiredCategoryName)]
-        [Description("The fact, that the response is already sent, will be persisted together with the ResponseParameter. If the client repeats the operation later, it will receive a RepeatedOperationException with the previous ResponseParameter in it.")]
+        [Description("The fact, that the response is already sent, will be persisted together with the ResponseParameter. If the client repeats the operation later, it will receive a OperationRepeatedException with the previous ResponseParameter in it.")]
         public bool Idempotent { get; set; }
 
         [Category(Constants.RequiredCategoryName)]
@@ -137,7 +137,7 @@ namespace Orleans.Activities
         // Called by ReceiveRequestSendResponseScope, to create the ReceiveRequestSendResponseScopeExecutionPropertyFactory with the proper TResponseParameter type.
         // Later ReceiveRequest will set the TaskCompletionSource in it to send back the result or let scope propagate unhandled exceptions.
         Func<ReceiveRequestSendResponseScopeExecutionProperty> ISendResponse.CreateReceiveRequestSendResponseScopeExecutionPropertyFactory() =>
-            () => new ReceiveRequestSendResponseScopeExecutionProperty<TResponseParameter>();
+            () => new ReceiveRequestSendResponseScopeExecutionProperty<TResponseParameter>(Idempotent);
 
         // We must persist before sending the response if we are idempotent, but this will cause double persist if the workflow goes idle after the response is sent.
         // TODO: can we do anything against this???

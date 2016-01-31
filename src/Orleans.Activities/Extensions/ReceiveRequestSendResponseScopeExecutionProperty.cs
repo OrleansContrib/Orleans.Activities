@@ -38,19 +38,41 @@ namespace Orleans.Activities.Extensions
     public abstract class ReceiveRequestSendResponseScopeExecutionProperty
     {
         [DataMember]
-        public string OperationName { get; protected set; }
+        #pragma warning disable CSE0002 // Use getter-only auto properties - setter method is required by persistence
+        public bool Idempotent { get; private set; }
+        #pragma warning restore CSE0002 // Use getter-only auto properties
 
-        //[DataMember] If the workflow is reloaded during execution, taskCompletionSource is lost intentionally.
-        protected object taskCompletionSource;
+        [DataMember]
+        public string OperationName { get; private set; }
+
+        [DataMember]
+        public bool Faulted { get; set; }
+
+        // Called implicitly by SendResponse.
+        protected ReceiveRequestSendResponseScopeExecutionProperty(bool idempotent)
+        {
+            Idempotent = idempotent;
+        }
 
         // Called by ReceiveRequest.
-        public abstract void Initialize(string operationName, object taskCompletionSource);
+        public void Initialize(string operationName)
+        {
+            if (!string.IsNullOrEmpty(OperationName))
+                throw new InvalidOperationException(nameof(OperationName) + " is already initialized.");
+            OperationName = operationName;
+        }
+
+        // Called by ReceiveRequest.
+        public abstract void Initialize(object taskCompletionSource);
+
+        // Called by ReceiveRequestSendResponseScope.
+        public abstract bool IsInitializedButNotCompleted { get; }
+
+        // Called by ReceiveRequestSendResponseScope.
+        public abstract bool IsInitializedAndCompleted { get; }
 
         // Called by ReceiveRequestSendResponseScope.
         public abstract void TrySetTaskCompletionSourceCanceled();
-
-        // Called by ReceiveRequestSendResponseScope.
-        public abstract bool TrySetTaskCompletionSourceException(Exception exception);
     }
 
     /// <summary>
@@ -60,28 +82,30 @@ namespace Orleans.Activities.Extensions
     [DataContract]
     public sealed class ReceiveRequestSendResponseScopeExecutionProperty<TResult> : ReceiveRequestSendResponseScopeExecutionProperty
     {
-        private void AssertIsNotInitialized()
-        {
-            if (!string.IsNullOrEmpty(OperationName))
-                throw new InvalidOperationException(typeof(ReceiveRequestSendResponseScopeExecutionProperty<TResult>).GetFriendlyName() + " is already initialized.");
-        }
-            
+        //[DataMember] If the workflow is reloaded during execution, taskCompletionSource is lost intentionally.
+        private TaskCompletionSource<TResult> taskCompletionSource;
+
+        // Called by SendResponse.
+        public ReceiveRequestSendResponseScopeExecutionProperty(bool idempotent)
+            : base(idempotent)
+        { }
+
         // Called by ReceiveRequest.
-        public override void Initialize(string operationName, object taskCompletionSource)
+        public override void Initialize(object taskCompletionSource)
         {
-            AssertIsNotInitialized();
+            if (this.taskCompletionSource != null)
+                throw new InvalidOperationException(nameof(taskCompletionSource) + " is already initialized.");
             if (!(taskCompletionSource is TaskCompletionSource<TResult>))
                 throw new ArgumentException($"Operation's taskCompletionSource is '{taskCompletionSource.GetType().GetFriendlyName()}' and not '{typeof(TaskCompletionSource<TResult>).GetFriendlyName()}', use the proper SendResponse or SendResponse<> activity.");
 
-            this.OperationName = operationName;
-            this.taskCompletionSource = taskCompletionSource;
+            this.taskCompletionSource = taskCompletionSource as TaskCompletionSource<TResult>;
         }
 
         // Called by SendResponse.
         public void AssertIsInitialized()
         {
-            if (string.IsNullOrEmpty(OperationName))
-                throw new InvalidOperationException(typeof(ReceiveRequestSendResponseScopeExecutionProperty<TResult>).GetFriendlyName() + " is not initialized, Initialize() must be called by ReceiveRequest before any SendResponse activity.");
+            if (string.IsNullOrEmpty(OperationName) || taskCompletionSource == null)
+                throw new InvalidOperationException(typeof(ReceiveRequestSendResponseScopeExecutionProperty<TResult>).GetFriendlyName() + " is not initialized, both Initialize() must be called by ReceiveRequest before any SendResponse activity.");
         }
 
         // Called by SendResponse.
@@ -93,22 +117,22 @@ namespace Orleans.Activities.Extensions
                     throw new InvalidOperationException("Operation can't be completed, this is a reloaded workflow, there is no TaskCompletionSource to set the result on the operation.");
             }
             else
-                (taskCompletionSource as TaskCompletionSource<TResult>).SetResult(responseParameter);
+                taskCompletionSource.SetResult(responseParameter);
         }
+
+        // Called by ReceiveRequestSendResponseScope.
+        public override bool IsInitializedButNotCompleted =>
+            !string.IsNullOrEmpty(OperationName) && taskCompletionSource != null && !taskCompletionSource.Task.IsCompleted;
+
+        // Called by ReceiveRequestSendResponseScope.
+        public override bool IsInitializedAndCompleted =>
+            !string.IsNullOrEmpty(OperationName) && taskCompletionSource != null && taskCompletionSource.Task.IsCompleted;
 
         // Called by ReceiveRequestSendResponseScope.
         public override void TrySetTaskCompletionSourceCanceled()
         {
             if (taskCompletionSource != null)
-                (taskCompletionSource as TaskCompletionSource<TResult>).TrySetCanceled();
-        }
-
-        // Called by ReceiveRequestSendResponseScope.
-        public override bool TrySetTaskCompletionSourceException(Exception exception)
-        {
-            if (taskCompletionSource != null)
-                return (taskCompletionSource as TaskCompletionSource<TResult>).TrySetException(exception);
-            return false;
+                taskCompletionSource.TrySetCanceled();
         }
     }
 }
