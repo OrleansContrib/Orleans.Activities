@@ -997,7 +997,7 @@ namespace Orleans.Activities.Test
                             {
                                 await grain.WorkflowHost.OperationAsync("IWorkflowInterface.OperationWithoutParamsAsync",
                                     () => TaskConstants.Completed);
-                                Console.WriteLine("OperationWithoutParamsAsync completed");
+                                Assert.Fail("OperationWithoutParamsAsync completed");
                             }).Unwrap(),
                         Task.Factory.StartNew(async () =>
                             {
@@ -1020,7 +1020,7 @@ namespace Orleans.Activities.Test
                 Console.WriteLine("---DONE---");
 
                 Assert.AreEqual(ActivityInstanceState.Closed, grain.CompletionState);
-                Assert.AreEqual(3, grain.WorkflowStatesCount);
+                Assert.AreEqual(4, grain.WorkflowStatesCount);
                 Assert.AreEqual(false, grain.UnhandledException.IsSet);
 
 
@@ -1036,13 +1036,24 @@ namespace Orleans.Activities.Test
                 {
                     string response = await grain.WorkflowHost.OperationAsync<string, string>("IWorkflowInterface.OperationWithParamsAsync",
                         () => Task.FromResult("requestResult"));
-                    Console.WriteLine("OperationWithParamsAsync completed, response: " + response);
+                    Assert.Fail("OperationWithParamsAsync completed, response: " + response);
                 }
                 catch (Exception e)
                 {
                     Console.WriteLine("...Exception thrown " + e.GetType());
-                    Assert.AreEqual(typeof(RepeatedOperationException<string>), e.GetType());
-                    Assert.AreEqual("responseParameter", (e as RepeatedOperationException<string>).PreviousResponseParameter);
+                    Assert.AreEqual(typeof(OperationRepeatedException<string>), e.GetType());
+                    Assert.AreEqual("responseParameter", (e as OperationRepeatedException<string>).PreviousResponseParameter);
+                }
+                try
+                {
+                    await grain.WorkflowHost.OperationAsync("IWorkflowInterface.OperationWithoutParamsAsync",
+                        () => TaskConstants.Completed);
+                    Assert.Fail("OperationWithoutParamsAsync completed");
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("...Exception thrown " + e.GetType());
+                    Assert.AreEqual(typeof(OperationCanceledException), e.GetType());
                 }
                 Console.WriteLine("Completed.WaitAsync...");
                 await grain.Completed.WaitAsync(1);
@@ -1051,18 +1062,18 @@ namespace Orleans.Activities.Test
                 Console.WriteLine("---DONE---");
 
                 Assert.AreEqual(ActivityInstanceState.Closed, grain.CompletionState);
-                Assert.AreEqual(4, grain.WorkflowStatesCount);
+                Assert.AreEqual(5, grain.WorkflowStatesCount);
                 Assert.AreEqual(false, grain.UnhandledException.IsSet);
             });
         }
 
         [TestMethod]
-        public async Task WorkflowInterfaceOperationWithUnhandledException()
+        public async Task WorkflowInterfaceOperationWithUnhandledExceptionAndAbort()
         {
             await RunAsyncWithReentrantSingleThreadedScheduler(async () =>
             {
                 Grain grain = new Grain(typeof(WorkflowInterfaceOperation));
-                grain.Parameters = new Parameters(unhandledExceptionAction: UnhandledExceptionAction.Terminate); // Will not use it, it will abort!
+                grain.Parameters = new Parameters(unhandledExceptionAction: UnhandledExceptionAction.Abort, reactivationReminderPeriod: TimeSpan.FromMilliseconds(500));
                 grain.Initialize();
 
                 Console.WriteLine("ActivateAsync...");
@@ -1073,11 +1084,12 @@ namespace Orleans.Activities.Test
                 {
                     await grain.WorkflowHost.OperationAsync("IWorkflowInterface.OperationWithoutParamsAsync",
                         () => TaskConstants.Completed);
-                    Console.WriteLine("OperationWithoutParamsAsync completed");
+                    Assert.Fail("OperationWithoutParamsAsync completed");
                 }
                 catch (Exception e)
                 {
                     Console.WriteLine("...Exception thrown " + e.GetType());
+                    // On first attempt, there is the taskCompletionSource from the operation, the exception is delegated back.
                     Assert.AreEqual(typeof(TestException), e.GetType());
                 }
 
@@ -1093,20 +1105,150 @@ namespace Orleans.Activities.Test
 
 
 
-                Console.WriteLine("Recreate from Delay...");
-                grain.Initialize();
-                grain.LoadWorkflowState(0);
-                await grain.RegisterOrUpdateReminderAsync("{urn:orleans.activities/1.0/properties/reminders/bookmarks}1", TimeSpan.FromMilliseconds(500), TimeSpan.FromMinutes(2));
-                Console.WriteLine("ActivateAsync... 0/" + grain.WorkflowStatesCount);
-                await grain.WorkflowHost.ActivateAsync();
+                Console.WriteLine("Recreate from Delay... (by the repeated reminder)");
 
                 Console.WriteLine("UnhandledException.WaitAsync...");
+                // On second attempt, there is no taskCompletionSource from the operation, the exception becomes an UnhandledException.
                 await grain.UnhandledException.WaitAsync(1);
                 Assert.AreEqual(typeof(TestException), grain.UnhandledExceptionException.GetType());
+
+                // Let WF finish the abortion (we are just after the UnhandledException AsyncManualResetEvent).
+                await Task.Yield();
                 Console.WriteLine("---DONE---");
                 Assert.AreEqual(WorkflowInstanceState.Aborted, grain.WorkflowHost.WorkflowInstanceState);
                 Assert.AreEqual(1, grain.WorkflowStatesCount);
+            });
+        }
 
+        [TestMethod]
+        public async Task WorkflowInterfaceOperationWithUnhandledExceptionAndTerminate()
+        {
+            await RunAsyncWithReentrantSingleThreadedScheduler(async () =>
+            {
+                Grain grain = new Grain(typeof(WorkflowInterfaceOperation));
+                grain.Parameters = new Parameters(unhandledExceptionAction: UnhandledExceptionAction.Terminate);
+                grain.Initialize();
+
+                Console.WriteLine("ActivateAsync...");
+                await grain.WorkflowHost.ActivateAsync();
+
+                Console.WriteLine("OperationAsync...");
+                try
+                {
+                    await grain.WorkflowHost.OperationAsync("IWorkflowInterface.OperationWithoutParamsAsync",
+                        () => TaskConstants.Completed);
+                    Assert.Fail("OperationWithoutParamsAsync completed");
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("...Exception thrown " + e.GetType());
+                    // On first attempt, there is the taskCompletionSource from the operation, the exception is delegated back.
+                    Assert.AreEqual(typeof(TestException), e.GetType());
+                }
+
+                Console.WriteLine("Completed.WaitAsync...");
+                grain.Written.Reset();
+                await grain.Completed.WaitAsync(1);
+                Console.WriteLine("Written.WaitAsync...");
+                await grain.Written.WaitAsync(1);
+                Console.WriteLine("---DONE---");
+
+                Assert.AreEqual(ActivityInstanceState.Faulted, grain.CompletionState);
+                Assert.AreEqual(2, grain.WorkflowStatesCount);
+                Assert.AreEqual(false, grain.UnhandledException.IsSet);
+
+
+
+                // Let WF finish the reminder unregistration (we are just after the Written AsyncManualResetEvent).
+                await Task.Yield();
+                Console.WriteLine("Recreate from Delay...");
+                grain.Initialize();
+                grain.LoadWorkflowState(1);
+                await grain.RegisterOrUpdateReminderAsync("{urn:orleans.activities/1.0/properties/reminders/bookmarks}1", TimeSpan.FromMilliseconds(500), TimeSpan.FromMinutes(2));
+                Console.WriteLine("ActivateAsync... 1/" + grain.WorkflowStatesCount);
+                await grain.WorkflowHost.ActivateAsync();
+
+                Console.WriteLine("UnhandledException.WaitAsync...");
+                // On second attempt, there is no taskCompletionSource from the operation, the exception becomes an UnhandledException.
+                await grain.UnhandledException.WaitAsync(1);
+                Assert.AreEqual(typeof(TestException), grain.UnhandledExceptionException.GetType());
+
+                Console.WriteLine("Completed.WaitAsync...");
+                grain.Completed.Reset();
+                grain.Written.Reset();
+                await grain.Completed.WaitAsync(1);
+                Console.WriteLine("Written.WaitAsync...");
+                await grain.Written.WaitAsync(1);
+                Console.WriteLine("---DONE---");
+                Assert.AreEqual(ActivityInstanceState.Faulted, grain.CompletionState);
+                Assert.AreEqual(3, grain.WorkflowStatesCount);
+            });
+        }
+
+        [TestMethod]
+        public async Task WorkflowInterfaceOperationWithUnhandledExceptionAndCancel()
+        {
+            await RunAsyncWithReentrantSingleThreadedScheduler(async () =>
+            {
+                Grain grain = new Grain(typeof(WorkflowInterfaceOperation));
+                grain.Parameters = new Parameters(unhandledExceptionAction: UnhandledExceptionAction.Cancel);
+                grain.Initialize();
+
+                Console.WriteLine("ActivateAsync...");
+                await grain.WorkflowHost.ActivateAsync();
+
+                Console.WriteLine("OperationAsync...");
+                try
+                {
+                    await grain.WorkflowHost.OperationAsync("IWorkflowInterface.OperationWithoutParamsAsync",
+                        () => TaskConstants.Completed);
+                    Assert.Fail("OperationWithoutParamsAsync completed");
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("...Exception thrown " + e.GetType());
+                    // On first attempt, there is the taskCompletionSource from the operation, the exception is delegated back.
+                    Assert.AreEqual(typeof(TestException), e.GetType());
+                }
+
+                Console.WriteLine("Completed.WaitAsync...");
+                await grain.Completed.WaitAsync(1);
+                Console.WriteLine("Written.WaitAsync...");
+                grain.Written.Reset();
+                await grain.Written.WaitAsync(1);
+                Console.WriteLine("---DONE---");
+
+                // TODO CancelWorkflow has one serious flaw: the completion state is Closed and not Canceled.
+                Assert.AreEqual(ActivityInstanceState.Closed, grain.CompletionState);
+                Assert.AreEqual(3, grain.WorkflowStatesCount);
+                Assert.AreEqual(false, grain.UnhandledException.IsSet);
+
+
+
+                // Let WF finish the reminder unregistration (we are just after the Written AsyncManualResetEvent).
+                await Task.Yield();
+                Console.WriteLine("Recreate from Delay...");
+                grain.Initialize();
+                grain.LoadWorkflowState(2);
+                await grain.RegisterOrUpdateReminderAsync("{urn:orleans.activities/1.0/properties/reminders/bookmarks}1", TimeSpan.FromMilliseconds(500), TimeSpan.FromMinutes(2));
+                Console.WriteLine("ActivateAsync... 1/" + grain.WorkflowStatesCount);
+                await grain.WorkflowHost.ActivateAsync();
+
+                Console.WriteLine("UnhandledException.WaitAsync...");
+                // On second attempt, there is no taskCompletionSource from the operation, the exception becomes an UnhandledException.
+                await grain.UnhandledException.WaitAsync(1);
+                Assert.AreEqual(typeof(TestException), grain.UnhandledExceptionException.GetType());
+
+                Console.WriteLine("Completed.WaitAsync...");
+                grain.Completed.Reset();
+                await grain.Completed.WaitAsync(1);
+                Console.WriteLine("Written.WaitAsync...");
+                grain.Written.Reset();
+                await grain.Written.WaitAsync(1);
+                Console.WriteLine("---DONE---");
+                // TODO CancelWorkflow has one serious flaw: the completion state is Closed and not Canceled.
+                Assert.AreEqual(ActivityInstanceState.Closed, grain.CompletionState);
+                Assert.AreEqual(5, grain.WorkflowStatesCount);
             });
         }
 
@@ -1128,7 +1270,7 @@ namespace Orleans.Activities.Test
                 {
                     string response = await grain.WorkflowHost.OperationAsync<string, string>("IWorkflowInterface.OperationWithParamsAsync",
                         () => Task.FromResult("requestResult"));
-                    Console.WriteLine("OperationWithParamsAsync completed, response: " + response);
+                    Assert.Fail("OperationWithParamsAsync completed, response: " + response);
                 }
                 catch (Exception e)
                 {
@@ -1162,7 +1304,7 @@ namespace Orleans.Activities.Test
                 {
                     await grain.WorkflowHost.OperationAsync("IWorkflowInterface.OperationWithoutParamsAsync",
                         () => TaskConstants.Completed);
-                    Console.WriteLine("OperationWithoutParamsAsync completed");
+                    Assert.Fail("OperationWithoutParamsAsync completed");
                 }
                 catch (Exception e)
                 {
@@ -1170,7 +1312,10 @@ namespace Orleans.Activities.Test
                     Assert.AreEqual(typeof(TestException), e.GetType());
                 }
 
+                // During operation, the Task throws immediately, not only when the workflow is idle, we have to allow the workflow to get aborted.
+                await Task.Yield();
                 Console.WriteLine("---DONE---");
+
                 Assert.AreEqual(WorkflowInstanceState.Aborted, grain.WorkflowHost.WorkflowInstanceState);
                 Assert.AreEqual(false, grain.Completed.IsSet);
                 Assert.AreEqual(0, grain.WorkflowStatesCount);
@@ -1199,7 +1344,9 @@ namespace Orleans.Activities.Test
                     Assert.AreEqual(typeof(TestException), e.InnerException.GetType());
                 }
 
+                // During activation, the Task throws only when the workflow is idle, at this time it is already aborted.
                 Console.WriteLine("---DONE---");
+                // Activation failed, we can't access even the properties.
                 //Assert.AreEqual(WorkflowInstanceState.Aborted, grain.WorkflowHost.WorkflowInstanceState);
                 try
                 {
@@ -1234,16 +1381,8 @@ namespace Orleans.Activities.Test
 
                 grain.throwDuringPersistence = true;
                 Console.WriteLine("ResumeBookmarkAsync...");
-                try
-                {
-                    BookmarkResumptionResult result = await grain.WorkflowInstanceCallback.ResumeBookmarkAsync(new System.Activities.Bookmark("Bookmark1"), null, TimeSpan.FromSeconds(1));
-                    Console.WriteLine("ResumeBookmarkAsync completed");
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine("...Exception thrown " + e.GetType());
-                    Assert.AreEqual(typeof(TestException), e.GetType());
-                }
+                BookmarkResumptionResult result = await grain.WorkflowInstanceCallback.ResumeBookmarkAsync(new System.Activities.Bookmark("Bookmark1"), null, TimeSpan.FromSeconds(1));
+                Console.WriteLine("ResumeBookmarkAsync completed");
 
                 Console.WriteLine("UnhandledException.WaitAsync...");
                 await grain.Completed.WaitAsync(1);
@@ -1253,6 +1392,84 @@ namespace Orleans.Activities.Test
                 Console.WriteLine("---DONE---");
                 Assert.AreEqual(WorkflowInstanceState.Aborted, grain.WorkflowHost.WorkflowInstanceState);
                 Assert.AreEqual(0, grain.WorkflowStatesCount);
+            });
+        }
+
+        [TestMethod]
+        public async Task WorkflowInterfaceOperationWithTimeoutWithParallel()
+        {
+            await RunAsyncWithReentrantSingleThreadedScheduler(async () =>
+            {
+                Grain grain = new Grain(typeof(WorkflowInterfaceOperationWithTimeoutWithParallel));
+                grain.Initialize();
+
+                Console.WriteLine("ActivateAsync...");
+                await grain.WorkflowHost.ActivateAsync();
+
+                Console.WriteLine("Delay...");
+                // the workflow is gone idle on the delay activity, we must wait to let it to timeout
+                await Task.Delay(TimeSpan.FromSeconds(1));
+
+                try
+                {
+                    Console.WriteLine("OperationAsync...");
+                    await grain.WorkflowHost.OperationAsync("IWorkflowInterface.OperationWithoutParamsAsync",
+                        () => TaskConstants.Completed);
+                    Assert.Fail("OperationWithoutParamsAsync completed");
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("...Exception thrown " + e.GetType());
+                    Assert.AreEqual(typeof(OperationCanceledException), e.GetType());
+                }
+                Console.WriteLine("Completed.WaitAsync...");
+                await grain.Completed.WaitAsync(1);
+                Console.WriteLine("Written.WaitAsync...");
+                await grain.Written.WaitAsync(1);
+                Console.WriteLine("---DONE---");
+
+                Assert.AreEqual(ActivityInstanceState.Closed, grain.CompletionState);
+                Assert.AreEqual(2, grain.WorkflowStatesCount);
+                Assert.AreEqual(false, grain.UnhandledException.IsSet);
+            });
+        }
+
+        [TestMethod]
+        public async Task WorkflowInterfaceOperationWithTimeoutWithPick()
+        {
+            await RunAsyncWithReentrantSingleThreadedScheduler(async () =>
+            {
+                Grain grain = new Grain(typeof(WorkflowInterfaceOperationWithTimeoutWithPick));
+                grain.Initialize();
+
+                Console.WriteLine("ActivateAsync...");
+                await grain.WorkflowHost.ActivateAsync();
+
+                Console.WriteLine("Delay...");
+                // the workflow is gone idle on the delay activity, we must wait to let it to timeout
+                await Task.Delay(TimeSpan.FromSeconds(1));
+
+                try
+                {
+                    Console.WriteLine("OperationAsync...");
+                    await grain.WorkflowHost.OperationAsync("IWorkflowInterface.OperationWithoutParamsAsync",
+                        () => TaskConstants.Completed);
+                    Assert.Fail("OperationWithoutParamsAsync completed");
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("...Exception thrown " + e.GetType());
+                    Assert.AreEqual(typeof(OperationCanceledException), e.GetType());
+                }
+                Console.WriteLine("Completed.WaitAsync...");
+                await grain.Completed.WaitAsync(1);
+                Console.WriteLine("Written.WaitAsync...");
+                await grain.Written.WaitAsync(1);
+                Console.WriteLine("---DONE---");
+
+                Assert.AreEqual(ActivityInstanceState.Closed, grain.CompletionState);
+                Assert.AreEqual(2, grain.WorkflowStatesCount);
+                Assert.AreEqual(false, grain.UnhandledException.IsSet);
             });
         }
 
@@ -1354,6 +1571,114 @@ namespace Orleans.Activities.Test
 
                 Assert.AreEqual(ActivityInstanceState.Canceled, grain.CompletionState);
                 Assert.AreEqual(1, grain.WorkflowStatesCount);
+                Assert.AreEqual(false, grain.UnhandledException.IsSet);
+            });
+        }
+
+        [TestMethod]
+        public async Task ParallelIncomingRequests()
+        {
+            await RunAsyncWithReentrantSingleThreadedScheduler(async () =>
+            {
+                Grain grain = new Grain(typeof(ParallelIncomingRequests));
+                grain.Initialize();
+
+                Console.WriteLine("ActivateAsync...");
+                await grain.WorkflowHost.ActivateAsync();
+
+                Console.WriteLine("OperationAsync...");
+                await Task.WhenAll(
+                    Task.Factory.StartNew(async () =>
+                    {
+                        await grain.WorkflowHost.OperationAsync("IWorkflowInterface.OperationWithoutParamsAsync",
+                            () => TaskConstants.Completed);
+                        Console.WriteLine("OperationWithoutParamsAsync completed");
+                    }).Unwrap(),
+                    Task.Factory.StartNew(async () =>
+                    {
+                        string response = await grain.WorkflowHost.OperationAsync<string, string>("IWorkflowInterface.OperationWithParamsAsync",
+                            () => Task.FromResult("requestResult"));
+                        Console.WriteLine("OperationWithParamsAsync completed, response: " + response);
+                    }).Unwrap()
+                    );
+                Console.WriteLine("Completed.WaitAsync...");
+                grain.Written.Reset();
+                await grain.Completed.WaitAsync(1);
+                Console.WriteLine("Written.WaitAsync...");
+                await grain.Written.WaitAsync(1);
+                Console.WriteLine("---DONE---");
+
+                try
+                {
+                    string response = await grain.WorkflowHost.OperationAsync<string, string>("IWorkflowInterface.OperationWithParamsAsync",
+                        () => Task.FromResult("requestResult"));
+                    Console.WriteLine("OperationWithParamsAsync completed, response: " + response);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("...Exception thrown " + e.GetType());
+                    Assert.AreEqual(typeof(OperationRepeatedException<string>), e.GetType());
+                    Assert.AreEqual("Response", (e as OperationRepeatedException<string>).PreviousResponseParameter);
+                }
+                try
+                {
+                    await grain.WorkflowHost.OperationAsync("IWorkflowInterface.OperationWithoutParamsAsync",
+                        () => TaskConstants.Completed);
+                    Console.WriteLine("OperationWithoutParamsAsync completed");
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("...Exception thrown " + e.GetType());
+                    Assert.AreEqual(typeof(OperationRepeatedException), e.GetType());
+                }
+
+                Assert.AreEqual(ActivityInstanceState.Closed, grain.CompletionState);
+                Assert.AreEqual(6, grain.WorkflowStatesCount);
+                Assert.AreEqual(false, grain.UnhandledException.IsSet);
+
+
+
+                Console.WriteLine("Recreate from persisted delay state...");
+                grain.Initialize();
+                grain.LoadWorkflowState(4);
+                await grain.RegisterOrUpdateReminderAsync("{urn:orleans.activities/1.0/properties/reminders/bookmarks}1", TimeSpan.FromMilliseconds(500), TimeSpan.FromMinutes(2));
+                await grain.RegisterOrUpdateReminderAsync("{urn:orleans.activities/1.0/properties/reminders/bookmarks}2", TimeSpan.FromMilliseconds(500), TimeSpan.FromMinutes(2));
+                Console.WriteLine("ActivateAsync... 4/" + grain.WorkflowStatesCount);
+                await grain.WorkflowHost.ActivateAsync();
+
+                Console.WriteLine("Completed.WaitAsync...");
+                await grain.Completed.WaitAsync(1);
+                grain.Written.Reset();
+                Console.WriteLine("Written.WaitAsync...");
+                await grain.Written.WaitAsync(1);
+                Console.WriteLine("---DONE---");
+
+                try
+                {
+                    string response = await grain.WorkflowHost.OperationAsync<string, string>("IWorkflowInterface.OperationWithParamsAsync",
+                        () => Task.FromResult("requestResult"));
+                    Console.WriteLine("OperationWithParamsAsync completed, response: " + response);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("...Exception thrown " + e.GetType());
+                    Assert.AreEqual(typeof(OperationRepeatedException<string>), e.GetType());
+                    Assert.AreEqual("Response", (e as OperationRepeatedException<string>).PreviousResponseParameter);
+                }
+                try
+                {
+                    await grain.WorkflowHost.OperationAsync("IWorkflowInterface.OperationWithoutParamsAsync",
+                        () => TaskConstants.Completed);
+                    Console.WriteLine("OperationWithoutParamsAsync completed");
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("...Exception thrown " + e.GetType());
+                    Assert.AreEqual(typeof(OperationRepeatedException), e.GetType());
+                }
+
+                Assert.AreEqual(ActivityInstanceState.Closed, grain.CompletionState);
+                Assert.AreEqual(10, grain.WorkflowStatesCount);
                 Assert.AreEqual(false, grain.UnhandledException.IsSet);
             });
         }

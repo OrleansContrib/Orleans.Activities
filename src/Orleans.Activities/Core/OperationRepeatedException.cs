@@ -12,20 +12,20 @@ namespace Orleans.Activities
     /// The exception that is thrown when an idempotent operation is already executed by the workflow.
     /// </summary>
     [Serializable]
-    public class RepeatedOperationException : InvalidOperationException
+    public class OperationRepeatedException : SystemException
     {
-        public RepeatedOperationException()
+        public OperationRepeatedException()
         { }
 
-        public RepeatedOperationException(string message)
+        public OperationRepeatedException(string message)
             : base(message)
         { }
 
-        public RepeatedOperationException(string message, Exception innerException)
+        public OperationRepeatedException(string message, Exception innerException)
             : base(message, innerException)
         { }
 
-        protected RepeatedOperationException(SerializationInfo info, StreamingContext context)
+        protected OperationRepeatedException(SerializationInfo info, StreamingContext context)
             : base(info, context)
         { }
     }
@@ -36,7 +36,7 @@ namespace Orleans.Activities
     /// </summary>
     /// <typeparam name="TPreviousResponseParameter"></typeparam>
     [Serializable]
-    public class RepeatedOperationException<TPreviousResponseParameter> : RepeatedOperationException
+    public class OperationRepeatedException<TPreviousResponseParameter> : OperationRepeatedException
         where TPreviousResponseParameter : class
     {
         private TPreviousResponseParameter previousResponseParameter;
@@ -48,24 +48,24 @@ namespace Orleans.Activities
             this.previousResponseParameter = previousResponseParameter;
         }
 
-        public RepeatedOperationException(TPreviousResponseParameter previousResponseParameter)
+        public OperationRepeatedException(TPreviousResponseParameter previousResponseParameter)
         {
             Init(previousResponseParameter);
         }
 
-        public RepeatedOperationException(TPreviousResponseParameter previousResponseParameter, string message)
+        public OperationRepeatedException(TPreviousResponseParameter previousResponseParameter, string message)
             : base(message)
         {
             Init(previousResponseParameter);
         }
 
-        public RepeatedOperationException(TPreviousResponseParameter previousResponseParameter, string message, Exception innerException)
+        public OperationRepeatedException(TPreviousResponseParameter previousResponseParameter, string message, Exception innerException)
             : base(message, innerException)
         {
             Init(previousResponseParameter);
         }
 
-        protected RepeatedOperationException(SerializationInfo info, StreamingContext context)
+        protected OperationRepeatedException(SerializationInfo info, StreamingContext context)
             : base(info, context)
         {
             previousResponseParameter = (TPreviousResponseParameter)info.GetValue(nameof(previousResponseParameter), typeof(TPreviousResponseParameter));

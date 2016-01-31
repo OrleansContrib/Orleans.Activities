@@ -33,7 +33,7 @@ namespace Orleans.Activities.Extensions
     // - we always unregister them AFTER save (if cancel requested), so in worst case they will fire unnecessarily (see above)
     // - in case of nonpersistent idle, we also register the reminders (due to the OnPausedAsync "event"), but we can unregister them on idle also,
     //   because they are not saved
-    // - the ReminderTable is never persisted with it's actual content, we don't save entries/bookmarks where the associated reminder will be deleted after save!
+    // - the ReminderTable is never persisted with it's actual content, we don't save entries/bookmarks where the associated reminder will be unregistered during/after save!
     // - during save it registers a default reactivation reminder if the controller/executor state is runnable and there are no registered reminders for the instance,
     //   this way in case of failure (when the instance is aborted or the silo is crashed), the reactivation reminder will reactivate the grain/host/instance
     // - after save and load it unregisters the reactivation reminder if the controller/executor state is not runnable (ie. idle or completed)
@@ -48,25 +48,25 @@ namespace Orleans.Activities.Extensions
         public enum ReminderState : int
         {
             NonExistent = 0,            // not a real, stored state, it is the result of a failed reminders.TryGetValue()
-            RegisterAndSave,            // TimerExtension.OnRegisterTimer() called in NonExistent "state" - fresh new reminder, never saved, can be cancelled during OnIdleAsync()
-            ReregisterAndResave,        // TimerExtension.OnRegisterTimer() called in SaveAndUnregister state - previously saved, can NOT be cancelled during OnIdleAsync()
+            RegisterAndSave,            // TimerExtension.OnRegisterTimer() called in NonExistent "state" - fresh new reminder, never saved, can be canceled during OnIdleAsync()
+            ReregisterAndResave,        // TimerExtension.OnRegisterTimer() called in SaveAndUnregister state - previously saved, can NOT be canceled during OnIdleAsync()
             RegisteredButNotSaved,      // registered during OnIdleAsync(), but not saved yet
             RegisteredButNotResaved,    // registered during OnIdleAsync(), but not resaved yet
             RegisteredAndSaved,         // saved after registration
             SaveAndUnregister,          // TimerExtension.OnCancelTimer() called in RegisteredAndSaved state
-            Unregister,                 // TimerExtension.OnCancelTimer() called in RegisteredButNotSaved state - never saved, can be cancelled during OnIdleAsync()
+            Unregister,                 // TimerExtension.OnCancelTimer() called in RegisteredButNotSaved state - never saved, can be canceled during OnIdleAsync()
         }
 
-        // Transitions:           | Register               Unregister           OnPaused                              OnSaving              OnSaved
-        // -----------------------|-----------------------------------------------------------------------------------------------------------------------------------
+        // Transitions:           | Register               Unregister           OnPaused                              OnSaving                         OnSaved
+        // -----------------------|----------------------------------------------------------------------------------------------------------------------------------------------
         // NonExistent            | ->RegisterAndSave      NOOP
-        // RegisterAndSave        | ->RegisterAndSave      delete entry         register & ->RegisteredButNotSaved    exception             exception
-        // ReregisterAndResave    | ->ReregisterAndResave  ->SaveAndUnregister  register & ->RegisteredButNotResaved  exception             exception
-        // RegisteredButNotSaved  | exception              ->Unregister         NOOP                                  ->RegisteredAndSaved  exception
-        // RegisteredButNotResaved| exception              ->SaveAndUnregister  NOOP                                  ->RegisteredAndSaved  exception
-        // RegisteredAndSaved     | exception              ->SaveAndUnregister  NOOP                                  NOOP                  NOOP
-        // SaveAndUnregister      | ->ReregisterAndResave  NOOP                 NOOP                                  NOOP                  unregister & delete entry
-        // Unregister             | ->RegisterAndSave      NOOP                 unregister & delete entry             exception             exception
+        // RegisterAndSave        | ->RegisterAndSave      delete entry         register & ->RegisteredButNotSaved    register & ->RegisteredAndSaved  exception
+        // ReregisterAndResave    | ->ReregisterAndResave  ->SaveAndUnregister  register & ->RegisteredButNotResaved  register & ->RegisteredAndSaved  exception
+        // RegisteredButNotSaved  | exception              ->Unregister         NOOP                                  ->RegisteredAndSaved             exception
+        // RegisteredButNotResaved| exception              ->SaveAndUnregister  NOOP                                  ->RegisteredAndSaved             exception
+        // RegisteredAndSaved     | exception              ->SaveAndUnregister  NOOP                                  NOOP                             NOOP
+        // SaveAndUnregister      | ->ReregisterAndResave  NOOP                 NOOP                                  NOOP                             unregister & delete entry
+        // Unregister             | ->RegisterAndSave      NOOP                 unregister & delete entry             unregister & delete entry        exception
 
         protected class ReminderInfo
         {
@@ -188,14 +188,15 @@ namespace Orleans.Activities.Extensions
             }
         }
 
+        protected static bool ParticipateInOnPaused(ReminderState reminderState) =>
+            reminderState == ReminderState.RegisterAndSave
+            || reminderState == ReminderState.ReregisterAndResave
+            || reminderState == ReminderState.Unregister;
+
         public async Task OnPausedAsync()
         {
             foreach (KeyValuePair<string, ReminderInfo> kvp in reminders
-                .Where((kvp) =>
-                    kvp.Value.ReminderState != ReminderState.RegisteredButNotSaved
-                    && kvp.Value.ReminderState != ReminderState.RegisteredButNotResaved
-                    && kvp.Value.ReminderState != ReminderState.RegisteredAndSaved
-                    && kvp.Value.ReminderState != ReminderState.SaveAndUnregister)
+                .Where((kvp) => ParticipateInOnPaused(kvp.Value.ReminderState))
                 .ToList()) // because we will modify the dictionary
                 switch (kvp.Value.ReminderState)
                 {
@@ -213,15 +214,17 @@ namespace Orleans.Activities.Extensions
                         break;
                     //case ReminderState.RegisteredButNotSaved:
                     //case ReminderState.RegisteredButNotResaved:
+                    //case ReminderState.RegisteredAndSaved:
+                    //case ReminderState.SaveAndUnregister:
                     default:
                         throw new InvalidOperationException($"Reminder '{kvp.Key}' is in state '{kvp.Value.ReminderState}' during OnPaused.");
                 }
         }
 
-        protected static bool ShouldCollect(ReminderState reminderState) =>
-            reminderState == ReminderState.RegisteredButNotSaved
-            || reminderState == ReminderState.RegisteredButNotResaved
-            || reminderState == ReminderState.RegisteredAndSaved;
+        protected static bool ParticipateInCollectValues(ReminderState reminderState) =>
+            // do not save bookmarks where the associated reminder will be unregistered during/after save
+            reminderState != ReminderState.SaveAndUnregister
+            && reminderState != ReminderState.Unregister;
 
         public void CollectValues(out IDictionary<XName, object> readWriteValues, out IDictionary<XName, object> writeOnlyValues)
         {
@@ -231,10 +234,10 @@ namespace Orleans.Activities.Extensions
             if (reminders.Count > 0)
             {
                 readWriteValues = new Dictionary<XName, object>(1);
-                readWriteValues.Add(
-                    WorkflowNamespace.Bookmarks,
-                    // do not save bookmarks where the associated reminder will be deleted after save
-                    reminders.Where((kvp) => ShouldCollect(kvp.Value.ReminderState)).Select((kvp) => kvp.Value.Bookmark).ToList());
+                readWriteValues.Add(WorkflowNamespace.Bookmarks, reminders
+                    .Where((kvp) => ParticipateInCollectValues(kvp.Value.ReminderState))
+                    .Select((kvp) => kvp.Value.Bookmark)
+                    .ToList());
             }
         }
 
@@ -264,24 +267,37 @@ namespace Orleans.Activities.Extensions
                 return TaskConstants.Completed;
         }
 
-        public Task OnSavingAsync()
+        protected static bool ParticipateInOnSaving(ReminderState reminderState) =>
+            reminderState != ReminderState.RegisteredAndSaved
+            && reminderState != ReminderState.SaveAndUnregister;
+
+        public async Task OnSavingAsync()
         {
             foreach (KeyValuePair<string, ReminderInfo> kvp in reminders
-                .Where((kvp) => kvp.Value.ReminderState != ReminderState.RegisteredAndSaved && kvp.Value.ReminderState != ReminderState.SaveAndUnregister))
+                .Where((kvp) => ParticipateInOnSaving(kvp.Value.ReminderState))
+                .ToList()) // because we will modify the dictionary
                 switch (kvp.Value.ReminderState)
                 {
+                    case ReminderState.RegisterAndSave:
+                    case ReminderState.ReregisterAndResave:
+                        kvp.Value.ReminderState = ReminderState.RegisteredAndSaved;
+                        await instance.RegisterOrUpdateReminderAsync(kvp.Key, kvp.Value.DueTime - DateTime.UtcNow);
+                        break;
                     case ReminderState.RegisteredButNotSaved:
                     case ReminderState.RegisteredButNotResaved:
                         kvp.Value.ReminderState = ReminderState.RegisteredAndSaved;
                         break;
-                    //case ReminderState.RegisterAndSave:
-                    //case ReminderState.ReregisterAndResave:
-                    //case ReminderState.Unregister:
+                    case ReminderState.Unregister:
+                        reminders.Remove(kvp.Key);
+                        await instance.UnregisterReminderAsync(kvp.Key);
+                        break;
+                    //case ReminderState.RegisteredAndSaved:
+                    //case ReminderState.SaveAndUnregister:
                     default:
                         throw new InvalidOperationException($"Reminder '{kvp.Key}' is in state '{kvp.Value.ReminderState}' during OnSaving.");
                 }
 
-            return RegisterReactivationReminderIfRequired();
+            await RegisterReactivationReminderIfRequired();
         }
 
         public async Task OnSavedAsync()

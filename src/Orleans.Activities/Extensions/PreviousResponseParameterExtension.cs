@@ -24,7 +24,7 @@ namespace Orleans.Activities.Extensions
     /// <summary>
     /// This extension is always created by the workflow host.
     /// It participates in the workflow persistence, and SendResponse activity stores the idempotent TWorkflowInterface operation responses in it.
-    /// WorkflowHost throws the RepeatedOperationException with the help of it.
+    /// WorkflowHost throws the OperationRepeatedException with the help of it.
     /// </summary>
     public class PreviousResponseParameterExtension : PersistenceParticipant
     {
@@ -36,16 +36,34 @@ namespace Orleans.Activities.Extensions
         }
 
         [Serializable]
-        protected struct ResponseParameter
+        protected abstract class ResponseParameter
         {
-            public Type type;
-            public object value;
+            public bool IsCanceled { get; }
+            public Type Type { get; }
+            public object Value { get; }
 
-            public ResponseParameter(Type type, object value)
+            protected ResponseParameter(bool isCanceled, Type type, object value)
             {
-                this.type = type;
-                this.value = value;
+                IsCanceled = isCanceled;
+                Type = type;
+                Value = value;
             }
+        }
+
+        [Serializable]
+        protected class CanceledResponseParameter : ResponseParameter
+        {
+            public CanceledResponseParameter()
+                : base(true, null, null)
+            { }
+        }
+
+        [Serializable]
+        protected class SentResponseParameter : ResponseParameter
+        {
+            public SentResponseParameter(Type type, object value)
+                : base(false, type, value)
+            { }
         }
 
         protected Dictionary<string, ResponseParameter> previousResponseParameters;
@@ -55,22 +73,33 @@ namespace Orleans.Activities.Extensions
             previousResponseParameters = new Dictionary<string, ResponseParameter>();
         }
 
+        // Called by ReceiveRequestSendResponseScope activity.
+        public bool TrySetResponseCanceled(string operationName)
+        {
+            bool containsKey = previousResponseParameters.ContainsKey(operationName);
+            if (!containsKey)
+                previousResponseParameters[operationName] = new CanceledResponseParameter();
+            return !containsKey;
+        }
+
         // Called by SendResponse activity.
         public void SetResponseParameter(string operationName, Type type, object value)
         {
-            previousResponseParameters[operationName] = new ResponseParameter(type, value);
+            previousResponseParameters[operationName] = new SentResponseParameter(type, value);
         }
 
         // Called by WorkflowHost.
         public void ThrowPreviousResponseParameter(string operationName, Type responseParameterType,
-            Func<object, RepeatedOperationException> createRepeatedOperationException)
+            Func<object, string, OperationRepeatedException> createOperationRepeatedException)
         {
             ResponseParameter previousResponseParameter;
             if (!previousResponseParameters.TryGetValue(operationName, out previousResponseParameter))
                 throw new InvalidOperationException($"Operation '{operationName}' is unexpected.");
-            if (previousResponseParameter.type != responseParameterType)
-                throw new ArgumentException($"Operation '{operationName}' has different ResponseParameter type '{responseParameterType}' then the previous operation '{previousResponseParameter.type}' had.");
-            throw createRepeatedOperationException(previousResponseParameter.value);
+            if (previousResponseParameter.IsCanceled)
+                throw new OperationCanceledException($"Operation '{operationName}' is already canceled.");
+            if (previousResponseParameter.Type != responseParameterType)
+                throw new ArgumentException($"Operation '{operationName}' has different ResponseParameter type '{responseParameterType}' then the previous operation '{previousResponseParameter.Type}' had.");
+            throw createOperationRepeatedException(previousResponseParameter.Value, $"Operation '{operationName}' is already executed.");
         }
 
         #region PersistenceParticipant members
