@@ -10,8 +10,7 @@ assembly_info:
   assembly_version: '{version}'
   assembly_file_version: '{version}'
   assembly_informational_version: '{version}-alpha'
-cache:
-- src\packages -> src\packages\packages.config
+cache: src\packages
 before_build:
 - cmd: nuget restore src\Orleans.Activities.sln
 build:
