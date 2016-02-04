@@ -46,8 +46,8 @@ namespace Orleans.Activities
         {
             OperationNames = new ObservableCollection<string>();
             Constraints.Add(OperationActivityHelper.VerifyParentIsWorkflowActivity());
-            Constraints.Add(OperationActivityHelper.VerifyIsOperationNameSet());
             Constraints.Add(OperationActivityHelper.SetWorkflowCallbackInterfaceOperationNames());
+            Constraints.Add(OperationActivityHelper.VerifyIsOperationNameSetAndValid());
             Constraints.Add(SendRequestReceiveResponseScopeHelper.VerifyParentIsSendRequestReceiveResponseScope());
         }
 
@@ -92,8 +92,8 @@ namespace Orleans.Activities
         {
             OperationNames = new ObservableCollection<string>();
             Constraints.Add(OperationActivityHelper.VerifyParentIsWorkflowActivity());
-            Constraints.Add(OperationActivityHelper.VerifyIsOperationNameSet());
             Constraints.Add(OperationActivityHelper.SetWorkflowCallbackInterfaceOperationNames());
+            Constraints.Add(OperationActivityHelper.VerifyIsOperationNameSetAndValid());
             Constraints.Add(SendRequestReceiveResponseScopeHelper.VerifyParentIsSendRequestReceiveResponseScope());
         }
 

@@ -153,7 +153,7 @@ namespace Orleans.Activities.Helpers
             };
         }
 
-        public static Constraint VerifyIsOperationNameSet()
+        public static Constraint VerifyIsOperationNameSetAndValid()
         {
             DelegateInArgument<Activity> element = new DelegateInArgument<Activity>();
             DelegateInArgument<ValidationContext> context = new DelegateInArgument<ValidationContext>();
@@ -164,11 +164,24 @@ namespace Orleans.Activities.Helpers
                 {
                     Argument1 = element,
                     Argument2 = context,
-                    Handler = new AssertValidation
+                    Handler = new Sequence
                     {
-                        Assertion = new InArgument<bool>((env) => element.Get(env).IsOperationNameSet()),
-                        Message = new InArgument<string>((env) => $"{element.Get(env).GetType().GetFriendlyName()} must have a valid operation name selected."),
-                        PropertyName = new InArgument<string>((env) => element.Get(env).DisplayName),
+                        Activities =
+                        {
+                            new AssertValidation
+                            {
+                                Assertion = new InArgument<bool>((env) => element.Get(env).IsOperationNameSet()),
+                                Message = new InArgument<string>((env) => $"{element.Get(env).GetType().GetFriendlyName()} must have a valid operation name selected."),
+                                PropertyName = new InArgument<string>((env) => element.Get(env).DisplayName),
+                            },
+                            new AssertValidation
+                            {
+                                // We treat empty OperationName properties as valid to avoid double, misleading error messages.
+                                Assertion = new InArgument<bool>((env) => !element.Get(env).IsOperationNameSet() || element.Get(env).IsOperationNameValid()),
+                                Message = new InArgument<string>((env) => $"{element.Get(env).GetType().GetFriendlyName()} must have a valid operation name selected from the available operations. The current value '{element.Get(env).GetOperationName()}' is not among the possible operation names. Possible reason, that the interface method names or signatures are changed.\n\nNote: This causes the unselected combo box in the designer, meantime the value is set in the XAML."),
+                                PropertyName = new InArgument<string>((env) => element.Get(env).DisplayName),
+                            },
+                        },
                     },
                 },
             };
