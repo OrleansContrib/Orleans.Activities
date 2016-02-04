@@ -66,8 +66,8 @@ namespace Orleans.Activities
             OperationNames = new ObservableCollection<string>();
             requestResultEvaluator = TaskFuncEvaluator.CreateActivityDelegate();
             Constraints.Add(OperationActivityHelper.VerifyParentIsWorkflowActivity());
-            Constraints.Add(OperationActivityHelper.VerifyIsOperationNameSet());
             Constraints.Add(OperationActivityHelper.SetWorkflowInterfaceOperationNames());
+            Constraints.Add(OperationActivityHelper.VerifyIsOperationNameSetAndValid());
             Constraints.Add(ReceiveRequestSendResponseScopeHelper.VerifyParentIsReceiveRequestSendResponseScope());
         }
         
@@ -138,8 +138,8 @@ namespace Orleans.Activities
             OperationNames = new ObservableCollection<string>();
             requestResultEvaluator = TaskFuncEvaluator<TRequestResult>.CreateActivityDelegate();
             Constraints.Add(OperationActivityHelper.VerifyParentIsWorkflowActivity());
-            Constraints.Add(OperationActivityHelper.VerifyIsOperationNameSet());
             Constraints.Add(OperationActivityHelper.SetWorkflowInterfaceOperationNames());
+            Constraints.Add(OperationActivityHelper.VerifyIsOperationNameSetAndValid());
             Constraints.Add(ReceiveRequestSendResponseScopeHelper.VerifyParentIsReceiveRequestSendResponseScope());
         }
 
