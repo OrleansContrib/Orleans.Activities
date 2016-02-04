@@ -4,8 +4,10 @@
 
 Workflow Foundation (.Net 4.x System.Activities workflows) over Orleans framework to provide stable, long-running, extremely scalable processes with XAML designer support.
 
-__NOTE:__ This project currently is an __experiment__, not production quality! There is no CI nor NuGet package for it.
+__NOTE:__ This project currently is an __experiment__, not production quality! There is no NuGet package for it.
 
+[![Build status](https://ci.appveyor.com/api/projects/status/hm24xccsyc4e5nh1?svg=true)](https://ci.appveyor.com/project/lmagyar/orleans-activities)
+~~NuGet~~
 [![Issue Stats](http://www.issuestats.com/github/OrleansContrib/Orleans.Activities/badge/pr)](http://www.issuestats.com/github/OrleansContrib/Orleans.Activities)
 [![Issue Stats](http://www.issuestats.com/github/OrleansContrib/Orleans.Activities/badge/issue)](http://www.issuestats.com/github/OrleansContrib/Orleans.Activities)
 
