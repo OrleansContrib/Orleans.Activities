@@ -1576,6 +1576,52 @@ namespace Orleans.Activities.Test
         }
 
         [TestMethod]
+        public async Task WorkflowCallbackInterfaceOperationWithTimeoutWithParallel()
+        {
+            await RunAsyncWithReentrantSingleThreadedScheduler(async () =>
+            {
+                Grain grain = new Grain(typeof(WorkflowCallbackInterfaceOperationWithTimeoutWithParallel));
+                grain.Initialize();
+
+                Console.WriteLine("ActivateAsync...");
+                await grain.WorkflowHost.ActivateAsync();
+
+                Console.WriteLine("Completed.WaitAsync...");
+                await grain.Completed.WaitAsync(1);
+                Console.WriteLine("Written.WaitAsync...");
+                await grain.Written.WaitAsync(1);
+                Console.WriteLine("---DONE---");
+
+                Assert.AreEqual(ActivityInstanceState.Closed, grain.CompletionState);
+                Assert.AreEqual(1, grain.WorkflowStatesCount);
+                Assert.AreEqual(false, grain.UnhandledException.IsSet);
+            });
+        }
+
+        [TestMethod]
+        public async Task WorkflowCallbackInterfaceOperationWithTimeoutWithPick()
+        {
+            await RunAsyncWithReentrantSingleThreadedScheduler(async () =>
+            {
+                Grain grain = new Grain(typeof(WorkflowCallbackInterfaceOperationWithTimeoutWithPick));
+                grain.Initialize();
+
+                Console.WriteLine("ActivateAsync...");
+                await grain.WorkflowHost.ActivateAsync();
+
+                Console.WriteLine("Completed.WaitAsync...");
+                await grain.Completed.WaitAsync(1);
+                Console.WriteLine("Written.WaitAsync...");
+                await grain.Written.WaitAsync(1);
+                Console.WriteLine("---DONE---");
+
+                Assert.AreEqual(ActivityInstanceState.Closed, grain.CompletionState);
+                Assert.AreEqual(1, grain.WorkflowStatesCount);
+                Assert.AreEqual(false, grain.UnhandledException.IsSet);
+            });
+        }
+
+        [TestMethod]
         public async Task ParallelIncomingRequests()
         {
             await RunAsyncWithReentrantSingleThreadedScheduler(async () =>
