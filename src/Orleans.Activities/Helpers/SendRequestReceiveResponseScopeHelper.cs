@@ -227,7 +227,7 @@ namespace Orleans.Activities.Helpers
                                     },
                                 },
                             },
-                            new WorkflowCallbackInterfaceOperationNamesSetter()
+                            new WorkflowCallbackInterfaceOperationNamesSetter
                             {
                                 SendRequest = new InArgument<IOperationActivity>((env) => sendRequest.Get(env)),
                                 WorkflowCallbackInterfaceType = new InArgument<Type>((env) => workflowCallbackInterfaceType.Get(env)),
