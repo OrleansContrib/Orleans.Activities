@@ -112,6 +112,7 @@ namespace Orleans.Activities
             noPersistHandle = new Variable<NoPersistHandle>();
             Constraints.Add(OperationActivityHelper.VerifyParentIsWorkflowActivity());
             Constraints.Add(SendRequestReceiveResponseScopeHelper.VerifySendRequestReceiveResponseScopeChildren());
+            Constraints.Add(SendRequestReceiveResponseScopeHelper.SetWorkflowCallbackInterfaceOperationNames());
             Constraints.Add(SendRequestReceiveResponseScopeHelper.SetSendRequestReceiveResponseScopeExecutionPropertyFactory());
         }
 

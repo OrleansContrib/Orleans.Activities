@@ -16,13 +16,10 @@ using Orleans.Activities.Tracking;
 
 namespace Orleans.Activities
 {
-    public static class SendRequestExtensions
+    // Used by ReceiveRequestSendResponseScope.
+    public interface ISendRequest
     {
-        public static bool IsSendRequest(this Activity activity)
-        {
-            Type type = activity.GetType();
-            return type == typeof(SendRequest) || type.IsGenericTypeOf(typeof(SendRequest<>));
-        }
+        Type RequestParameterType { get; }
     }
 
     /// <summary>
@@ -30,7 +27,7 @@ namespace Orleans.Activities
     /// </summary>
     [Designer(typeof(SendRequestDesigner))]
     [ToolboxBitmap(typeof(SendRequest), nameof(SendRequest) + ".png")]
-    public sealed class SendRequest : NativeActivity, IOperationActivity
+    public sealed class SendRequest : NativeActivity, IOperationActivity, ISendRequest
     {
         // TODO add combobox to the properties window also
         [Category(Constants.RequiredCategoryName)]
@@ -42,13 +39,15 @@ namespace Orleans.Activities
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public ObservableCollection<string> OperationNames { get; }
 
+        // Called by SendRequestReceiveResponseScope, to select the appropriate OperationNames for the SendRequest activity.
+        Type ISendRequest.RequestParameterType => typeof(void);
+
         public SendRequest()
         {
             OperationNames = new ObservableCollection<string>();
             Constraints.Add(OperationActivityHelper.VerifyParentIsWorkflowActivity());
-            Constraints.Add(OperationActivityHelper.SetWorkflowCallbackInterfaceOperationNames());
+            Constraints.Add(OperationActivityHelper.VerifyParentIsSendRequestReceiveResponseScope());
             Constraints.Add(OperationActivityHelper.VerifyIsOperationNameSetAndValid());
-            Constraints.Add(SendRequestReceiveResponseScopeHelper.VerifyParentIsSendRequestReceiveResponseScope());
         }
 
         // This will start/schedule the OnOperationAsync task, but won't wait for it, the task will be an implicit (single threaded reentrant) parallel activity.
@@ -70,7 +69,7 @@ namespace Orleans.Activities
     /// <typeparam name="TRequestParameter"></typeparam>
     [Designer(typeof(SendRequestGenericDesigner))]
     [ToolboxBitmap(typeof(SendRequest<>), nameof(SendRequest) + ".png")]
-    public sealed class SendRequest<TRequestParameter> : NativeActivity, IOperationActivity
+    public sealed class SendRequest<TRequestParameter> : NativeActivity, IOperationActivity, ISendRequest
         where TRequestParameter : class
     {
         // TODO add combobox to the properties window also
@@ -88,13 +87,15 @@ namespace Orleans.Activities
         [Description("The parameter of the outgoing TWorkflowCallbackInterface operation.")]
         public InArgument<TRequestParameter> RequestParameter { get; set; }
 
+        // Called by SendRequestReceiveResponseScope, to select the appropriate OperationNames for the SendRequest activity.
+        Type ISendRequest.RequestParameterType => typeof(TRequestParameter);
+
         public SendRequest()
         {
             OperationNames = new ObservableCollection<string>();
             Constraints.Add(OperationActivityHelper.VerifyParentIsWorkflowActivity());
-            Constraints.Add(OperationActivityHelper.SetWorkflowCallbackInterfaceOperationNames());
+            Constraints.Add(OperationActivityHelper.VerifyParentIsSendRequestReceiveResponseScope());
             Constraints.Add(OperationActivityHelper.VerifyIsOperationNameSetAndValid());
-            Constraints.Add(SendRequestReceiveResponseScopeHelper.VerifyParentIsSendRequestReceiveResponseScope());
         }
 
         // This will start/schedule the OnOperationAsync task, but won't wait for it, the task will be an implicit (single threaded reentrant) parallel activity.

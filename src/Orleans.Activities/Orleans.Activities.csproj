@@ -85,6 +85,7 @@
     </Compile>
     <Compile Include="Extensions\ReceiveRequestSendResponseScopeExecutionProperty.cs" />
     <Compile Include="Helpers\ActiveTaskCompletionSources.cs" />
+    <Compile Include="Helpers\VirtualArray.cs" />
     <Compile Include="Helpers\WorkflowActivityHelper.cs" />
     <Compile Include="Helpers\TypeExtensions.cs" />
     <Compile Include="Helpers\WorkflowInterfaceInfo.cs" />

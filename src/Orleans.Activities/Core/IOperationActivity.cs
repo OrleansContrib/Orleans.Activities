@@ -16,12 +16,13 @@ namespace Orleans.Activities
     public interface IOperationActivity
     {
         /// <summary>
-        /// Used by <see cref="OperationActivityHelper.VerifyIsOperationNameSetAndValid"/> validation constraint. Implementation practically have a setter.
+        /// Used by <see cref="OperationActivityHelper.VerifyIsOperationNameSetAndValid"/> validation constraint. Implementation practically has a setter.
         /// </summary>
         string OperationName { get; }
 
         /// <summary>
-        /// Used by <see cref="OperationActivityHelper.SetOperationNames"/> validation constraint. The ObservableCollection have a Set() method, the collection can't be replaced.
+        /// Used by <see cref="ReceiveRequestSendResponseScopeHelper.SetWorkflowInterfaceOperationNames"/> and <see cref="ReceiveRequestSendResponseScopeHelper.SetWorkflowInterfaceOperationNames"/> validation constraint.
+        /// The ObservableCollection has a Set() method, the collection can't be replaced.
         /// </summary>
         ObservableCollection<string> OperationNames { get; }
     }
@@ -37,10 +38,5 @@ namespace Orleans.Activities
         // To avoid "An expression tree lambda may not contain a null propagating operator." error in validation constraints.
         public static string GetOperationName(this Activity activity) =>
             (activity as IOperationActivity)?.OperationName ?? "null";
-
-        public static void SetOperationNames(this Activity activity, IEnumerable<string> operationNames)
-        {
-            (activity as IOperationActivity)?.OperationNames.Set(operationNames);
-        }
     }
 }

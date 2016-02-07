@@ -11,22 +11,12 @@ namespace Orleans.Activities.Helpers
     /// <summary>
     /// Generates operation names for valid TWorkflowInterface or TWorkflowCallbackInterface interfaces.
     /// </summary>
-    public static class OperationInfo
-    {
-        public static IEnumerable<string> GetOperationNames(this Type type) =>
-            typeof(OperationInfo<>).MakeGenericType(type).GetProperty(nameof(OperationInfo<object>.OperationNames)).GetValue(null) as IEnumerable<string>;
-    }
-
-    /// <summary>
-    /// Generates operation names for valid TWorkflowInterface or TWorkflowCallbackInterface interfaces.
-    /// </summary>
     /// <typeparam name="T"></typeparam>
     public static class OperationInfo<T>
     {
         private static bool isNamespaceRequiredForOperationNames;
 
         public static IEnumerable<MethodInfo> OperationMethods { get; }
-        public static IEnumerable<string> OperationNames { get; }
 
         static OperationInfo()
         {
@@ -42,8 +32,6 @@ namespace Orleans.Activities.Helpers
                 .ToArray();
 
             OperationMethods = operationMethods;
-
-            OperationNames = operationMethods.Select((m) => GetOperationName(m)).ToArray();
         }
 
         public static string GetOperationName(MethodInfo method)

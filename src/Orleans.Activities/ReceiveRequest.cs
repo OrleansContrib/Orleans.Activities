@@ -17,12 +17,6 @@ namespace Orleans.Activities
 {
     public static class ReceiveRequestExtensions
     {
-        public static bool IsReceiveRequest(this Activity activity)
-        {
-            Type type = activity.GetType();
-            return type == typeof(ReceiveRequest) || type.IsGenericTypeOf(typeof(ReceiveRequest<>));
-        }
-
         // Reads out the parameters of the incoming operation, ie. the bookmark. WorkflowHost sends a TaskCompletionSource and a Func<Task> or Func<Task<>> in an array.
         public static void GetOperationParameters<TTask>(object value, out object taskCompletionSource, out Func<TTask> requestResultTaskFunc)
         {
@@ -39,13 +33,19 @@ namespace Orleans.Activities
         }
     }
 
+    // Used by ReceiveRequestSendResponseScope.
+    public interface IReceiveRequest
+    {
+        Type RequestResultType { get; }
+    }
+
     /// <summary>
     /// Receives an incoming request by executing the request result delegate created by the appropriate TWorkflowInterface operation.
     /// The receiving delegate is only executed if this activity is able to accept the incoming request.
     /// </summary>
     [Designer(typeof(ReceiveRequestDesigner))]
     [ToolboxBitmap(typeof(ReceiveRequest), nameof(ReceiveRequest) + ".png")]
-    public sealed class ReceiveRequest : NativeActivity, IOperationActivity
+    public sealed class ReceiveRequest : NativeActivity, IOperationActivity, IReceiveRequest
     {
         // TODO add combobox to the properties window also
         [Category(Constants.RequiredCategoryName)]
@@ -57,6 +57,9 @@ namespace Orleans.Activities
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public ObservableCollection<string> OperationNames { get; }
 
+        // Called by ReceiveRequestSendResponseScope, to select the appropriate OperationNames for the ReceiveRequest activity.
+        Type IReceiveRequest.RequestResultType => typeof(void);
+
         private ActivityAction<Func<Task>> requestResultEvaluator;
 
         protected override bool CanInduceIdle => true;
@@ -66,9 +69,8 @@ namespace Orleans.Activities
             OperationNames = new ObservableCollection<string>();
             requestResultEvaluator = TaskFuncEvaluator.CreateActivityDelegate();
             Constraints.Add(OperationActivityHelper.VerifyParentIsWorkflowActivity());
-            Constraints.Add(OperationActivityHelper.SetWorkflowInterfaceOperationNames());
+            Constraints.Add(OperationActivityHelper.VerifyParentIsReceiveRequestSendResponseScope());
             Constraints.Add(OperationActivityHelper.VerifyIsOperationNameSetAndValid());
-            Constraints.Add(ReceiveRequestSendResponseScopeHelper.VerifyParentIsReceiveRequestSendResponseScope());
         }
         
         protected override void CacheMetadata(NativeActivityMetadata metadata)
@@ -111,7 +113,7 @@ namespace Orleans.Activities
     /// <typeparam name="TRequestResult"></typeparam>
     [Designer(typeof(ReceiveRequestGenericDesigner))]
     [ToolboxBitmap(typeof(ReceiveRequest<>), nameof(ReceiveRequest) + ".png")]
-    public sealed class ReceiveRequest<TRequestResult> : NativeActivity, IOperationActivity
+    public sealed class ReceiveRequest<TRequestResult> : NativeActivity, IOperationActivity, IReceiveRequest
         where TRequestResult : class
     {
         // TODO add combobox to the properties window also
@@ -129,6 +131,9 @@ namespace Orleans.Activities
         [Description("The result of the Func<Task<TRequestResult>> delegate of the incoming TWorkflowInterface operation will be stored here.")]
         public OutArgument<TRequestResult> RequestResult { get; set; }
 
+        // Called by ReceiveRequestSendResponseScope, to select the appropriate OperationNames for the ReceiveRequest activity.
+        Type IReceiveRequest.RequestResultType => typeof(TRequestResult);
+
         private ActivityFunc<Func<Task<TRequestResult>>, TRequestResult> requestResultEvaluator;
 
         protected override bool CanInduceIdle => true;
@@ -138,9 +143,8 @@ namespace Orleans.Activities
             OperationNames = new ObservableCollection<string>();
             requestResultEvaluator = TaskFuncEvaluator<TRequestResult>.CreateActivityDelegate();
             Constraints.Add(OperationActivityHelper.VerifyParentIsWorkflowActivity());
-            Constraints.Add(OperationActivityHelper.SetWorkflowInterfaceOperationNames());
+            Constraints.Add(OperationActivityHelper.VerifyParentIsReceiveRequestSendResponseScope());
             Constraints.Add(OperationActivityHelper.VerifyIsOperationNameSetAndValid());
-            Constraints.Add(ReceiveRequestSendResponseScopeHelper.VerifyParentIsReceiveRequestSendResponseScope());
         }
 
         protected override void CacheMetadata(NativeActivityMetadata metadata)
