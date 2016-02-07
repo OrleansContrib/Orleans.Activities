@@ -214,6 +214,7 @@ namespace Orleans.Activities
 
             Constraints.Add(OperationActivityHelper.VerifyParentIsWorkflowActivity());
             Constraints.Add(ReceiveRequestSendResponseScopeHelper.VerifyReceiveRequestSendResponseScopeChildren());
+            Constraints.Add(ReceiveRequestSendResponseScopeHelper.SetWorkflowInterfaceOperationNames());
             Constraints.Add(ReceiveRequestSendResponseScopeHelper.SetReceiveRequestSendResponseScopeExecutionPropertyFactory());
         }
 

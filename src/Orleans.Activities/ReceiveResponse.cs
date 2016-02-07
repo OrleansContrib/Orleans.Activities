@@ -14,18 +14,10 @@ using Orleans.Activities.Tracking;
 
 namespace Orleans.Activities
 {
-    public static class ReceiveResponseExtensions
-    {
-        public static bool IsReceiveResponse(this Activity activity)
-        {
-            Type type = activity.GetType();
-            return type == typeof(ReceiveResponse) || type.IsGenericTypeOf(typeof(ReceiveResponse<>));
-        }
-    }
-
     // Called by SendRequestReceiveResponseScope, to create the SendRequestReceiveResponseScopeExecutionPropertyFactory with the proper TResponseResult type.
     public interface IReceiveResponse
     {
+        Type ResponseResultType { get; }
         Func<SendRequestReceiveResponseScopeExecutionProperty> CreateSendRequestReceiveResponseScopeExecutionPropertyFactory();
     }
 
@@ -37,6 +29,14 @@ namespace Orleans.Activities
     [ToolboxBitmap(typeof(ReceiveResponse), nameof(ReceiveResponse) + ".png")]
     public sealed class ReceiveResponse : NativeActivity, IReceiveResponse
     {
+        // Called by SendRequestReceiveResponseScope, to select the appropriate OperationNames for the SendRequest activity.
+        Type IReceiveResponse.ResponseResultType => typeof(void);
+
+        // Called by SendRequestReceiveResponseScope, to create the SendRequestReceiveResponseScopeExecutionPropertyFactory with the proper TResponseResult type.
+        // Later SendRequest will set the Task in it to receive the result or let scope consume and propagate unhandled exceptions.
+        Func<SendRequestReceiveResponseScopeExecutionProperty> IReceiveResponse.CreateSendRequestReceiveResponseScopeExecutionPropertyFactory() =>
+            () => new SendRequestReceiveResponseScopeExecutionPropertyWithoutResult();
+
         private ActivityFunc<Task<Func<Task>>, Func<Task>> responseResultWaiter;
         private ActivityAction<Func<Task>> responseResultEvaluator;
 
@@ -47,7 +47,7 @@ namespace Orleans.Activities
             responseResultWaiter = TaskFuncTaskWaiter.CreateActivityDelegate();
             responseResultEvaluator = TaskFuncEvaluator.CreateActivityDelegate();
             Constraints.Add(OperationActivityHelper.VerifyParentIsWorkflowActivity());
-            Constraints.Add(SendRequestReceiveResponseScopeHelper.VerifyParentIsSendRequestReceiveResponseScope());
+            Constraints.Add(OperationActivityHelper.VerifyParentIsSendRequestReceiveResponseScope());
         }
 
         protected override void CacheMetadata(NativeActivityMetadata metadata)
@@ -56,11 +56,6 @@ namespace Orleans.Activities
             metadata.AddImplementationDelegate(responseResultEvaluator);
             base.CacheMetadata(metadata);
         }
-
-        // Called by SendRequestReceiveResponseScope, to create the SendRequestReceiveResponseScopeExecutionPropertyFactory with the proper TResponseResult type.
-        // Later SendRequest will set the Task in it to receive the result or let scope consume and propagate unhandled exceptions.
-        Func<SendRequestReceiveResponseScopeExecutionProperty> IReceiveResponse.CreateSendRequestReceiveResponseScopeExecutionPropertyFactory() =>
-            () => new SendRequestReceiveResponseScopeExecutionPropertyWithoutResult();
 
         protected override void Execute(NativeActivityContext context)
         {
@@ -99,6 +94,14 @@ namespace Orleans.Activities
     public sealed class ReceiveResponse<TResponseResult> : NativeActivity, IReceiveResponse
         where TResponseResult : class
     {
+        // Called by SendRequestReceiveResponseScope, to select the appropriate OperationNames for the SendRequest activity.
+        Type IReceiveResponse.ResponseResultType => typeof(TResponseResult);
+
+        // Called by SendRequestReceiveResponseScope, to create the SendRequestReceiveResponseScopeExecutionPropertyFactory with the proper TResponseResult type.
+        // Later SendRequest will set the Task in it to receive the result or let scope consume and propagate unhandled exceptions.
+        Func<SendRequestReceiveResponseScopeExecutionProperty> IReceiveResponse.CreateSendRequestReceiveResponseScopeExecutionPropertyFactory() =>
+            () => new SendRequestReceiveResponseScopeExecutionPropertyWithResult<TResponseResult>();
+
         [RequiredArgument]
         [Category(Constants.RequiredCategoryName)]
         [Description("The result of the Func<Task<TResponseResult>> delegate of the outgoing TWorkflowCallbackInterface operation will be stored here.")]
@@ -114,7 +117,7 @@ namespace Orleans.Activities
             responseResultWaiter = TaskFuncTaskWaiter<TResponseResult>.CreateActivityDelegate();
             responseResultEvaluator = TaskFuncEvaluator<TResponseResult>.CreateActivityDelegate();
             Constraints.Add(OperationActivityHelper.VerifyParentIsWorkflowActivity());
-            Constraints.Add(SendRequestReceiveResponseScopeHelper.VerifyParentIsSendRequestReceiveResponseScope());
+            Constraints.Add(OperationActivityHelper.VerifyParentIsSendRequestReceiveResponseScope());
         }
 
         protected override void CacheMetadata(NativeActivityMetadata metadata)
@@ -123,11 +126,6 @@ namespace Orleans.Activities
             metadata.AddImplementationDelegate(responseResultEvaluator);
             base.CacheMetadata(metadata);
         }
-
-        // Called by SendRequestReceiveResponseScope, to create the SendRequestReceiveResponseScopeExecutionPropertyFactory with the proper TResponseResult type.
-        // Later SendRequest will set the Task in it to receive the result or let scope consume and propagate unhandled exceptions.
-        Func<SendRequestReceiveResponseScopeExecutionProperty> IReceiveResponse.CreateSendRequestReceiveResponseScopeExecutionPropertyFactory() =>
-            () => new SendRequestReceiveResponseScopeExecutionPropertyWithResult<TResponseResult>();
 
         protected override void Execute(NativeActivityContext context)
         {

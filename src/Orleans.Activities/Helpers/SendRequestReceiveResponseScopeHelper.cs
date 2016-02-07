@@ -64,18 +64,18 @@ namespace Orleans.Activities.Helpers
                                     {
                                         Activities = 
                                         {
-                                            new If()
+                                            new If
                                             {                                          
-                                                Condition = new InArgument<bool>((env) => child.Get(env).IsSendRequest()),
+                                                Condition = new InArgument<bool>((env) => child.Get(env) is ISendRequest),
                                                 Then = new Assign<int>
                                                 {
                                                     Value = new InArgument<int>(env => sendRequestCounter.Get(env) + 1),
                                                     To = sendRequestCounter,
                                                 },
                                             },
-                                            new If()
+                                            new If
                                             {                                          
-                                                Condition = new InArgument<bool>((env) => child.Get(env).IsReceiveResponse()),
+                                                Condition = new InArgument<bool>((env) => child.Get(env) is IReceiveResponse),
                                                 Then = new Assign<int>
                                                 {
                                                     Value = new InArgument<int>(env => receiveResponseCounter.Get(env) + 1),
@@ -104,6 +104,142 @@ namespace Orleans.Activities.Helpers
             };
         }
 
+        private enum TypeParameterIndex
+        {
+            //WorkflowInterface = 0,
+            WorkflowCallbackInterface = 1,
+        }
+
+        private sealed class WorkflowCallbackInterfaceOperationNamesSetter : CodeActivity
+        {
+            public InArgument<IOperationActivity> SendRequest { get; set; }
+            public InArgument<Type> WorkflowCallbackInterfaceType { get; set; }
+            public InArgument<Type> RequestParameterType { get; set; }
+            public InArgument<Type> ResponseResultType { get; set; }
+
+            protected override void Execute(CodeActivityContext context)
+            {
+                IOperationActivity sendRequest = SendRequest.Get(context);
+                Type workflowCallbackInterfaceType = WorkflowCallbackInterfaceType.Get(context);
+                Type requestParameterType = RequestParameterType.Get(context);
+                Type responseResultType = ResponseResultType.Get(context);
+
+                if (sendRequest != null && workflowCallbackInterfaceType != null && requestParameterType != null && responseResultType != null)
+                    sendRequest.OperationNames.Set(
+                        typeof(WorkflowCallbackInterfaceInfo<>).MakeGenericType(workflowCallbackInterfaceType)
+                            .GetMethod(nameof(WorkflowCallbackInterfaceInfo<object>.GetOperationNames)).Invoke(null, new object[] { requestParameterType, responseResultType }) as IEnumerable<string>);
+            }
+        }
+
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Maintainability", "CA1506:AvoidExcessiveClassCoupling")]
+        public static Constraint SetWorkflowCallbackInterfaceOperationNames()
+        {
+            DelegateInArgument<SendRequestReceiveResponseScope> element = new DelegateInArgument<SendRequestReceiveResponseScope>();
+            DelegateInArgument<ValidationContext> context = new DelegateInArgument<ValidationContext>();
+
+            DelegateInArgument<Activity> parent = new DelegateInArgument<Activity>();
+            DelegateInArgument<Activity> child = new DelegateInArgument<Activity>();
+            Variable<IOperationActivity> sendRequest = new Variable<IOperationActivity>();
+            Variable<Type> workflowCallbackInterfaceType = new Variable<Type>();
+            Variable<Type> requestParameterType = new Variable<Type>();
+            Variable<Type> responseResultType = new Variable<Type>();
+
+            return new Constraint<SendRequestReceiveResponseScope>
+            {
+                Body = new ActivityAction<SendRequestReceiveResponseScope, ValidationContext>
+                {
+                    Argument1 = element,
+                    Argument2 = context,
+                    Handler = new Sequence
+                    {
+                        Variables =
+                        {
+                            sendRequest,
+                            workflowCallbackInterfaceType,
+                            requestParameterType,
+                            responseResultType,
+                        },
+                        Activities =
+                        {
+                            new ForEach<Activity>
+                            {
+                                Values = new GetParentChain
+                                {
+                                    ValidationContext = context,
+                                },
+                                Body = new ActivityAction<Activity>
+                                {
+                                    Argument = parent,
+                                    Handler = new If
+                                    {
+                                        Condition = new InArgument<bool>((env) => parent.Get(env).IsWorkflowActivity()),
+                                        Then = new Assign<Type>
+                                        {
+                                            Value = new InArgument<Type>((env) => parent.Get(env).GetWorkflowActivityType().GetGenericArguments()[(int)TypeParameterIndex.WorkflowCallbackInterface]),
+                                            To = workflowCallbackInterfaceType,
+                                        },
+                                    },
+                                },
+                            },
+                            new ForEach<Activity>
+                            {
+                                Values = new GetChildSubtree
+                                {
+                                    ValidationContext = context,
+                                },
+                                Body = new ActivityAction<Activity>
+                                {
+                                    Argument = child,
+                                    Handler = new Sequence
+                                    {
+                                        Activities =
+                                        {
+                                            new If
+                                            {
+                                                Condition = new InArgument<bool>((env) => child.Get(env) is ISendRequest),
+                                                Then = new Sequence
+                                                {
+                                                    Activities =
+                                                    {
+                                                        new Assign<IOperationActivity>
+                                                        {
+                                                            Value = new InArgument<IOperationActivity>((env) => child.Get(env) as IOperationActivity),
+                                                            To = sendRequest
+                                                        },
+                                                        new Assign<Type>
+                                                        {
+                                                            Value = new InArgument<Type>((env) => (child.Get(env) as ISendRequest).RequestParameterType),
+                                                            To = requestParameterType
+                                                        },
+                                                    },
+                                                },
+                                            },
+                                            new If
+                                            {
+                                                Condition = new InArgument<bool>((env) => child.Get(env) is IReceiveResponse),
+                                                Then = new Assign<Type>
+                                                {
+                                                    Value = new InArgument<Type>((env) => (child.Get(env) as IReceiveResponse).ResponseResultType),
+                                                    To = responseResultType
+                                                },
+                                            },
+                                        },
+                                    },
+                                },
+                            },
+                            new WorkflowCallbackInterfaceOperationNamesSetter()
+                            {
+                                SendRequest = new InArgument<IOperationActivity>((env) => sendRequest.Get(env)),
+                                WorkflowCallbackInterfaceType = new InArgument<Type>((env) => workflowCallbackInterfaceType.Get(env)),
+                                RequestParameterType = new InArgument<Type>((env) => requestParameterType.Get(env)),
+                                ResponseResultType = new InArgument<Type>((env) => responseResultType.Get(env)),
+                            },
+                        },
+                    },
+                },
+            };
+        }
+
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Maintainability", "CA1506:AvoidExcessiveClassCoupling")]
         public static Constraint SetSendRequestReceiveResponseScopeExecutionPropertyFactory()
         {
@@ -127,7 +263,7 @@ namespace Orleans.Activities.Helpers
                         Body = new ActivityAction<Activity>
                         {
                             Argument = child,
-                            Handler = new If()
+                            Handler = new If
                             {
                                 Condition = new InArgument<bool>((env) => child.Get(env) is IReceiveResponse),
                                 Then = new SendRequestReceiveResponseScope.SendRequestReceiveResponseScopeExecutionPropertyFactorySetter
@@ -135,61 +271,6 @@ namespace Orleans.Activities.Helpers
                                     IReceiveResponse = new InArgument<IReceiveResponse>((env) => child.Get(env) as IReceiveResponse),
                                     SendRequestReceiveResponseScope = new InArgument<SendRequestReceiveResponseScope>((env) => element.Get(env)),
                                 },
-                            },
-                        },
-                    },
-                },
-            };
-        }
-
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Maintainability", "CA1506:AvoidExcessiveClassCoupling")]
-        public static Constraint VerifyParentIsSendRequestReceiveResponseScope()
-        {
-            DelegateInArgument<Activity> element = new DelegateInArgument<Activity>();
-            DelegateInArgument<ValidationContext> context = new DelegateInArgument<ValidationContext>();
-
-            DelegateInArgument<Activity> parent = new DelegateInArgument<Activity>();
-            Variable<bool> result = new Variable<bool>();
-
-            return new Constraint<Activity>
-            {
-                Body = new ActivityAction<Activity, ValidationContext>
-                {
-                    Argument1 = element,
-                    Argument2 = context,
-                    Handler = new Sequence
-                    {
-                        Variables =
-                        {
-                            result,
-                        },
-                        Activities =
-                        {
-                            new ForEach<Activity>
-                            {
-                                Values = new GetParentChain
-                                {
-                                    ValidationContext = context,
-                                },
-                                Body = new ActivityAction<Activity>
-                                {
-                                    Argument = parent, 
-                                    Handler = new If
-                                    {
-                                        Condition = new InArgument<bool>((env) => parent.Get(env).GetType() == typeof(SendRequestReceiveResponseScope)),
-                                        Then = new Assign<bool>
-                                        {
-                                            Value = true,
-                                            To = result
-                                        },
-                                    },
-                                },
-                            },
-                            new AssertValidation
-                            {
-                                Assertion = new InArgument<bool>((env) => result.Get(env)),
-                                Message = new InArgument<string>((env) => $"{element.Get(env).GetType().GetFriendlyName()} can only be added inside a {nameof(SendRequestReceiveResponseScope)} activity."),
-                                PropertyName = new InArgument<string>((env) => element.Get(env).DisplayName),
                             },
                         },
                     },

@@ -10,7 +10,7 @@ using Orleans.Activities.AsyncEx;
 
 namespace Orleans.Activities.Test
 {
-    public interface ITestWorkflowInterface : TestWorkflowInterface1A.ITestWorkflowInterface, TestWorkflowInterface1B.ITestWorkflowInterface { }
+    public interface ITestWorkflowInterface1 : TestWorkflowInterface1A.ITestWorkflowInterface, TestWorkflowInterface1B.ITestWorkflowInterface { }
     namespace TestWorkflowInterface1A
     {
         public interface ITestWorkflowInterface
@@ -25,20 +25,20 @@ namespace Orleans.Activities.Test
             Task TestWorkflowInterfaceOperationAsync();
         }
     }
-    public interface ITestWorkflowCallbackInterface : ITestWorkflowCallbackInterface1 { }
-    public interface ITestWorkflowCallbackInterface1
+    public interface ITestWorkflowCallbackInterface1 : ITestWorkflowCallbackInterface1A { }
+    public interface ITestWorkflowCallbackInterface1A
     {
         Task TestWorkflowCallbackInterfaceOperationAsync();
     }
 
-    public interface ITestWorkflowInterfaceBase
+    public interface ITestWorkflowInterface2Base
     {
         Task<string> SayHello1(Func<Task<string>> requestResult);
         Task SayHello2(Func<Task<string>> requestResult);
         Task<string> SayHello3(Func<Task> requestResult);
         Task SayHello4(Func<Task> requestResult);
     }
-    public interface ITestWorkflowInterface2 : ITestWorkflowInterfaceBase
+    public interface ITestWorkflowInterface2 : ITestWorkflowInterface2Base
     {
         Task SayHello44(Func<Task> requestResult);
     }
@@ -74,39 +74,39 @@ namespace Orleans.Activities.Test
         }
     }
 
-    public interface ITestWorkflowCallbackInterfaceBase
+    public interface ITestWorkflowCallbackInterface2Base
     {
         Task<Func<Task<string>>> SayHello1(string requestParameter);
         Task<Func<Task>> SayHello2(string requestParameter);
         Task<Func<Task<string>>> SayHello3();
         Task<Func<Task>> SayHello4();
     }
-    public interface ITestWorkflowCallbackInterface2 : ITestWorkflowCallbackInterfaceBase
+    public interface ITestWorkflowCallbackInterface2 : ITestWorkflowCallbackInterface2Base
     {
         Task<Func<Task>> SayHello44();
     }
 
     public class WorkflowCallbackInterface : ITestWorkflowCallbackInterface2
     {
-        Task<Func<Task<string>>> ITestWorkflowCallbackInterfaceBase.SayHello1(string requestParameter)
+        Task<Func<Task<string>>> ITestWorkflowCallbackInterface2Base.SayHello1(string requestParameter)
         {
             Console.WriteLine($"ITestWorkflowCallbackInterfaceBase.SayHello1({requestParameter})");
             return Task.FromResult<Func<Task<string>>>(() => TaskConstants.StringEmpty);
         }
 
-        Task<Func<Task>> ITestWorkflowCallbackInterfaceBase.SayHello2(string requestParameter)
+        Task<Func<Task>> ITestWorkflowCallbackInterface2Base.SayHello2(string requestParameter)
         {
             Console.WriteLine($"ITestWorkflowCallbackInterfaceBase.SayHello2({requestParameter})");
             return Task.FromResult<Func<Task>>(() => TaskConstants.BooleanFalse);
         }
 
-        Task<Func<Task<string>>> ITestWorkflowCallbackInterfaceBase.SayHello3()
+        Task<Func<Task<string>>> ITestWorkflowCallbackInterface2Base.SayHello3()
         {
             Console.WriteLine("ITestWorkflowCallbackInterfaceBase.SayHello3");
             return Task.FromResult<Func<Task<string>>>(() => TaskConstants.StringEmpty);
         }
 
-        Task<Func<Task>> ITestWorkflowCallbackInterfaceBase.SayHello4()
+        Task<Func<Task>> ITestWorkflowCallbackInterface2Base.SayHello4()
         {
             Console.WriteLine("ITestWorkflowCallbackInterfaceBase.SayHello4");
             return Task.FromResult<Func<Task>>(() => Task.FromResult(false));
@@ -151,11 +151,29 @@ namespace Orleans.Activities.Test
         }
 
         [TestMethod]
-        public void TypeExtensions()
+        public void OperationNames()
         {
-            foreach (var name in OperationInfo.GetOperationNames(typeof(IWorkflowActivity<ITestWorkflowInterface, ITestWorkflowCallbackInterface>).GetGenericArguments()[0]))
+            foreach (var method in OperationInfo<ITestWorkflowInterface1>.OperationMethods)
+                Console.WriteLine(OperationInfo<ITestWorkflowInterface1>.GetOperationName(method));
+            foreach (var method in OperationInfo<ITestWorkflowCallbackInterface1>.OperationMethods)
+                Console.WriteLine(OperationInfo<ITestWorkflowCallbackInterface1>.GetOperationName(method));
+
+            foreach (var name in WorkflowInterfaceInfo<ITestWorkflowInterface2>.GetOperationNames(typeof(string), typeof(string)))
                 Console.WriteLine(name);
-            foreach (var name in OperationInfo.GetOperationNames(typeof(IWorkflowActivity<ITestWorkflowInterface, ITestWorkflowCallbackInterface>).GetGenericArguments()[1]))
+            foreach (var name in WorkflowInterfaceInfo<ITestWorkflowInterface2>.GetOperationNames(typeof(void), typeof(string)))
+                Console.WriteLine(name);
+            foreach (var name in WorkflowInterfaceInfo<ITestWorkflowInterface2>.GetOperationNames(typeof(string), typeof(void)))
+                Console.WriteLine(name);
+            foreach (var name in WorkflowInterfaceInfo<ITestWorkflowInterface2>.GetOperationNames(typeof(void), typeof(void)))
+                Console.WriteLine(name);
+
+            foreach (var name in WorkflowCallbackInterfaceInfo<ITestWorkflowCallbackInterface2>.GetOperationNames(typeof(string), typeof(string)))
+                Console.WriteLine(name);
+            foreach (var name in WorkflowCallbackInterfaceInfo<ITestWorkflowCallbackInterface2>.GetOperationNames(typeof(void), typeof(string)))
+                Console.WriteLine(name);
+            foreach (var name in WorkflowCallbackInterfaceInfo<ITestWorkflowCallbackInterface2>.GetOperationNames(typeof(string), typeof(void)))
+                Console.WriteLine(name);
+            foreach (var name in WorkflowCallbackInterfaceInfo<ITestWorkflowCallbackInterface2>.GetOperationNames(typeof(void), typeof(void)))
                 Console.WriteLine(name);
         }
 
@@ -174,7 +192,7 @@ namespace Orleans.Activities.Test
             proxy.SayHello3(null);
             proxy.SayHello4(null);
             proxy.SayHello44(null);
-            ITestWorkflowInterfaceBase proxyBase = WorkflowInterfaceProxy<ITestWorkflowInterfaceBase>.CreateProxy(new WorkflowInterface());
+            ITestWorkflowInterface2Base proxyBase = WorkflowInterfaceProxy<ITestWorkflowInterface2Base>.CreateProxy(new WorkflowInterface());
             proxyBase.SayHello1(null);
             proxyBase.SayHello2(null);
             proxyBase.SayHello3(null);
@@ -186,10 +204,10 @@ namespace Orleans.Activities.Test
         {
             IWorkflowHostCallbackOperations proxy = WorkflowCallbackInterfaceProxy<ITestWorkflowCallbackInterface2>.CreateProxy(new WorkflowCallbackInterface());
 
-            proxy.OnOperationAsync<string, string>("ITestWorkflowCallbackInterfaceBase.SayHello1", "foo").Result();
-            proxy.OnOperationAsync<string>("ITestWorkflowCallbackInterfaceBase.SayHello2", "foo").Result();
-            proxy.OnOperationAsync<string>("ITestWorkflowCallbackInterfaceBase.SayHello3").Result();
-            proxy.OnOperationAsync("ITestWorkflowCallbackInterfaceBase.SayHello4").Result();
+            proxy.OnOperationAsync<string, string>("ITestWorkflowCallbackInterface2Base.SayHello1", "foo").Result();
+            proxy.OnOperationAsync<string>("ITestWorkflowCallbackInterface2Base.SayHello2", "foo").Result();
+            proxy.OnOperationAsync<string>("ITestWorkflowCallbackInterface2Base.SayHello3").Result();
+            proxy.OnOperationAsync("ITestWorkflowCallbackInterface2Base.SayHello4").Result();
             proxy.OnOperationAsync("ITestWorkflowCallbackInterface2.SayHello44").Result();
         }
     }

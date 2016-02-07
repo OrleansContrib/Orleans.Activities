@@ -15,18 +15,10 @@ using Orleans.Activities.Tracking;
 
 namespace Orleans.Activities
 {
-    public static class SendResponseExtensions
-    {
-        public static bool IsSendResponse(this Activity activity)
-        {
-            Type type = activity.GetType();
-            return type == typeof(SendResponse) || type.IsGenericTypeOf(typeof(SendResponse<>));
-        }
-    }
-
-    // Called by ReceiveRequestSendResponseScope, to create the ReceiveRequestSendResponseScopeExecutionPropertyFactory with the proper TResponseParameter type.
+    // Used by ReceiveRequestSendResponseScope.
     public interface ISendResponse
     {
+        Type ResponseParameterType { get; }
         Func<ReceiveRequestSendResponseScopeExecutionProperty> CreateReceiveRequestSendResponseScopeExecutionPropertyFactory();
     }
 
@@ -37,6 +29,14 @@ namespace Orleans.Activities
     [ToolboxBitmap(typeof(SendResponse), nameof(SendResponse) + ".png")]
     public sealed class SendResponse : NativeActivity, ISendResponse
     {
+        // Called by ReceiveRequestSendResponseScope, to select the appropriate OperationNames for the ReceiveRequest activity.
+        Type ISendResponse.ResponseParameterType => typeof(void);
+
+        // Called by ReceiveRequestSendResponseScope, to create the ReceiveRequestSendResponseScopeExecutionPropertyFactory with the proper TResponseParameter type.
+        // Later ReceiveRequest will set the TaskCompletionSource in it to send back the result or let scope propagate unhandled exceptions.
+        Func<ReceiveRequestSendResponseScopeExecutionProperty> ISendResponse.CreateReceiveRequestSendResponseScopeExecutionPropertyFactory() =>
+            () => new ReceiveRequestSendResponseScopeExecutionProperty<object>(Idempotent);
+
         [Category(Constants.RequiredCategoryName)]
         [Description("The fact, that the response is already sent, will be persisted. If the client repeats the operation later, it will receive a OperationRepeatedException.")]
         public bool Idempotent { get; set; }
@@ -51,7 +51,7 @@ namespace Orleans.Activities
         {
             persist = new Persist();
             Constraints.Add(OperationActivityHelper.VerifyParentIsWorkflowActivity());
-            Constraints.Add(ReceiveRequestSendResponseScopeHelper.VerifyParentIsReceiveRequestSendResponseScope());
+            Constraints.Add(OperationActivityHelper.VerifyParentIsReceiveRequestSendResponseScope());
         }
 
         protected override void CacheMetadata(NativeActivityMetadata metadata)
@@ -59,11 +59,6 @@ namespace Orleans.Activities
             metadata.AddImplementationChild(persist);
             base.CacheMetadata(metadata);
         }
-
-        // Called by ReceiveRequestSendResponseScope, to create the ReceiveRequestSendResponseScopeExecutionPropertyFactory with the proper TResponseParameter type.
-        // Later ReceiveRequest will set the TaskCompletionSource in it to send back the result or let scope propagate unhandled exceptions.
-        Func<ReceiveRequestSendResponseScopeExecutionProperty> ISendResponse.CreateReceiveRequestSendResponseScopeExecutionPropertyFactory() =>
-            () => new ReceiveRequestSendResponseScopeExecutionProperty<object>(Idempotent);
 
         // We must persist before sending the response if we are idempotent, but this will cause double persist if the workflow goes idle after the response is sent.
         // TODO: can we do anything against this???
@@ -106,6 +101,14 @@ namespace Orleans.Activities
     public sealed class SendResponse<TResponseParameter> : NativeActivity, ISendResponse
         where TResponseParameter : class
     {
+        // Called by ReceiveRequestSendResponseScope, to select the appropriate OperationNames for the ReceiveRequest activity.
+        Type ISendResponse.ResponseParameterType => typeof(TResponseParameter);
+
+        // Called by ReceiveRequestSendResponseScope, to create the ReceiveRequestSendResponseScopeExecutionPropertyFactory with the proper TResponseParameter type.
+        // Later ReceiveRequest will set the TaskCompletionSource in it to send back the result or let scope propagate unhandled exceptions.
+        Func<ReceiveRequestSendResponseScopeExecutionProperty> ISendResponse.CreateReceiveRequestSendResponseScopeExecutionPropertyFactory() =>
+            () => new ReceiveRequestSendResponseScopeExecutionProperty<TResponseParameter>(Idempotent);
+
         [RequiredArgument]
         [Category(Constants.RequiredCategoryName)]
         [Description("ResponseParameter has to be serializable if the operation is idempotent.")]
@@ -125,7 +128,7 @@ namespace Orleans.Activities
         {
             persist = new Persist();
             Constraints.Add(OperationActivityHelper.VerifyParentIsWorkflowActivity());
-            Constraints.Add(ReceiveRequestSendResponseScopeHelper.VerifyParentIsReceiveRequestSendResponseScope());
+            Constraints.Add(OperationActivityHelper.VerifyParentIsReceiveRequestSendResponseScope());
         }
 
         protected override void CacheMetadata(NativeActivityMetadata metadata)
@@ -133,11 +136,6 @@ namespace Orleans.Activities
             metadata.AddImplementationChild(persist);
             base.CacheMetadata(metadata);
         }
-
-        // Called by ReceiveRequestSendResponseScope, to create the ReceiveRequestSendResponseScopeExecutionPropertyFactory with the proper TResponseParameter type.
-        // Later ReceiveRequest will set the TaskCompletionSource in it to send back the result or let scope propagate unhandled exceptions.
-        Func<ReceiveRequestSendResponseScopeExecutionProperty> ISendResponse.CreateReceiveRequestSendResponseScopeExecutionPropertyFactory() =>
-            () => new ReceiveRequestSendResponseScopeExecutionProperty<TResponseParameter>(Idempotent);
 
         // We must persist before sending the response if we are idempotent, but this will cause double persist if the workflow goes idle after the response is sent.
         // TODO: can we do anything against this???
