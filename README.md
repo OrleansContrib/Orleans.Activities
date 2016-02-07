@@ -6,7 +6,7 @@ Workflow Foundation (.Net 4.x System.Activities workflows) over Orleans framewor
 
 __NOTE:__ This project currently is an __experiment__, not production quality! There is no NuGet package for it.
 
-[![Build status](https://ci.appveyor.com/api/projects/status/hm24xccsyc4e5nh1?svg=true)](https://ci.appveyor.com/project/lmagyar/orleans-activities)
+[![Build status](https://ci.appveyor.com/api/projects/status/dy600wk9qn1fppqw?svg=true)](https://ci.appveyor.com/project/OrleansContrib/orleans-activities)
 ~~NuGet~~
 [![Issue Stats](http://www.issuestats.com/github/OrleansContrib/Orleans.Activities/badge/pr)](http://www.issuestats.com/github/OrleansContrib/Orleans.Activities)
 [![Issue Stats](http://www.issuestats.com/github/OrleansContrib/Orleans.Activities/badge/issue)](http://www.issuestats.com/github/OrleansContrib/Orleans.Activities)
