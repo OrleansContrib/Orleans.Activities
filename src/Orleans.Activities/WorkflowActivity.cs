@@ -17,13 +17,16 @@ namespace Orleans.Activities
     /// The de facto "root" activity to get the TWorkflowInterface and TWorkflowCallbackInterface types.
     /// <para>Due to the limitations of the designer, the base class of the XAML designed activity, ie. the workflow must be Activity.
     /// If we use the general ReceiveRequest, SendResponse, SendRequest, ReceiveResponse activities, a WorkflowActivity must be the top activity under the workflow's "root" activity.
-    /// See <see cref="WorkflowGrain{TWorkflowState, TWorkflowInterface, TWorkflowCallbackInterface}"/> for the description of the type parameters.</para>  
+    /// See <see cref="WorkflowGrain{TGrainState, TWorkflowInterface, TWorkflowCallbackInterface}"/> for the description of the type parameters.</para>  
     /// </summary>
     /// <typeparam name="TWorkflowInterface"></typeparam>
     /// <typeparam name="TWorkflowCallbackInterface"></typeparam>
     [ContentProperty(nameof(Body))]
     [Designer(typeof(WorkflowActivityDesigner))]
     [ToolboxBitmap(typeof(WorkflowActivity<,>), nameof(WorkflowActivity<TWorkflowInterface, TWorkflowCallbackInterface>) + ".png")]
+    [Description("The de facto \"root\" activity to get the TWorkflowInterface and TWorkflowCallbackInterface types.\n" +
+        "Due to the limitations of the designer, the base class of the XAML designed activity, ie. the workflow must be Activity. " +
+        "If we use the general ReceiveRequest, SendResponse, SendRequest, ReceiveResponse activities, a WorkflowActivity must be the top activity under the workflow's \"root\" activity.\nSee WorkflowGrain<TGrainState, TWorkflowInterface, TWorkflowCallbackInterface> for the description of the type parameters.")]
     public sealed class WorkflowActivity<TWorkflowInterface, TWorkflowCallbackInterface> : NativeActivity, IWorkflowActivity<TWorkflowInterface, TWorkflowCallbackInterface>
         where TWorkflowInterface : class
         where TWorkflowCallbackInterface : class

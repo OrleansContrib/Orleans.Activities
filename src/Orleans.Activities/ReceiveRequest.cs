@@ -45,6 +45,8 @@ namespace Orleans.Activities
     /// </summary>
     [Designer(typeof(ReceiveRequestDesigner))]
     [ToolboxBitmap(typeof(ReceiveRequest), nameof(ReceiveRequest) + ".png")]
+    [Description("Receives an incoming request by executing the request result delegate created by the appropriate TWorkflowInterface operation. " +
+        "The receiving delegate is only executed if this activity is able to accept the incoming request.")]
     public sealed class ReceiveRequest : NativeActivity, IOperationActivity, IReceiveRequest
     {
         // TODO add combobox to the properties window also
@@ -113,6 +115,8 @@ namespace Orleans.Activities
     /// <typeparam name="TRequestResult"></typeparam>
     [Designer(typeof(ReceiveRequestGenericDesigner))]
     [ToolboxBitmap(typeof(ReceiveRequest<>), nameof(ReceiveRequest) + ".png")]
+    [Description("Receives an incoming request by executing the request result delegate created by the appropriate TWorkflowInterface operation, and sets the RequestResult of the execution. " +
+        "The receiving delegate is only executed if this activity is able to accept the incoming request.")]
     public sealed class ReceiveRequest<TRequestResult> : NativeActivity, IOperationActivity, IReceiveRequest
         where TRequestResult : class
     {

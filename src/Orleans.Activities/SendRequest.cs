@@ -27,6 +27,7 @@ namespace Orleans.Activities
     /// </summary>
     [Designer(typeof(SendRequestDesigner))]
     [ToolboxBitmap(typeof(SendRequest), nameof(SendRequest) + ".png")]
+    [Description("Sends an outgoing request by calling the appropriate TWorkflowCallbackInterface operation.")]
     public sealed class SendRequest : NativeActivity, IOperationActivity, ISendRequest
     {
         // TODO add combobox to the properties window also
@@ -69,6 +70,7 @@ namespace Orleans.Activities
     /// <typeparam name="TRequestParameter"></typeparam>
     [Designer(typeof(SendRequestGenericDesigner))]
     [ToolboxBitmap(typeof(SendRequest<>), nameof(SendRequest) + ".png")]
+    [Description("Sends an outgoing request by calling the appropriate TWorkflowCallbackInterface operation with RequestParameter.")]
     public sealed class SendRequest<TRequestParameter> : NativeActivity, IOperationActivity, ISendRequest
         where TRequestParameter : class
     {

@@ -17,6 +17,7 @@ namespace Orleans.Activities
     /// </summary>
     [Designer(typeof(TimeoutDesigner))]
     [ToolboxBitmap(typeof(Timeout), nameof(Timeout) + ".png")]
+    [Description("Compared to Delay activity that uses TimeSpan for duration, Timeout uses DateTime.")]
     public class Timeout : TimeoutBase
     {
         [RequiredArgument]

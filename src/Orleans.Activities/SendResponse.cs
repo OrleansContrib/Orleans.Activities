@@ -27,6 +27,7 @@ namespace Orleans.Activities
     /// </summary>
     [Designer(typeof(SendResponseDesigner))]
     [ToolboxBitmap(typeof(SendResponse), nameof(SendResponse) + ".png")]
+    [Description("Completes an incoming request.")]
     public sealed class SendResponse : NativeActivity, ISendResponse
     {
         // Called by ReceiveRequestSendResponseScope, to select the appropriate OperationNames for the ReceiveRequest activity.
@@ -98,6 +99,7 @@ namespace Orleans.Activities
     /// <typeparam name="TResponseParameter"></typeparam>
     [Designer(typeof(SendResponseGenericDesigner))]
     [ToolboxBitmap(typeof(SendResponse<>), nameof(SendResponse) + ".png")]
+    [Description("Completes an incoming request and sends back a result of the operation.")]
     public sealed class SendResponse<TResponseParameter> : NativeActivity, ISendResponse
         where TResponseParameter : class
     {

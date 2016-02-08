@@ -13,8 +13,12 @@ using Orleans.Activities.Designers;
 
 namespace Orleans.Activities
 {
+    /// <summary>
+    /// On each repetition increases the value of the delay up to a max. limit. It's practical for a degressive repetition.
+    /// </summary>
     [Designer(typeof(RetryDelayDesigner))]
     [ToolboxBitmap(typeof(RetryDelay), nameof(RetryDelay) + ".png")]
+    [Description("On each repetition increases the value of the delay up to a max. limit. It's practical for a degressive repetition.")]
     public class RetryDelay : TimeoutBase
     {
         [RequiredArgument]

@@ -17,10 +17,15 @@ namespace Orleans.Activities
 {
     /// <summary>
     /// Scope for SendRequest and ReceiveResponse activities.
+    /// <para>The main responsibility of this activity, to await the outgoing TWorkflowCallbackInterface operation's task in case ReceiveResponse is unable to do this.
+    /// This is necessary in case of a fault propagation, that can be the result of an unhandled exception.</para>
     /// </summary>
     [ContentProperty(nameof(Body))]
     [Designer(typeof(SendRequestReceiveResponseScopeDesigner))]
     [ToolboxBitmap(typeof(SendRequestReceiveResponseScope), nameof(SendRequestReceiveResponseScope) + ".png")]
+    [Description("Scope for SendRequest and ReceiveResponse activities.\n" +
+        "The main responsibility of this activity, to await the outgoing TWorkflowCallbackInterface operation's task in case ReceiveResponse is unable to do this. " +
+        "This is necessary in case of a fault propagation, that can be the result of an unhandled exception.")]
     public sealed class SendRequestReceiveResponseScope : NativeActivity
     {
         // An elaborate setter for the private sendRequestReceiveResponseScopeExecutionPropertyFactory field, used by the SendRequestReceiveResponseScopeHelper's constraints.
