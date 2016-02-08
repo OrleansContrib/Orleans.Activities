@@ -45,25 +45,21 @@ The goal, is to keep the C# code in the grain, and use the workflow only to deci
 
 Implemented:
 
-* Persistence (compatible with legacy workflow extensions), but it can run without any persistence
-* Reminders (redirected from System.Activities Timers, 1 min. is the minimum)
+* Persistence (compatible with legacy workflow extensions)
+* Reminders (compatible with legacy Delay activities, though 1 min. is the minimum)
 * Tracking
 * Designer support
+* Nearly all legacy activities are supported (except TransactionScope and messaging activities)
 
 Extra implemented features:
 
 * TAP async API
 * Optionally idempotent request processing for forward recovery
 * Automatic reactivation after failure
-* Workflow can be persisted during processing an incoming request (ReceiveRequestSendResponseScope is __NOT__ an implicit NoPersistScope)
+* Workflow can be persisted during processing an incoming request (ReceiveRequestSendResponseScope is __not__ an implicit NoPersistScope)
 * Executing code "in the background" on the tail of the request after the request returns it's response
 * Workflow is informed whether it is running in a reloaded state after failure (to determine necessary recovery)
-* Notification participant (to notify extensions when the workflow is idle)
-
-Not tested, but should work:
-
-* CancellationScope
-* CompensableActivity and CompensationExtension
+* Notification participant extensions (to get notified when the workflow is idle)
 
 Under construction:
 
