@@ -13,10 +13,13 @@ using Orleans.Activities.Extensions;
 namespace Orleans.Activities
 {
     /// <summary>
-    /// Gets the IsReloaded property of the workflow.
+    /// Gets the IsReloaded property of the workflow. IsReloaded is true from a Load with Runnable state up to the first Save.
+    /// <para>A Load with Runnable state tipically means a Reload after a failure, when previously the workflow was persisted explicitly before a critical step.</para>
     /// </summary>
     [Designer(typeof(GetIsReloadedDesigner))]
     [ToolboxBitmap(typeof(GetIsReloaded), nameof(GetIsReloaded) + ".png")]
+    [Description("Gets the IsReloaded property of the workflow. IsReloaded is true from a Load with Runnable state up to the first Save.\n" +
+        "A Load with Runnable state tipically means a Reload after a failure, when previously the workflow was persisted explicitly before a critical step.")]
     public sealed class GetIsReloaded : CodeActivity
     {
         [RequiredArgument]

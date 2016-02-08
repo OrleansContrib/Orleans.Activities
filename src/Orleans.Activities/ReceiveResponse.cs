@@ -27,6 +27,8 @@ namespace Orleans.Activities
     /// </summary>
     [Designer(typeof(ReceiveResponseDesigner))]
     [ToolboxBitmap(typeof(ReceiveResponse), nameof(ReceiveResponse) + ".png")]
+    [Description("Completes an outgoing request. " +
+        "The request's result delegate is only executed if this activity is able to complete the outgoing request.")]
     public sealed class ReceiveResponse : NativeActivity, IReceiveResponse
     {
         // Called by SendRequestReceiveResponseScope, to select the appropriate OperationNames for the SendRequest activity.
@@ -91,6 +93,8 @@ namespace Orleans.Activities
     /// <typeparam name="TResponseResult"></typeparam>
     [Designer(typeof(ReceiveResponseGenericDesigner))]
     [ToolboxBitmap(typeof(ReceiveResponse<>), nameof(ReceiveResponse) + ".png")]
+    [Description("Completes an outgoing request, and sets the ResponseResult of the execution. " +
+        "The request's result delegate is only executed if this activity is able to complete the outgoing request.")]
     public sealed class ReceiveResponse<TResponseResult> : NativeActivity, IReceiveResponse
         where TResponseResult : class
     {

@@ -38,6 +38,15 @@ namespace Orleans.Activities
     [ContentProperty("Body")]
     [Designer(typeof(ReceiveRequestSendResponseScopeDesigner))]
     [ToolboxBitmap(typeof(ReceiveRequestSendResponseScope), nameof(ReceiveRequestSendResponseScope) + ".png")]
+    [Description("Scope for ReceiveRequest and SendResponse activities.\n" +
+        "This is persistable, worst case we can't send back the response, but we can store it as idempotent response, and the next client call can receive it automatically. " +
+        "If the client repeats the request during execution of the scope, the incoming request will wait for the execution of the current operation. " +
+        "If the workflow goes idle during the execution of the operation and the grain is reentrant, the repeated request will get an InvalidOperationException, due to " +
+        "the workflow doesn't wait for operation already, but didn't produced the response yet.\n" +
+        "The main responsibility of this activity, to cancel the operation even if the scope completes without executing the SendResponse activity. " +
+        "In the workflow, this is possible, to not execute the SendResponse, there is no \"not all code paths return a value\" error for it.\n" +
+        "In case of an exception, the scope catches it and behaves like a root activity, calls OnUnhandledException on the host and Abort / Cancel / Terminate the workflow. " +
+        "In this case all other open operations' taskCompletionSource will be faulted also.")]
     public sealed class ReceiveRequestSendResponseScope : NativeActivity
     {
         // An elaborate setter for the private receiveRequestSendResponseScopeExecutionPropertyFactory field, used by the ReceiveRequestSendResponseScopeHelper's constraints.
