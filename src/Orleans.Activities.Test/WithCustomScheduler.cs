@@ -79,6 +79,7 @@ namespace Orleans.Activities.Test
         public Exception UnhandledExceptionException { get; private set; }
         public AsyncManualResetEvent Completed { get; private set; }
         public ActivityInstanceState CompletionState { get; private set; }
+        public IDictionary<string, object> Outputs { get; private set; }
         public Exception TerminationException { get; private set; }
         public AsyncManualResetEvent Written { get; private set; }
 
@@ -254,6 +255,7 @@ namespace Orleans.Activities.Test
         public Task OnCompletedAsync(ActivityInstanceState completionState, IDictionary<string, object> outputs, Exception terminationException)
         {
             CompletionState = completionState;
+            Outputs = outputs;
             TerminationException = terminationException;
             Completed.Set();
             return TaskConstants.Completed;
@@ -1726,6 +1728,84 @@ namespace Orleans.Activities.Test
                 Assert.AreEqual(ActivityInstanceState.Closed, grain.CompletionState);
                 Assert.AreEqual(10, grain.WorkflowStatesCount);
                 Assert.AreEqual(false, grain.UnhandledException.IsSet);
+            });
+        }
+
+        [TestMethod]
+        public async Task CancellationScope()
+        {
+            await RunAsyncWithReentrantSingleThreadedScheduler(async () =>
+            {
+                Grain grain = new Grain(typeof(CancellationScope));
+                grain.Initialize();
+
+                Console.WriteLine("ActivateAsync...");
+                await grain.WorkflowHost.ActivateAsync();
+
+                Console.WriteLine("Completed.WaitAsync...");
+                await grain.Completed.WaitAsync(1);
+                Console.WriteLine("Written.WaitAsync...");
+                await grain.Written.WaitAsync(1);
+                Console.WriteLine("---DONE---");
+
+                Assert.AreEqual(ActivityInstanceState.Closed, grain.CompletionState);
+                Assert.AreEqual(1, grain.WorkflowStatesCount);
+                Assert.AreEqual(false, grain.UnhandledException.IsSet);
+
+                Assert.IsNotNull(grain.Outputs);
+                object result;
+                Assert.IsTrue(grain.Outputs.TryGetValue("Result", out result));
+                Assert.AreEqual("Canceled", (string)result);
+            });
+        }
+
+        [TestMethod]
+        public async Task Compensation()
+        {
+            await RunAsyncWithReentrantSingleThreadedScheduler(async () =>
+            {
+                Grain grain = new Grain(typeof(ExceptionCausingCustomCancellation));
+                grain.Initialize();
+
+                Console.WriteLine("ActivateAsync...");
+                await grain.WorkflowHost.ActivateAsync();
+
+                Console.WriteLine("Completed.WaitAsync...");
+                await grain.Completed.WaitAsync(1);
+                Console.WriteLine("Written.WaitAsync...");
+                await grain.Written.WaitAsync(1);
+                Console.WriteLine("---DONE---");
+
+                Assert.AreEqual(ActivityInstanceState.Closed, grain.CompletionState);
+                Assert.AreEqual(1, grain.WorkflowStatesCount);
+                Assert.AreEqual(false, grain.UnhandledException.IsSet);
+
+                Assert.IsNotNull(grain.Outputs);
+                object result;
+                Assert.IsTrue(grain.Outputs.TryGetValue("Result", out result));
+                Assert.AreEqual("Cancellation C;Cancellation;Confirmation A;Compensation B;Exception catched;", (string)result);
+
+
+
+                grain = new Grain(typeof(CancellingActivityInvokesCustomCancellation));
+                grain.Initialize();
+
+                Console.WriteLine("ActivateAsync...");
+                await grain.WorkflowHost.ActivateAsync();
+
+                Console.WriteLine("Completed.WaitAsync...");
+                await grain.Completed.WaitAsync(1);
+                Console.WriteLine("Written.WaitAsync...");
+                await grain.Written.WaitAsync(1);
+                Console.WriteLine("---DONE---");
+
+                Assert.AreEqual(ActivityInstanceState.Closed, grain.CompletionState);
+                Assert.AreEqual(1, grain.WorkflowStatesCount);
+                Assert.AreEqual(false, grain.UnhandledException.IsSet);
+
+                Assert.IsNotNull(grain.Outputs);
+                Assert.IsTrue(grain.Outputs.TryGetValue("Result", out result));
+                Assert.AreEqual("Cancellation C;Cancellation;Confirmation B;Confirmation A;", (string)result);
             });
         }
     }

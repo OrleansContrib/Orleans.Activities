@@ -1,0 +1,103 @@
+﻿<Activity mc:Ignorable="sap sap2010 sads" x:Class="Orleans.Activities.Test.Activities.CancellationScope"
+ xmlns="http://schemas.microsoft.com/netfx/2009/xaml/activities"
+ xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+ xmlns:mca="clr-namespace:Microsoft.CSharp.Activities;assembly=System.Activities"
+ xmlns:sads="http://schemas.microsoft.com/netfx/2010/xaml/activities/debugger"
+ xmlns:sap="http://schemas.microsoft.com/netfx/2009/xaml/activities/presentation"
+ xmlns:sap2010="http://schemas.microsoft.com/netfx/2010/xaml/activities/presentation"
+ xmlns:sco="clr-namespace:System.Collections.ObjectModel;assembly=mscorlib"
+ xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <x:Members>
+    <x:Property Name="Result" Type="OutArgument(x:String)" />
+  </x:Members>
+  <sap2010:ExpressionActivityEditor.ExpressionActivityEditor>C#</sap2010:ExpressionActivityEditor.ExpressionActivityEditor>
+  <TextExpression.NamespacesForImplementation>
+    <sco:Collection x:TypeArguments="x:String">
+      <x:String>System</x:String>
+      <x:String>System.Collections.Generic</x:String>
+      <x:String>System.Data</x:String>
+      <x:String>System.Linq</x:String>
+      <x:String>System.Text</x:String>
+    </sco:Collection>
+  </TextExpression.NamespacesForImplementation>
+  <TextExpression.ReferencesForImplementation>
+    <sco:Collection x:TypeArguments="AssemblyReference">
+      <AssemblyReference>Microsoft.CSharp</AssemblyReference>
+      <AssemblyReference>System</AssemblyReference>
+      <AssemblyReference>System.Activities</AssemblyReference>
+      <AssemblyReference>System.Core</AssemblyReference>
+      <AssemblyReference>System.Data</AssemblyReference>
+      <AssemblyReference>System.Drawing</AssemblyReference>
+      <AssemblyReference>System.Runtime.Serialization</AssemblyReference>
+      <AssemblyReference>System.ServiceModel</AssemblyReference>
+      <AssemblyReference>System.ServiceModel.Activities</AssemblyReference>
+      <AssemblyReference>System.Xaml</AssemblyReference>
+      <AssemblyReference>System.Xml</AssemblyReference>
+      <AssemblyReference>System.Xml.Linq</AssemblyReference>
+      <AssemblyReference>Orleans.Activities</AssemblyReference>
+      <AssemblyReference>mscorlib</AssemblyReference>
+      <AssemblyReference>Orleans.Activities.Test.Activities</AssemblyReference>
+    </sco:Collection>
+  </TextExpression.ReferencesForImplementation>
+  <Parallel CompletionCondition="True">
+    <CancellationScope>
+      <Delay>
+        <InArgument x:TypeArguments="x:TimeSpan">
+          <mca:CSharpValue x:TypeArguments="x:TimeSpan">TimeSpan.FromSeconds(1)</mca:CSharpValue>
+        </InArgument>
+        <sap2010:WorkflowViewState.IdRef>Delay_1</sap2010:WorkflowViewState.IdRef>
+      </Delay>
+      <CancellationScope.CancellationHandler>
+        <Assign>
+          <Assign.To>
+            <OutArgument x:TypeArguments="x:String">
+              <mca:CSharpReference x:TypeArguments="x:String">Result</mca:CSharpReference>
+            </OutArgument>
+          </Assign.To>
+          <Assign.Value>
+            <InArgument x:TypeArguments="x:String">Canceled</InArgument>
+          </Assign.Value>
+          <sap2010:WorkflowViewState.IdRef>Assign_1</sap2010:WorkflowViewState.IdRef>
+        </Assign>
+      </CancellationScope.CancellationHandler>
+      <sap2010:WorkflowViewState.IdRef>CancellationScope_1</sap2010:WorkflowViewState.IdRef>
+    </CancellationScope>
+    <CancellationScope>
+      <Delay>
+        <InArgument x:TypeArguments="x:TimeSpan">
+          <mca:CSharpValue x:TypeArguments="x:TimeSpan">TimeSpan.FromMilliseconds(100)</mca:CSharpValue>
+        </InArgument>
+        <sap2010:WorkflowViewState.IdRef>Delay_2</sap2010:WorkflowViewState.IdRef>
+      </Delay>
+      <CancellationScope.CancellationHandler>
+        <Assign>
+          <Assign.To>
+            <OutArgument x:TypeArguments="x:String">
+              <mca:CSharpReference x:TypeArguments="x:String">Result</mca:CSharpReference>
+            </OutArgument>
+          </Assign.To>
+          <Assign.Value>
+            <InArgument x:TypeArguments="x:String">Oops</InArgument>
+          </Assign.Value>
+          <sap2010:WorkflowViewState.IdRef>Assign_2</sap2010:WorkflowViewState.IdRef>
+        </Assign>
+      </CancellationScope.CancellationHandler>
+      <sap2010:WorkflowViewState.IdRef>CancellationScope_2</sap2010:WorkflowViewState.IdRef>
+    </CancellationScope>
+    <sap2010:WorkflowViewState.IdRef>Parallel_1</sap2010:WorkflowViewState.IdRef>
+    <sads:DebugSymbol.Symbol>d2paOlxQcml2YXRlXEdpdEh1YlxsbWFneWFyXE9ybGVhbnMuQWN0aXZpdGllc1xzcmNcT3JsZWFucy5BY3Rpdml0aWVzLlRlc3QuQWN0aXZpdGllc1xDYW5jZWxsYXRpb25TY29wZS54YW1sDioDWQ4CAQErBUAZAgELQQVWGQIBAyohKicCAQIsBzEPAgEQMwk9EgIBDEIHRw8CAQhJCVMSAgEELgsuYgIBETo0OjwCAQ82DzZbAgENRAtEaQIBCVA0UDgCAQdMD0xbAgEF</sads:DebugSymbol.Symbol>
+  </Parallel>
+  <sap2010:WorkflowViewState.IdRef>Orleans.Activities.Test.Activities.CancellationScope_1</sap2010:WorkflowViewState.IdRef>
+  <sap2010:WorkflowViewState.ViewStateManager>
+    <sap2010:ViewStateManager>
+      <sap2010:ViewStateData Id="Delay_1" sap:VirtualizedContainerService.HintSize="200,22" />
+      <sap2010:ViewStateData Id="Assign_1" sap:VirtualizedContainerService.HintSize="242,62" />
+      <sap2010:ViewStateData Id="CancellationScope_1" sap:VirtualizedContainerService.HintSize="278,329" />
+      <sap2010:ViewStateData Id="Delay_2" sap:VirtualizedContainerService.HintSize="200,22" />
+      <sap2010:ViewStateData Id="Assign_2" sap:VirtualizedContainerService.HintSize="242,62" />
+      <sap2010:ViewStateData Id="CancellationScope_2" sap:VirtualizedContainerService.HintSize="278,329" />
+      <sap2010:ViewStateData Id="Parallel_1" sap:VirtualizedContainerService.HintSize="710,375" />
+      <sap2010:ViewStateData Id="Orleans.Activities.Test.Activities.CancellationScope_1" sap:VirtualizedContainerService.HintSize="750,455" />
+    </sap2010:ViewStateManager>
+  </sap2010:WorkflowViewState.ViewStateManager>
+</Activity>
