@@ -34,6 +34,7 @@ namespace Orleans.Activities.Configuration
         /// this flag has no effect on persistence (see <see cref="IdlePersistenceMode.OnPersistableIdle"/>).</para>
         /// </summary>
         OnStart = 4,
+        Allways = OnStart | OnPersistableIdle | OnCompleted,
     }
 
     public static class IdlePersistenceModeExtensions

@@ -101,8 +101,6 @@ namespace Orleans.Activities
 
         #region Grain & IRemindable infrastructure members
 
-        public override Task OnActivateAsync() => workflowHost.ActivateAsync();
-
         public override Task OnDeactivateAsync() => workflowHost.DeactivateAsync();
 
         public virtual Task ReceiveReminder(string reminderName, TickStatus tickStatus) => workflowHost.ReminderAsync(reminderName);
@@ -201,7 +199,7 @@ namespace Orleans.Activities
         /// In a typical implementation of this method a <see cref="TrackingParticipant"/> implementation can be added to the workflow to log the steps that are executed.
         /// <para>Also can be used for custom activities that require some workflow extensions,
         /// but it would be better to use the standard ReceiveRequest, SendResponse, SendRequest, ReceiveResponse activities and keep the special logic in the grain code.</para>
-        /// <para>Executed once on each activation (OnActivateAsync),
+        /// <para>Executed once on each activation,
         /// and after each case when the workflow is restarted or reloaded from the last persisted state due to an abort tipically caused by an unhandled exception.</para>
         /// </summary>
         /// <returns></returns>
@@ -209,7 +207,7 @@ namespace Orleans.Activities
 
         /// <summary>
         /// If the workflow (as an activity) has input arguments, their values can be set by the dictionary returned by this method.
-        /// <para>Executed only once on the first activation (OnActivateAsync),
+        /// <para>Executed only once on the first activation,
         /// and after each case when the workflow is restarted due to an abort tipically caused by an unhandled exception before the first persistence.</para>
         /// </summary>
         /// <returns></returns>

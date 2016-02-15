@@ -8,8 +8,8 @@ namespace Orleans.Activities.Helpers
 {
     /// <summary>
     /// Helps WorkflowHost to always complete all the active/pending taskCompletionSource-s of the incoming operations.
-    /// <para>During activation, the UnhandledExceptionAndNormalCompletion protection is used, task is completed or exception is set only when the workflow goes idle.</para>
-    /// <para>During operations, the UnhandledExceptionOnly protection is used, task's exception is set immediatelly when the OnUnhandledException is called.</para>
+    /// <para>During preparation, the Preparation protection is used, task is completed or exception is set only when the workflow goes idle.</para>
+    /// <para>During operations/reminders, the Normal protection is used, task's exception is set immediatelly when the OnUnhandledException is called.</para>
     /// </summary>
     public class ActiveTaskCompletionSources
     {
@@ -36,8 +36,14 @@ namespace Orleans.Activities.Helpers
 
         public enum TaskCompletionSourceProtectionLevel
         {
-            UnhandledExceptionOnly,
-            UnhandledExceptionAndNormalCompletion,
+            /// <summary>
+            /// Task's exception is set immediatelly when the OnUnhandledException is called.
+            /// </summary>
+            Normal,
+            /// <summary>
+            /// Task is completed or exception is set only when the workflow goes idle.
+            /// </summary>
+            Preparation,
         }
 
         public TaskCompletionSourceProtectionLevel ProtectionLevel { get; set; }
@@ -71,11 +77,12 @@ namespace Orleans.Activities.Helpers
 
         public bool TrySetException(Exception exception)
         {
-            if (ProtectionLevel == TaskCompletionSourceProtectionLevel.UnhandledExceptionAndNormalCompletion)
+            if (ProtectionLevel == TaskCompletionSourceProtectionLevel.Preparation)
                 return TryStoreException(exception);
-            else
+            else // TaskCompletionSourceProtectionLevel.Normal
             {
                 bool result = false;
+                // If any TCS accepts the exception, we are successful, ie. we don't need to propagate the exception with OnUnhandledException later.
                 foreach (ActiveTaskCompletionSource activeTaskCompletionSource in activeTaskCompletionSources.Values.ToList())
                     if (activeTaskCompletionSource.TrySetException(exception))
                         result = true;
@@ -83,18 +90,24 @@ namespace Orleans.Activities.Helpers
             }
         }
 
-        public void TrySetCompleted()
+        public bool TrySetCompleted()
         {
-            if (storedException != null)
+            if (storedException != null) // TaskCompletionSourceProtectionLevel.Preparation
             {
                 Exception storedException = this.storedException;
                 this.storedException = null;
+                // We assume, that this will be always successful, because nothing else will set this TCS during Preparation.
                 foreach (ActiveTaskCompletionSource activeTaskCompletionSource in activeTaskCompletionSources.Values.ToList())
                     activeTaskCompletionSource.TrySetException(storedException);
+                return true;
             }
-            else if (ProtectionLevel == TaskCompletionSourceProtectionLevel.UnhandledExceptionAndNormalCompletion)
+            else if (ProtectionLevel == TaskCompletionSourceProtectionLevel.Preparation)
+            {
                 foreach (ActiveTaskCompletionSource activeTaskCompletionSource in activeTaskCompletionSources.Values.ToList())
                     activeTaskCompletionSource.TrySetDefaultResult();
+                return true;
+            }
+            return false;
         }
     }
 }
