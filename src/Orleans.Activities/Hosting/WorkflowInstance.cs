@@ -190,9 +190,6 @@ namespace Orleans.Activities.Hosting
         public WorkflowInstanceState WorkflowInstanceState =>
             Controller.State;
 
-        public ActivityInstanceState GetCompletionState(out IDictionary<string, object> outputArguments, out Exception terminationException) =>
-            Controller.GetCompletionState(out outputArguments, out terminationException);
-
         public async Task AbortAsync(Exception reason)
         {
             await IfHasPendingThenFlushTrackingRecordsAsync();

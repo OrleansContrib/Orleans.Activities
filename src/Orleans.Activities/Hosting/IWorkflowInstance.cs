@@ -21,7 +21,6 @@ namespace Orleans.Activities.Hosting
         Task DeactivateAsync();
 
         WorkflowInstanceState WorkflowInstanceState { get; }
-        ActivityInstanceState GetCompletionState(out IDictionary<string, object> outputArguments, out Exception terminationException);
 
         Task AbortAsync(Exception reason);
         Task ScheduleCancelAsync();

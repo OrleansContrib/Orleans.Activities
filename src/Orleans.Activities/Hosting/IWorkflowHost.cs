@@ -15,7 +15,6 @@ namespace Orleans.Activities.Hosting
     /// </summary>
     public interface IWorkflowHostInfrastructure
     {
-        Task ActivateAsync();
         Task DeactivateAsync();
 
         Task ReminderAsync(string reminderName);
@@ -26,8 +25,13 @@ namespace Orleans.Activities.Hosting
     /// </summary>
     public interface IWorkflowHostControl
     {
-        WorkflowInstanceState WorkflowInstanceState { get; }
-        ActivityInstanceState GetCompletionState(out IDictionary<string, object> outputArguments, out Exception terminationException);
+        /// <summary>
+        /// Use this method only, when the workflow doesn't start with accepting an incoming request, but executes other activities.
+        /// <para>IMPORTANT: The method will return only when the workflow goes idle.</para>
+        /// <para>IMPORTANT: Set grain.Parameters = new Parameters(idlePersistenceMode: IdlePersistenceMode.Allways),
+        /// because by default it won't persist on first idle after start, that idle is usually waiting for an incoming operation.</para>
+        /// </summary>
+        Task StartAsync();
 
         Task AbortAsync(Exception reason);
         Task CancelAsync();

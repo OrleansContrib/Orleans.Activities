@@ -41,6 +41,8 @@ A typical workflow grain manages operations in other grain(s) and handles only t
 
 The goal, is to keep the C# code in the grain, and use the workflow only to decide what to do next. This way we can avoid a steep learning curve to use workflows: the developer doesn't need to write or to understand anything about activities, he/she can build workflows with the provided activities in a designer.
 
+If it's needed, a mainly computational workflow can be executed also, even without any incoming or outgoing request. 
+
 ## Functionality
 
 Implemented:
