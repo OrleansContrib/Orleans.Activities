@@ -601,12 +601,12 @@ namespace Orleans.Activities.Hosting
                         && !hasRaisedCompleted)
                     {
                         await IfHasPendingThenFlushTrackingRecordsAsync();
-                        hasRaisedCompleted = true;
                         ActivityInstanceState completionState;
                         IDictionary<string, object> outputs;
                         Exception terminationException;
                         completionState = Controller.GetCompletionState(out outputs, out terminationException);
                         await host.OnCompletedAsync(completionState, outputs, terminationException);
+                        hasRaisedCompleted = true;
                     }
 
                     // Call OnPausedAsync() on INotificationParticipant extensions.

@@ -32,12 +32,8 @@ namespace Orleans.Activities.Hosting
     {
         IParameters Parameters { get; }
 
-        IEnumerable<object> CreateExtensions();
-        Task<IDictionary<string, object>> OnStartAsync();
         // source can be null
         Task OnUnhandledExceptionAsync(Exception exception, Activity source);
-        // outputArguments and terminationException can be null
-        Task OnCompletedAsync(ActivityInstanceState completionState, IDictionary<string, object> outputArguments, Exception terminationException);
     }
 
     /// <summary>

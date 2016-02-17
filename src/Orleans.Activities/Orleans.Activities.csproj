@@ -73,6 +73,7 @@
     <Compile Include="AsyncEx\AsyncResultCompletedSynchronously.cs" />
     <Compile Include="Configuration\Parameters.cs" />
     <Compile Include="Core\CancellableTaskAsyncCodeActivity.cs" />
+    <Compile Include="Core\EnumerableExtensions.cs" />
     <Compile Include="Core\WorkflowState.cs" />
     <Compile Include="Designers\Binding\ObservableCollection.cs" />
     <Compile Include="Core\TaskAsyncNativeActivity.cs" />

@@ -6,11 +6,9 @@ using System.Threading.Tasks;
 
 using System.Activities;
 using Orleans.Runtime;
-using Orleans.Activities.AsyncEx;
 using Orleans.Activities.Configuration;
 using Orleans.Activities.Helpers;
 using Orleans.Activities.Hosting;
-using Orleans.Activities.Tracking;
 
 namespace Orleans.Activities
 {
@@ -22,10 +20,11 @@ namespace Orleans.Activities
 
     /// <summary>
     /// Base class for workflow backed grains.
-    /// <para>IMPORTANT: See TWorkflowInterface and TWorkflowCallbackInterface type parameters' description! These types must be interfaces and must have methods with required signatures!</para>
-    /// <para>IMPORTANT: The WorkflowGrain implementation must explicitly implement the TWorkflowCallbackInterface interface!</para>
+    /// <para>IMPORTANT: See the type parameters' description! These types must be interfaces and must have methods with required signatures!</para>
+    /// <para>IMPORTANT: The WorkflowGrain implementation must (if possible explicitly) implement the TWorkflowCallbackInterface interface!</para>
     /// </summary>
-    /// <typeparam name="TGrainState"></typeparam>
+    /// <typeparam name="TGrain">TGrain must be the grain itself, and the grain must implement (if possible explicitly) the TWorkflowCallbackInterface interface.</typeparam>
+    /// <typeparam name="TGrainState">TGrainState must inherit from <see cref="GrainState"/>, and must implement <see cref="IWorkflowState"/>. Or use <see cref="WorkflowState"/> if your grain has no custom state properties.</typeparam>
     /// <typeparam name="TWorkflowInterface">Defines the interface that contains the operations that the backing workflow can accept, ie. the incoming requests.
     /// These operations shouldn't be the same as the grain's public grain interface, it can contain more or less operations.
     /// And the signature of these operations are never the same as the grain's public grain interface's methods, they can have 1 parameter and can have 1 return value
@@ -46,7 +45,8 @@ namespace Orleans.Activities
     /// <para>Task&lt;Func&lt;Task&lt;...&gt;&gt;&gt; OnOperationNameAsync()</para>
     /// <para>Task&lt;Func&lt;Task&gt;&gt; OnOperationNameAsync()</para>
     /// </typeparam>
-    public abstract class WorkflowGrain<TGrainState, TWorkflowInterface, TWorkflowCallbackInterface> : Grain<TGrainState>, IRemindable
+    public abstract class WorkflowGrain<TGrain, TGrainState, TWorkflowInterface, TWorkflowCallbackInterface> : Grain<TGrainState>, IRemindable
+        where TGrain : WorkflowGrain<TGrain, TGrainState, TWorkflowInterface, TWorkflowCallbackInterface>, TWorkflowCallbackInterface
         where TGrainState : GrainState, IWorkflowState
         where TWorkflowInterface : class
         where TWorkflowCallbackInterface : class
@@ -61,19 +61,17 @@ namespace Orleans.Activities
 
         #region ctor and properties for DI
 
-        protected WorkflowGrain(Func<WorkflowIdentity, Activity> workflowDefinitionFactory, WorkflowIdentity workflowDefinitionIdentity)
+        /// <summary>
+        /// </summary>
+        /// <param name="workflowDefinitionFactory">Can return the same singleton Activity instance for all the grains that use it.
+        /// There is no need to recreate the workflow activity for each grain instance.</param>
+        /// <param name="workflowDefinitionIdentityFactory">Can be null.</param>
+        protected WorkflowGrain(Func<WorkflowIdentity, Activity> workflowDefinitionFactory, Func<WorkflowIdentity> workflowDefinitionIdentityFactory)
         {
-            // TODO
-            // it's not possible to force at compile time that the WorkflowGrain implementation should implement TWorkflowCallbackInterface
-            // it would be great to check all the WorkflowGrain implementations at assembly load time (Orleans bootstrap? DI? module initilizer .cctor?)
-            // WorkflowInterfaceProxy<> and WorkflowCallbackInterfaceProxy<> cctor also executes checks on TWorkflowInterface and TWorkflowCallbackInterface method signatures, but called only at first usage and not load time
-            // Fody/ModuleInit: https://github.com/fody/moduleinit
-            // Module Initializer: http://einaregilsson.com/module-initializers-in-csharp/
+            if (!typeof(TGrain).IsAssignableFrom(GetType()))
+                throw new InvalidProgramException($"Type '{typeof(TGrain).GetFriendlyName()}' is not assignable from current type '{GetType().GetFriendlyName()}'!");
 
-            if (!(this is TWorkflowCallbackInterface))
-                throw new InvalidProgramException($"Type '{GetType().GetFriendlyName()}' must explicitly implement interface '{typeof(TWorkflowCallbackInterface).GetFriendlyName()}'!");
-
-            workflowHost = new WorkflowHost(new WorkflowHostCallback(this), workflowDefinitionFactory, workflowDefinitionIdentity);
+            workflowHost = new WorkflowHost(new WorkflowHostCallback(this), workflowDefinitionFactory, workflowDefinitionIdentityFactory);
             workflowInterfaceProxy = WorkflowInterfaceProxy<TWorkflowInterface>.CreateProxy(workflowHost);
         }
 
@@ -111,11 +109,11 @@ namespace Orleans.Activities
 
         private class WorkflowHostCallback : IWorkflowHostCallback
         {
-            private WorkflowGrain<TGrainState, TWorkflowInterface, TWorkflowCallbackInterface> grain;
+            private WorkflowGrain<TGrain, TGrainState, TWorkflowInterface, TWorkflowCallbackInterface> grain;
 
             private IWorkflowHostCallbackOperations workflowCallbackInterfaceProxy;
 
-            public WorkflowHostCallback(WorkflowGrain<TGrainState, TWorkflowInterface, TWorkflowCallbackInterface> grain)
+            public WorkflowHostCallback(WorkflowGrain<TGrain, TGrainState, TWorkflowInterface, TWorkflowCallbackInterface> grain)
             {
                 this.grain = grain;
                 this.workflowCallbackInterfaceProxy = WorkflowCallbackInterfaceProxy<TWorkflowCallbackInterface>.CreateProxy(grain as TWorkflowCallbackInterface);
@@ -154,16 +152,8 @@ namespace Orleans.Activities
 
             public IParameters Parameters => grain.Parameters;
 
-            public IEnumerable<object> CreateExtensions() => grain.CreateExtensions();
-
-            public Task<IDictionary<string, object>> OnStartAsync() =>
-                grain.OnStartAsync();
-
             public Task OnUnhandledExceptionAsync(Exception exception, Activity source) =>
                 grain.OnUnhandledExceptionAsync(exception, source);
-
-            public Task OnCompletedAsync(ActivityInstanceState completionState, IDictionary<string, object> outputs, Exception terminationException)  =>
-                grain.OnCompletedAsync(completionState, outputs, terminationException);
 
             public Task<Func<Task<TResponseResult>>> OnOperationAsync<TRequestParameter, TResponseResult>(string operationName, TRequestParameter requestParameter)
                     where TRequestParameter : class
@@ -196,24 +186,6 @@ namespace Orleans.Activities
         protected TWorkflowInterface WorkflowInterface => workflowInterfaceProxy;
 
         /// <summary>
-        /// In a typical implementation of this method a <see cref="TrackingParticipant"/> implementation can be added to the workflow to log the steps that are executed.
-        /// <para>Also can be used for custom activities that require some workflow extensions,
-        /// but it would be better to use the standard ReceiveRequest, SendResponse, SendRequest, ReceiveResponse activities and keep the special logic in the grain code.</para>
-        /// <para>Executed once on each activation,
-        /// and after each case when the workflow is restarted or reloaded from the last persisted state due to an abort tipically caused by an unhandled exception.</para>
-        /// </summary>
-        /// <returns></returns>
-        protected virtual IEnumerable<object> CreateExtensions() => Enumerable.Empty<object>();
-
-        /// <summary>
-        /// If the workflow (as an activity) has input arguments, their values can be set by the dictionary returned by this method.
-        /// <para>Executed only once on the first activation,
-        /// and after each case when the workflow is restarted due to an abort tipically caused by an unhandled exception before the first persistence.</para>
-        /// </summary>
-        /// <returns></returns>
-        protected virtual Task<IDictionary<string, object>> OnStartAsync() => TaskConstants<IDictionary<string, object>>.Default;
-
-        /// <summary>
         /// Exceptions are propagated back to the caller before a grain incoming request's response has been sent back, but after the workflow runs on the tail of the request,
         /// the grain has to handle (and log, if a tracking-participant-extension is not used) the exception.
         /// <para>By default the workflow is aborted on an unhandled exception and will be reloaded from the last persisted state (or restarted, if persistence hasn't happened before)
@@ -223,15 +195,5 @@ namespace Orleans.Activities
         /// <param name="source">Can be null.</param>
         /// <returns></returns>
         protected abstract Task OnUnhandledExceptionAsync(Exception exception, Activity source);
-
-        /// <summary>
-        /// Called when the workflow is completed.
-        /// <para>Tipically executed only once, but in case of failure, there is a small chance that it is called multiple times.</para>
-        /// </summary>
-        /// <param name="completionState"></param>
-        /// <param name="outputArguments">Can be null. If the workflow (as an activity) has output arguments, their values are returned here.</param>
-        /// <param name="terminationException">Can be null.</param>
-        /// <returns></returns>
-        protected virtual Task OnCompletedAsync(ActivityInstanceState completionState, IDictionary<string, object> outputArguments, Exception terminationException) => TaskConstants.Completed;
     }
 }

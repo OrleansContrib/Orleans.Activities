@@ -66,29 +66,24 @@ public interface IHelloWorkflowCallbackInterface
 
 ### Grain
 
-The class definition, where we define the TGrainState, TWorkflowInterface and TWorkflowCallbackInterface type parameters.
+The class definition, where we define the TGrain, TGrainState, TWorkflowInterface and TWorkflowCallbackInterface type parameters.
 
-__NOTE:__ The grain must implement (if possible explicitly) the TWorkflowCallbackInterface interface (see `IHelloWorkflowCallbackInterface`).
+__NOTE:__ The grain must implement (if possible explicitly) the TWorkflowCallbackInterface interface (see `IHelloWorkflowCallbackInterface`) and TGrain should be the grain itself.
 
 ```c#
-public sealed class HelloGrain : WorkflowGrain<HelloGrainState, IHelloWorkflowInterface, IHelloWorkflowCallbackInterface>,
+public sealed class HelloGrain : WorkflowGrain<HelloGrain, HelloGrainState, IHelloWorkflowInterface, IHelloWorkflowCallbackInterface>,
   IHello, IHelloWorkflowCallbackInterface
 ```
 
-Constructor, in this example without Dependency Injection, just define the activity factory and leave the workflow definition identity null.
+Constructor, in this example without Dependency Injection, just define the workflow definition (ie. activity) factory and leave the workflow definition identity factory null.
+
+Optionally, to see what happens during the workflow execution with tracking, we add a TrackingParticipant extension. The ExtensionsFactory property can also be null.
 
 ```c#
 public HelloGrain()
   : base((wi) => new HelloActivity(), null)
-{ }
-```
-
-Optionally see what happens during the workflow execution with tracking, this can be left out, there is a default empty implementation in the base class.
-
-```c#
-protected override IEnumerable<object> CreateExtensions()
 {
-  yield return new GrainTrackingParticipant(GetLogger());
+  WorkflowControl.ExtensionsFactory = () => new GrainTrackingParticipant(GetLogger()).Yield();
 }
 ```
 

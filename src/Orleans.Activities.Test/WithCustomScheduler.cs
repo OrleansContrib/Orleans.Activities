@@ -19,8 +19,6 @@ using System.IO;
 using Orleans.Activities.Persistence;
 using System.Activities.Tracking;
 using Orleans.Activities.Configuration;
-using System.Runtime.Serialization;
-using System.Xml;
 
 namespace Orleans.Activities.Test
 {
@@ -109,11 +107,57 @@ namespace Orleans.Activities.Test
 
         public void Initialize()
         {
-            WorkflowHost wf = new WorkflowHost(this, (wfdi) => Activator.CreateInstance(workflowDefinitionType) as Activity, null);
+            WorkflowHost wf = new WorkflowHost(this, (wi) => Activator.CreateInstance(workflowDefinitionType) as Activity, null);
             WorkflowHost = wf;
             WorkflowInstanceCallback = wf;
 
             state = new WorkflowState();
+
+            wf.ExtensionsFactory = () =>
+            {
+                TrackingProfile trackingProfile = new TrackingProfile();
+                trackingProfile.Queries.Add(new WorkflowInstanceQuery()
+                {
+                    States = { "*" },
+                });
+                //trackingProfile.Queries.Add(new ActivityScheduledQuery()
+                //{
+                //    ActivityName = "*",
+                //});
+                //trackingProfile.Queries.Add(new ActivityStateQuery()
+                //{
+                //    States = { "*" }
+                //});
+                trackingProfile.Queries.Add(new BookmarkResumptionQuery()
+                {
+                    Name = "*",
+                });
+                trackingProfile.Queries.Add(new CancelRequestedQuery()
+                {
+                    ActivityName = "*",
+                });
+                trackingProfile.Queries.Add(new CustomTrackingQuery()
+                {
+                    ActivityName = "*",
+                    Name = "*"
+                });
+                trackingProfile.Queries.Add(new FaultPropagationQuery()
+                {
+                    FaultSourceActivityName = "*",
+                });
+
+                TrackingParticipant etwTrackingParticipant = new ConsoleTrackingParticipant();
+                etwTrackingParticipant.TrackingProfile = trackingProfile;
+                return etwTrackingParticipant.Yield();
+            };
+            wf.OnCompletedAsync = (ActivityInstanceState completionState, IDictionary<string, object> outputArguments, Exception terminationException) =>
+            {
+                CompletionState = completionState;
+                OutputArguments = outputArguments;
+                TerminationException = terminationException;
+                Completed.Set();
+                return TaskConstants.Completed;
+            };
 
             UnhandledException = new AsyncManualResetEvent(false);
             Completed = new AsyncManualResetEvent(false);
@@ -208,63 +252,10 @@ namespace Orleans.Activities.Test
             }
         }
 
-        public IEnumerable<object> CreateExtensions()
-        {
-            TrackingProfile trackingProfile = new TrackingProfile();
-            trackingProfile.Queries.Add(new WorkflowInstanceQuery()
-            {
-                States = { "*" },
-            });
-            //trackingProfile.Queries.Add(new ActivityScheduledQuery()
-            //{
-            //    ActivityName = "*",
-            //});
-            //trackingProfile.Queries.Add(new ActivityStateQuery()
-            //{
-            //    States = { "*" }
-            //});
-            trackingProfile.Queries.Add(new BookmarkResumptionQuery()
-            {
-                Name = "*",
-            });
-            trackingProfile.Queries.Add(new CancelRequestedQuery()
-            {
-                ActivityName = "*",
-            });
-            trackingProfile.Queries.Add(new CustomTrackingQuery()
-            {
-                ActivityName = "*",
-                Name = "*"
-            });
-            trackingProfile.Queries.Add(new FaultPropagationQuery()
-            {
-                FaultSourceActivityName = "*",
-            });
-
-            TrackingParticipant etwTrackingParticipant = new ConsoleTrackingParticipant();
-            etwTrackingParticipant.TrackingProfile = trackingProfile;
-
-            List<object> extensions = new List<object>();
-            extensions.Add(etwTrackingParticipant);
-            return extensions;
-        }
-
-        public Task<IDictionary<string, object>> OnStartAsync() =>
-            TaskConstants<IDictionary<string, object>>.Default;
-
         public Task OnUnhandledExceptionAsync(Exception exception, Activity source)
         {
             UnhandledExceptionException = exception;
             UnhandledException.Set();
-            return TaskConstants.Completed;
-        }
-
-        public Task OnCompletedAsync(ActivityInstanceState completionState, IDictionary<string, object> outputArguments, Exception terminationException)
-        {
-            CompletionState = completionState;
-            OutputArguments = outputArguments;
-            TerminationException = terminationException;
-            Completed.Set();
             return TaskConstants.Completed;
         }
 
@@ -495,8 +486,8 @@ namespace Orleans.Activities.Test
                 grain.Parameters = new Parameters(idlePersistenceMode: IdlePersistenceMode.Never);
                 grain.Initialize();
 
-                Console.WriteLine("StartAsync...");
-                await grain.WorkflowHost.StartAsync();
+                Console.WriteLine("RunAsync...");
+                await grain.WorkflowHost.RunAsync();
 
                 Console.WriteLine("Delay...");
                 // the workflow is gone idle on the delay activity, we must wait to let it to get to the bookmark, to avoid "NotFound"
@@ -522,8 +513,8 @@ namespace Orleans.Activities.Test
                 grain.Parameters = new Parameters(idlePersistenceMode: IdlePersistenceMode.Allways);
                 grain.Initialize();
 
-                Console.WriteLine("StartAsync... -1/" + grain.WorkflowStatesCount);
-                await grain.WorkflowHost.StartAsync();
+                Console.WriteLine("RunAsync... -1/" + grain.WorkflowStatesCount);
+                await grain.WorkflowHost.RunAsync();
 
                 Console.WriteLine("Delay...");
                 // the workflow is gone idle on the delay activity, we must wait to let it to get to the bookmark, to avoid "NotFound"
@@ -551,21 +542,21 @@ namespace Orleans.Activities.Test
                 Console.WriteLine("Recreate from bookmark3...");
                 grain.Initialize();
                 grain.LoadWorkflowState(1);
-                Console.WriteLine("StartAsync... 1/" + grain.WorkflowStatesCount);
-                await grain.WorkflowHost.StartAsync();
+                Console.WriteLine("RunAsync... 1/" + grain.WorkflowStatesCount);
+                await grain.WorkflowHost.RunAsync();
 
                 Console.WriteLine("Recreate from bookmark3 again...");
                 grain.Initialize();
                 grain.LoadWorkflowState(1);
-                Console.WriteLine("StartAsync... 1/" + grain.WorkflowStatesCount);
-                await grain.WorkflowHost.StartAsync();
+                Console.WriteLine("RunAsync... 1/" + grain.WorkflowStatesCount);
+                await grain.WorkflowHost.RunAsync();
 
                 Console.WriteLine("Recreate from runable persist state...");
                 grain.Initialize();
                 grain.LoadWorkflowState(2);
                 await grain.RegisterOrUpdateReminderAsync("{urn:orleans.activities/1.0/properties/reminders}Reactivation", TimeSpan.FromSeconds(1), TimeSpan.FromMinutes(2));
-                Console.WriteLine("StartAsync... 2/" + grain.WorkflowStatesCount);
-                await grain.WorkflowHost.StartAsync();
+                Console.WriteLine("RunAsync... 2/" + grain.WorkflowStatesCount);
+                await grain.WorkflowHost.RunAsync();
 
                 Console.WriteLine("ResumeBookmarkAsync Bookmark3...");
                 result = await grain.WorkflowInstanceCallback.ResumeBookmarkAsync(new System.Activities.Bookmark("Bookmark3"), null, TimeSpan.FromSeconds(1));
@@ -584,8 +575,8 @@ namespace Orleans.Activities.Test
 
                 grain.Parameters = new Parameters(idlePersistenceMode: IdlePersistenceMode.Allways);
                 grain.Initialize();
-                Console.WriteLine("StartAsync... -1/" + grain.WorkflowStatesCount);
-                await grain.WorkflowHost.StartAsync();
+                Console.WriteLine("RunAsync... -1/" + grain.WorkflowStatesCount);
+                await grain.WorkflowHost.RunAsync();
 
                 Console.WriteLine("Delay...");
                 // the workflow is gone idle on the delay activity, we must wait to let it to get to the bookmark, to avoid "NotFound"
@@ -613,8 +604,8 @@ namespace Orleans.Activities.Test
                 Console.WriteLine("Recreate from bookmark3...");
                 grain.Initialize();
                 grain.LoadWorkflowState(1);
-                Console.WriteLine("StartAsync... 1/" + grain.WorkflowStatesCount);
-                await grain.WorkflowHost.StartAsync();
+                Console.WriteLine("RunAsync... 1/" + grain.WorkflowStatesCount);
+                await grain.WorkflowHost.RunAsync();
 
                 Console.WriteLine("ResumeBookmarkAsync Bookmark3...");
                 result = await grain.WorkflowInstanceCallback.ResumeBookmarkAsync(new System.Activities.Bookmark("Bookmark3"), null, TimeSpan.FromSeconds(1));
@@ -664,8 +655,8 @@ namespace Orleans.Activities.Test
 
                 try
                 {
-                    Console.WriteLine("StartAsync...");
-                    await grain.WorkflowHost.StartAsync();
+                    Console.WriteLine("RunAsync...");
+                    await grain.WorkflowHost.RunAsync();
                     Assert.AreEqual(0, grain.WorkflowStatesCount);
                 }
                 catch (Exception e)
@@ -692,8 +683,8 @@ namespace Orleans.Activities.Test
 
                 try
                 {
-                    Console.WriteLine("StartAsync...");
-                    await grain.WorkflowHost.StartAsync();
+                    Console.WriteLine("RunAsync...");
+                    await grain.WorkflowHost.RunAsync();
                 }
                 catch (Exception e)
                 {
@@ -724,8 +715,8 @@ namespace Orleans.Activities.Test
 
                 try
                 {
-                    Console.WriteLine("StartAsync...");
-                    await grain.WorkflowHost.StartAsync();
+                    Console.WriteLine("RunAsync...");
+                    await grain.WorkflowHost.RunAsync();
                 }
                 catch (Exception e)
                 {
@@ -840,8 +831,8 @@ namespace Orleans.Activities.Test
                 Grain grain = new Grain(typeof(Terminate));
                 grain.Initialize();
 
-                Console.WriteLine("StartAsync...");
-                await grain.WorkflowHost.StartAsync();
+                Console.WriteLine("RunAsync...");
+                await grain.WorkflowHost.RunAsync();
 
                 Console.WriteLine("Completed.WaitAsync...");
                 await grain.Completed.WaitAsync(1);
@@ -863,8 +854,8 @@ namespace Orleans.Activities.Test
                 Grain grain = new Grain(typeof(ThrowUnhandledException));
                 grain.Initialize();
 
-                Console.WriteLine("StartAsync...");
-                await grain.WorkflowHost.StartAsync();
+                Console.WriteLine("RunAsync...");
+                await grain.WorkflowHost.RunAsync();
 
                 Console.WriteLine("AbortAsync...");
                 await grain.WorkflowHost.AbortAsync(new TestException());
@@ -884,8 +875,8 @@ namespace Orleans.Activities.Test
                 Grain grain = new Grain(typeof(ThrowUnhandledException));
                 grain.Initialize();
 
-                Console.WriteLine("StartAsync...");
-                await grain.WorkflowHost.StartAsync();
+                Console.WriteLine("RunAsync...");
+                await grain.WorkflowHost.RunAsync();
 
                 Console.WriteLine("CancelAsync...");
                 await grain.WorkflowHost.CancelAsync();
@@ -913,8 +904,8 @@ namespace Orleans.Activities.Test
                 Grain grain = new Grain(typeof(ThrowUnhandledException));
                 grain.Initialize();
 
-                Console.WriteLine("StartAsync...");
-                await grain.WorkflowHost.StartAsync();
+                Console.WriteLine("RunAsync...");
+                await grain.WorkflowHost.RunAsync();
 
                 Console.WriteLine("TerminateAsync...");
                 grain.Completed.Reset();
@@ -942,8 +933,8 @@ namespace Orleans.Activities.Test
                 Grain grain = new Grain(typeof(Orleans.Activities.Test.Activities.TaskAsyncNativeActivity));
                 grain.Initialize();
 
-                Console.WriteLine("StartAsync...");
-                await grain.WorkflowHost.StartAsync();
+                Console.WriteLine("RunAsync...");
+                await grain.WorkflowHost.RunAsync();
 
                 Console.WriteLine("Completed.WaitAsync...");
                 await grain.Completed.WaitAsync(2);
@@ -1292,8 +1283,8 @@ namespace Orleans.Activities.Test
                 try
                 {
                     grain.throwDuringPersistence = true;
-                    Console.WriteLine("StartAsync...");
-                    await grain.WorkflowHost.StartAsync();
+                    Console.WriteLine("RunAsync...");
+                    await grain.WorkflowHost.RunAsync();
                 }
                 catch (Exception e)
                 {
@@ -1318,8 +1309,8 @@ namespace Orleans.Activities.Test
                 grain.Parameters = new Parameters(idlePersistenceMode: IdlePersistenceMode.OnCompleted);
                 grain.Initialize();
 
-                Console.WriteLine("StartAsync...");
-                await grain.WorkflowHost.StartAsync();
+                Console.WriteLine("RunAsync...");
+                await grain.WorkflowHost.RunAsync();
 
                 Console.WriteLine("Delay...");
                 // the workflow is gone idle on the delay activity, we must wait to let it to get to the bookmark, to avoid "NotFound"
@@ -1350,8 +1341,8 @@ namespace Orleans.Activities.Test
                 grain.Initialize();
 
                 // It is intentional to call Start, we are testing not calling Operation on time.
-                Console.WriteLine("StartAsync...");
-                await grain.WorkflowHost.StartAsync();
+                Console.WriteLine("RunAsync...");
+                await grain.WorkflowHost.RunAsync();
 
                 Console.WriteLine("Delay...");
                 // the workflow is gone idle on the delay activity, we must wait to let it to timeout
@@ -1390,8 +1381,8 @@ namespace Orleans.Activities.Test
                 grain.Initialize();
 
                 // It is intentional to call Start, we are testing not calling Operation on time.
-                Console.WriteLine("StartAsync...");
-                await grain.WorkflowHost.StartAsync();
+                Console.WriteLine("RunAsync...");
+                await grain.WorkflowHost.RunAsync();
 
                 Console.WriteLine("Delay...");
                 // the workflow is gone idle on the delay activity, we must wait to let it to timeout
@@ -1429,8 +1420,8 @@ namespace Orleans.Activities.Test
                 Grain grain = new Grain(typeof(WorkflowCallbackInterfaceOperation));
                 grain.Initialize();
 
-                Console.WriteLine("StartAsync...");
-                await grain.WorkflowHost.StartAsync();
+                Console.WriteLine("RunAsync...");
+                await grain.WorkflowHost.RunAsync();
 
                 Console.WriteLine("Completed.WaitAsync...");
                 await grain.Completed.WaitAsync(1);
@@ -1453,8 +1444,8 @@ namespace Orleans.Activities.Test
                 grain.Parameters = new Parameters(unhandledExceptionAction: UnhandledExceptionAction.Terminate);
                 grain.Initialize();
 
-                Console.WriteLine("StartAsync...");
-                await grain.WorkflowHost.StartAsync();
+                Console.WriteLine("RunAsync...");
+                await grain.WorkflowHost.RunAsync();
 
                 Console.WriteLine("UnhandledException.WaitAsync...");
                 await grain.UnhandledException.WaitAsync(1);
@@ -1479,8 +1470,8 @@ namespace Orleans.Activities.Test
                 grain.Parameters = new Parameters(unhandledExceptionAction: UnhandledExceptionAction.Terminate);
                 grain.Initialize();
 
-                Console.WriteLine("StartAsync...");
-                await grain.WorkflowHost.StartAsync();
+                Console.WriteLine("RunAsync...");
+                await grain.WorkflowHost.RunAsync();
 
                 Console.WriteLine("UnhandledException.WaitAsync...");
                 await grain.UnhandledException.WaitAsync(1);
@@ -1505,8 +1496,8 @@ namespace Orleans.Activities.Test
                 grain.Parameters = new Parameters(unhandledExceptionAction: UnhandledExceptionAction.Terminate);
                 grain.Initialize();
 
-                Console.WriteLine("StartAsync...");
-                await grain.WorkflowHost.StartAsync();
+                Console.WriteLine("RunAsync...");
+                await grain.WorkflowHost.RunAsync();
 
                 Console.WriteLine("CancelAsync...");
                 await grain.WorkflowHost.CancelAsync();
@@ -1531,8 +1522,8 @@ namespace Orleans.Activities.Test
                 Grain grain = new Grain(typeof(WorkflowCallbackInterfaceOperationWithTimeoutWithParallel));
                 grain.Initialize();
 
-                Console.WriteLine("StartAsync...");
-                await grain.WorkflowHost.StartAsync();
+                Console.WriteLine("RunAsync...");
+                await grain.WorkflowHost.RunAsync();
 
                 Console.WriteLine("Completed.WaitAsync...");
                 await grain.Completed.WaitAsync(1);
@@ -1554,8 +1545,8 @@ namespace Orleans.Activities.Test
                 Grain grain = new Grain(typeof(WorkflowCallbackInterfaceOperationWithTimeoutWithPick));
                 grain.Initialize();
 
-                Console.WriteLine("StartAsync...");
-                await grain.WorkflowHost.StartAsync();
+                Console.WriteLine("RunAsync...");
+                await grain.WorkflowHost.RunAsync();
 
                 Console.WriteLine("Completed.WaitAsync...");
                 await grain.Completed.WaitAsync(1);
@@ -1681,8 +1672,8 @@ namespace Orleans.Activities.Test
                 Grain grain = new Grain(typeof(CancellationScope));
                 grain.Initialize();
 
-                Console.WriteLine("StartAsync...");
-                await grain.WorkflowHost.StartAsync();
+                Console.WriteLine("RunAsync...");
+                await grain.WorkflowHost.RunAsync();
 
                 Console.WriteLine("Completed.WaitAsync...");
                 await grain.Completed.WaitAsync(1);
@@ -1709,8 +1700,8 @@ namespace Orleans.Activities.Test
                 Grain grain = new Grain(typeof(ExceptionCausingCustomCancellation));
                 grain.Initialize();
 
-                Console.WriteLine("StartAsync...");
-                await grain.WorkflowHost.StartAsync();
+                Console.WriteLine("RunAsync...");
+                await grain.WorkflowHost.RunAsync();
 
                 Console.WriteLine("Completed.WaitAsync...");
                 await grain.Completed.WaitAsync(1);
@@ -1732,8 +1723,8 @@ namespace Orleans.Activities.Test
                 grain = new Grain(typeof(CancellingActivityInvokesCustomCancellation));
                 grain.Initialize();
 
-                Console.WriteLine("StartAsync...");
-                await grain.WorkflowHost.StartAsync();
+                Console.WriteLine("RunAsync...");
+                await grain.WorkflowHost.RunAsync();
 
                 Console.WriteLine("Completed.WaitAsync...");
                 await grain.Completed.WaitAsync(1);
