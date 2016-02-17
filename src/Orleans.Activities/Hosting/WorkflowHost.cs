@@ -52,28 +52,30 @@ namespace Orleans.Activities.Hosting
     {
         #region protected/private fields
 
-        protected IWorkflowHostCallback grain;
-        protected Func<WorkflowIdentity, Activity> workflowDefinitionFactory;
-        protected WorkflowIdentity workflowDefinitionIdentity;
+        private Func<WorkflowIdentity, Activity> workflowDefinitionFactory;
+        private Func<WorkflowIdentity> workflowDefinitionIdentityFactory;
 
         private ActiveTaskCompletionSources activeTaskCompletionSources;
         private AsyncAutoResetEvent idle;
-
-        protected IWorkflowInstance instance;
         private PreviousResponseParameterExtension previousResponseParameterExtension;
+
+        protected IWorkflowHostCallback grain;
+        protected WorkflowIdentity workflowDefinitionIdentity;
+        protected IWorkflowInstance instance;
 
         #endregion
 
         #region ctor
 
-        public WorkflowHost(IWorkflowHostCallback grain, Func<WorkflowIdentity, Activity> workflowDefinitionFactory, WorkflowIdentity workflowDefinitionIdentity)
+        public WorkflowHost(IWorkflowHostCallback grain, Func<WorkflowIdentity, Activity> workflowDefinitionFactory, Func<WorkflowIdentity> workflowDefinitionIdentityFactory)
         {
             this.grain = grain;
             this.workflowDefinitionFactory = workflowDefinitionFactory;
-            this.workflowDefinitionIdentity = workflowDefinitionIdentity;
+            this.workflowDefinitionIdentityFactory = workflowDefinitionIdentityFactory ?? (() => null);
 
             activeTaskCompletionSources = new ActiveTaskCompletionSources();
             idle = new AsyncAutoResetEvent(true);
+            previousResponseParameterExtension = new PreviousResponseParameterExtension();
         }
 
         #endregion
@@ -95,7 +97,13 @@ namespace Orleans.Activities.Hosting
 
         #region IWorkflowHost/IWorkflowHostControl members
 
-        public Task StartAsync() =>
+        public Func<IEnumerable<object>> ExtensionsFactory { private get; set; }
+
+        public Func<Task<IDictionary<string, object>>> OnStartAsync { private get; set; }
+
+        public Func<ActivityInstanceState, IDictionary<string, object>, Exception, Task> OnCompletedAsync { private get; set; }
+
+        public Task RunAsync() =>
             PrepareInstanceAsync(Parameters.ResumeInfrastructureTimeout);
 
         public Task AbortAsync(Exception reason) =>
@@ -139,6 +147,7 @@ namespace Orleans.Activities.Hosting
             {
                 await ResumeOperationBookmarkAsync(operationName, taskCompletionSource, requestResult, typeof(void),
                     (responseParameter, message) => new OperationRepeatedException(message));
+                // ScheduleAndRunInstanceAsync will throw if scheduling the operation wasn't successful, so awaiting TCS is safe now.
                 await taskCompletionSource.Task;
             }
             finally
@@ -156,6 +165,7 @@ namespace Orleans.Activities.Hosting
             {
                 await ResumeOperationBookmarkAsync(operationName, taskCompletionSource, requestResult, typeof(TResponseParameter),
                     (responseParameter, message) => new OperationRepeatedException<TResponseParameter>(responseParameter as TResponseParameter, message));
+                // ScheduleAndRunInstanceAsync will throw if scheduling the operation wasn't successful, so awaiting TCS is safe now.
                 return await taskCompletionSource.Task;
             }
             finally
@@ -207,15 +217,22 @@ namespace Orleans.Activities.Hosting
 
         #region protected/private helper methods
 
-        private IEnumerable<object> GetExtensions()
-        {
-            IEnumerable<object> extensions = grain.CreateExtensions();
-            previousResponseParameterExtension = new PreviousResponseParameterExtension();
-            if (extensions != null)
-                foreach (object extension in extensions)
-                    yield return extension;
-            yield return previousResponseParameterExtension;
-        }
+        protected IParameters Parameters => grain.Parameters;
+
+        private IEnumerable<object> Extensions =>
+            ExtensionsFactory == null
+            ? previousResponseParameterExtension.Yield()
+            : ExtensionsFactory().Append(previousResponseParameterExtension);
+
+        private Task<IDictionary<string, object>> RaiseOnStartAsync() =>
+            OnStartAsync == null
+            ? TaskConstants<IDictionary<string, object>>.Default
+            : OnStartAsync();
+
+        private Task RaiseOnCompletedAsync(ActivityInstanceState completionState, IDictionary<string, object> outputArguments, Exception terminationException) =>
+            OnCompletedAsync == null
+            ? TaskConstants.Completed
+            : OnCompletedAsync(completionState, outputArguments, terminationException);
 
         private async Task WaitIdleAsync(TimeSpan timeout)
         {
@@ -245,11 +262,14 @@ namespace Orleans.Activities.Hosting
             if (instance == null)
             {
                 IWorkflowState workflowState = grain.WorkflowState;
+                WorkflowIdentity workflowDefinitionIdentity;
+                IWorkflowInstance instance;
                 if (workflowState.InstanceValues == null)
                 {
                     // Start, there is no previous persisted state.
+                    workflowDefinitionIdentity = workflowDefinitionIdentityFactory();
                     instance = new WorkflowInstance(this, workflowDefinitionFactory(workflowDefinitionIdentity), workflowDefinitionIdentity);
-                    instance.Start(await grain.OnStartAsync(), GetExtensions());
+                    instance.Start(await RaiseOnStartAsync(), Extensions);
                 }
                 else
                 {
@@ -262,9 +282,12 @@ namespace Orleans.Activities.Hosting
                     //      what happens with these activity trees during update???
                     // await instance.LoadAsync(workflowState.InstanceValues, GetExtensions(), >>>DynamicUpdateMap: workflowState.WorkflowDefinitionIdentity -> workflowDefinitionIdentity<<<);
 
-                    await instance.LoadAsync(workflowState.InstanceValues, GetExtensions());
+                    await instance.LoadAsync(workflowState.InstanceValues, Extensions);
                     workflowDefinitionIdentity = workflowState.WorkflowDefinitionIdentity;
                 }
+                // Set the the values only, when the instance was successfully initialized.
+                this.workflowDefinitionIdentity = workflowDefinitionIdentity;
+                this.instance = instance;
             }
             if (instance.WorkflowInstanceState == WorkflowInstanceState.Runnable)
             {
@@ -350,6 +373,7 @@ namespace Orleans.Activities.Hosting
             }
         }
 
+        // If schedule is not successful, caller musn't await TCS, because it will never be completed (nor the WF, nor the host will complete it in any way)!
         protected async Task<TResult> ScheduleAndRunInstanceAsync<TResult, TResponseParameter>(TimeSpan timeout, Func<Task<TResult>> asyncFunctionToSchedule,
                 Func<TResult, bool> isScheduleSuccessful, TaskCompletionSource<TResponseParameter> taskCompletionSource)
             where TResponseParameter : class
@@ -380,11 +404,11 @@ namespace Orleans.Activities.Hosting
 
         #region IWorkflowInstanceCallback members
 
-        public Guid PrimaryKey => grain.PrimaryKey;
+        Guid IWorkflowInstanceCallback.PrimaryKey => grain.PrimaryKey;
 
-        public IParameters Parameters => grain.Parameters;
+        IParameters IWorkflowInstanceCallback.Parameters => Parameters;
 
-        public Task SaveAsync(IDictionary<XName, InstanceValue> instanceValues)
+        Task IWorkflowInstanceCallback.SaveAsync(IDictionary<XName, InstanceValue> instanceValues)
         {
             IWorkflowState workflowState = grain.WorkflowState;
             workflowState.WorkflowDefinitionIdentity = workflowDefinitionIdentity;
@@ -392,53 +416,48 @@ namespace Orleans.Activities.Hosting
             return grain.SaveWorkflowStateAsync();
         }
 
-        public void OnNotifyIdle()
+        void IWorkflowInstanceCallback.OnNotifyIdle()
         {
             if (!activeTaskCompletionSources.TrySetCompleted())
                 idle.Set();
         }
 
-        public Task OnUnhandledExceptionAsync(Exception exception, Activity source)
+        Task IWorkflowInstanceCallback.OnUnhandledExceptionAsync(Exception exception, Activity source)
         {
             if (activeTaskCompletionSources.TrySetException(exception))
                 return TaskConstants.Completed;
             return grain.OnUnhandledExceptionAsync(exception, source);
         }
 
-        public Task OnCompletedAsync(ActivityInstanceState completionState, IDictionary<string, object> outputArguments, Exception terminationException) =>
-            grain.OnCompletedAsync(completionState, outputArguments, terminationException);
+        Task IWorkflowInstanceCallback.OnCompletedAsync(ActivityInstanceState completionState, IDictionary<string, object> outputArguments, Exception terminationException) =>
+            RaiseOnCompletedAsync(completionState, outputArguments, terminationException);
 
-        public Task<BookmarkResumptionResult> ResumeBookmarkAsync(Bookmark bookmark, object value, TimeSpan timeout) =>
+        Task<BookmarkResumptionResult> IWorkflowInstanceCallback.ResumeBookmarkAsync(Bookmark bookmark, object value, TimeSpan timeout) =>
             ScheduleAndRunInstanceAsync(timeout,
                 () => instance.ScheduleBookmarkResumptionAsync(bookmark, value),
                 (_result) => _result == BookmarkResumptionResult.Success);
 
-        // It's common with IWorkflowHost.
-        //public Task AbortAsync(Exception reason);
+        Task IWorkflowInstanceCallback.AbortAsync(Exception reason) => AbortAsync(reason);
 
-        public Task<Func<Task<TResponseResult>>> OnOperationAsync<TRequestParameter, TResponseResult>(string operationName, TRequestParameter requestParameter)
-                where TRequestParameter : class
-                where TResponseResult : class =>
+        Task<Func<Task<TResponseResult>>> IWorkflowInstanceCallback.OnOperationAsync<TRequestParameter, TResponseResult>(string operationName, TRequestParameter requestParameter) =>
             grain.OnOperationAsync<TRequestParameter, TResponseResult>(operationName, requestParameter);
 
-        public Task<Func<Task>> OnOperationAsync<TRequestParameter>(string operationName, TRequestParameter requestParameter)
-                where TRequestParameter : class =>
+        Task<Func<Task>> IWorkflowInstanceCallback.OnOperationAsync<TRequestParameter>(string operationName, TRequestParameter requestParameter) =>
             grain.OnOperationAsync<TRequestParameter>(operationName, requestParameter);
 
-        public Task<Func<Task<TResponseResult>>> OnOperationAsync<TResponseResult>(string operationName)
-                where TResponseResult : class =>
+        Task<Func<Task<TResponseResult>>> IWorkflowInstanceCallback.OnOperationAsync<TResponseResult>(string operationName) =>
             grain.OnOperationAsync<TResponseResult>(operationName);
 
-        public Task<Func<Task>> OnOperationAsync(string operationName) =>
+        Task<Func<Task>> IWorkflowInstanceCallback.OnOperationAsync(string operationName) =>
             grain.OnOperationAsync(operationName);
 
-        public Task RegisterOrUpdateReminderAsync(string reminderName, TimeSpan dueTime) =>
+        Task IWorkflowInstanceCallback.RegisterOrUpdateReminderAsync(string reminderName, TimeSpan dueTime) =>
             grain.RegisterOrUpdateReminderAsync(reminderName, dueTime, Parameters.ReactivationReminderPeriod);
 
-        public Task UnregisterReminderAsync(string reminderName) =>
+        Task IWorkflowInstanceCallback.UnregisterReminderAsync(string reminderName) =>
             grain.UnregisterReminderAsync(reminderName);
 
-        public Task<IEnumerable<string>> GetRemindersAsync() =>
+        Task<IEnumerable<string>> IWorkflowInstanceCallback.GetRemindersAsync() =>
             grain.GetRemindersAsync();
 
         #endregion

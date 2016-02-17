@@ -6,11 +6,8 @@ using System.Threading.Tasks;
 using Orleans;
 
 using System.Activities;
-using System.Activities.Tracking;
 using Orleans.Activities;
-using Orleans.Activities.Configuration;
 using Orleans.Activities.Sample.HelloWorld.GrainInterfaces;
-using Orleans.Runtime;
 
 namespace Orleans.Activities.Sample.HelloWorld.Grains
 {
@@ -36,17 +33,13 @@ namespace Orleans.Activities.Sample.HelloWorld.Grains
         Task<Func<Task<string>>> WhatShouldISay(string clientSaid);
     }
 
-    public sealed class HelloGrain : WorkflowGrain<HelloGrainState, IHelloWorkflowInterface, IHelloWorkflowCallbackInterface>, IHello, IHelloWorkflowCallbackInterface
+    public sealed class HelloGrain : WorkflowGrain<HelloGrain, HelloGrainState, IHelloWorkflowInterface, IHelloWorkflowCallbackInterface>, IHello, IHelloWorkflowCallbackInterface
     {
-        // Without DI and versioning, just direct create the workflow definition.
+        // Without DI and versioning, just directly create the workflow definition.
         public HelloGrain()
             : base((wi) => new HelloActivity(), null)
-        { }
-
-        // Optionally see what happens during the workflow execution with tracking.
-        protected override IEnumerable<object> CreateExtensions()
         {
-            yield return new GrainTrackingParticipant(GetLogger());
+            WorkflowControl.ExtensionsFactory = () => new GrainTrackingParticipant(GetLogger()).Yield();
         }
 
         // Mandatory: at least log the unhandled exceptions (workflow will abort by default, see Parameters property).
