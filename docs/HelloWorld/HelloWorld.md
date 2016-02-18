@@ -81,7 +81,7 @@ Optionally, to see what happens during the workflow execution with tracking, we 
 
 ```c#
 public HelloGrain()
-  : base((wi) => new HelloActivity(), null)
+  : base(((grainState, workflowIdentity)) => new HelloActivity(), null)
 {
   WorkflowControl.ExtensionsFactory = () => new GrainTrackingParticipant(GetLogger()).Yield();
 }

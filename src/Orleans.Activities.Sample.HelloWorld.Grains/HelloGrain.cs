@@ -37,7 +37,7 @@ namespace Orleans.Activities.Sample.HelloWorld.Grains
     {
         // Without DI and versioning, just directly create the workflow definition.
         public HelloGrain()
-            : base((wi) => new HelloActivity(), null)
+            : base((grainState, workflowIdentity) => new HelloActivity(), null)
         {
             WorkflowControl.ExtensionsFactory = () => new GrainTrackingParticipant(GetLogger()).Yield();
         }
