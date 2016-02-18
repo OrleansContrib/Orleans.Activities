@@ -40,6 +40,8 @@ namespace Orleans.Activities.Hosting
         /// <para>If the workflow (as an activity) has input arguments, their values can be set by the dictionary returned by this method.</para>
         /// <para>Executed only once on the first activation,
         /// and after each case when the workflow is restarted due to an abort tipically caused by an unhandled exception before the first persistence.</para>
+        /// <para>IMPORTANT: Do not copy values from the grain's state into the input arguments, because input arguments will be persisted by the workflow also.
+        /// Closure directly the necessary values from the incoming public grain method call's parameters into the delegate.</para>
         /// </summary>
         Func<Task<IDictionary<string, object>>> OnStartAsync { set; }
 

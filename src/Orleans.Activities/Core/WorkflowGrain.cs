@@ -66,12 +66,14 @@ namespace Orleans.Activities
         /// <param name="workflowDefinitionFactory">Can return the same singleton Activity instance for all the grains that use it.
         /// There is no need to recreate the workflow activity for each grain instance.</param>
         /// <param name="workflowDefinitionIdentityFactory">Can be null.</param>
-        protected WorkflowGrain(Func<WorkflowIdentity, Activity> workflowDefinitionFactory, Func<WorkflowIdentity> workflowDefinitionIdentityFactory)
+        protected WorkflowGrain(Func<TGrainState, WorkflowIdentity, Activity> workflowDefinitionFactory, Func<TGrainState, WorkflowIdentity> workflowDefinitionIdentityFactory)
         {
             if (!typeof(TGrain).IsAssignableFrom(GetType()))
                 throw new InvalidProgramException($"Type '{typeof(TGrain).GetFriendlyName()}' is not assignable from current type '{GetType().GetFriendlyName()}'!");
 
-            workflowHost = new WorkflowHost(new WorkflowHostCallback(this), workflowDefinitionFactory, workflowDefinitionIdentityFactory);
+            workflowHost = new WorkflowHost(new WorkflowHostCallback(this),
+                (WorkflowIdentity workflowIdentity) => workflowDefinitionFactory(State, workflowIdentity),
+                workflowDefinitionIdentityFactory == null ? default(Func<WorkflowIdentity>) : () => workflowDefinitionIdentityFactory(State));
             workflowInterfaceProxy = WorkflowInterfaceProxy<TWorkflowInterface>.CreateProxy(workflowHost);
         }
 
