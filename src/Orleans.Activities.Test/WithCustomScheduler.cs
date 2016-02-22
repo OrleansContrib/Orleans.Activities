@@ -510,7 +510,7 @@ namespace Orleans.Activities.Test
             await RunAsyncWithReentrantSingleThreadedScheduler(async () =>
             {
                 Grain grain = new Grain(typeof(ResumeBookmarksWithPersistence));
-                grain.Parameters = new Parameters(idlePersistenceMode: IdlePersistenceMode.Allways);
+                grain.Parameters = new Parameters(idlePersistenceMode: IdlePersistenceMode.Always);
                 grain.Initialize();
 
                 Console.WriteLine("RunAsync... -1/" + grain.WorkflowStatesCount);
@@ -573,7 +573,7 @@ namespace Orleans.Activities.Test
 
                 // --------
 
-                grain.Parameters = new Parameters(idlePersistenceMode: IdlePersistenceMode.Allways);
+                grain.Parameters = new Parameters(idlePersistenceMode: IdlePersistenceMode.Always);
                 grain.Initialize();
                 Console.WriteLine("RunAsync... -1/" + grain.WorkflowStatesCount);
                 await grain.WorkflowHost.RunAsync();
@@ -1739,6 +1739,273 @@ namespace Orleans.Activities.Test
                 Assert.IsNotNull(grain.OutputArguments);
                 Assert.IsTrue(grain.OutputArguments.TryGetValue("Result", out result));
                 Assert.AreEqual("Cancellation C;Cancellation;Confirmation B;Confirmation A;", (string)result);
+            });
+        }
+
+        [TestMethod]
+        public async Task ShortRunningComputationalWithoutIdle()
+        {
+            await RunAsyncWithReentrantSingleThreadedScheduler(async () =>
+            {
+                Grain grain = new Grain(typeof(Computational));
+                grain.Parameters = new Parameters(idlePersistenceMode: IdlePersistenceMode.Always);
+                grain.Initialize();
+
+                grain.WorkflowHost.OnStartAsync = () => Task.FromResult<IDictionary<string, object>>(new Dictionary<string, object>()
+                    { { "Delay", TimeSpan.Zero }, { "ShouldThrow", false }, { "Argument", 2 } });
+                Console.WriteLine("RunToCompletionAsync...");
+                IDictionary<string, object> outputArguments = await grain.WorkflowHost.RunToCompletionAsync();
+                Console.WriteLine("---DONE---");
+
+                Assert.AreEqual(false, grain.Completed.IsSet);
+                Assert.AreEqual(1, grain.WorkflowStatesCount);
+                Assert.AreEqual(false, grain.UnhandledException.IsSet);
+
+                Assert.IsNotNull(outputArguments);
+                object result;
+                Assert.IsTrue(outputArguments.TryGetValue("Result", out result));
+                Assert.AreEqual(4, (Int32)result);
+            });
+        }
+
+        [TestMethod]
+        public async Task ShortRunningComputationalWithIdle()
+        {
+            await RunAsyncWithReentrantSingleThreadedScheduler(async () =>
+            {
+                Grain grain = new Grain(typeof(Computational));
+                grain.Parameters = new Parameters(idlePersistenceMode: IdlePersistenceMode.Always);
+                grain.Initialize();
+
+                grain.WorkflowHost.OnStartAsync = () => Task.FromResult<IDictionary<string, object>>(new Dictionary<string, object>()
+                    { { "Delay", TimeSpan.FromMilliseconds(100) }, { "ShouldThrow", false }, { "Argument", 2 } });
+                Console.WriteLine("RunToCompletionAsync...");
+                IDictionary<string, object> outputArguments = await grain.WorkflowHost.RunToCompletionAsync();
+                Console.WriteLine("Written.WaitAsync...");
+                grain.Written.Reset();
+                await grain.Written.WaitAsync(1);
+                Console.WriteLine("---DONE---");
+
+                Assert.AreEqual(false, grain.Completed.IsSet);
+                Assert.AreEqual(2, grain.WorkflowStatesCount);
+                Assert.AreEqual(false, grain.UnhandledException.IsSet);
+
+                Assert.IsNotNull(outputArguments);
+                object result;
+                Assert.IsTrue(outputArguments.TryGetValue("Result", out result));
+                Assert.AreEqual(4, (Int32)result);
+
+
+
+                // Let WF finish the reminder unregistration (we are just after the Written AsyncManualResetEvent).
+                await Task.Yield();
+                Console.WriteLine("Recreate from Delay...");
+                grain.Initialize();
+                grain.LoadWorkflowState(1);
+                await grain.RegisterOrUpdateReminderAsync("{urn:orleans.activities/1.0/properties/reminders/bookmarks}1", TimeSpan.FromMilliseconds(100), TimeSpan.FromMinutes(2));
+                Console.WriteLine("Completed.WaitAsync...");
+                await grain.Completed.WaitAsync(1);
+                Console.WriteLine("Written.WaitAsync...");
+                await grain.Written.WaitAsync(1);
+                Console.WriteLine("---DONE---");
+
+                Assert.AreEqual(3, grain.WorkflowStatesCount);
+                Assert.AreEqual(false, grain.UnhandledException.IsSet);
+
+                Assert.IsNotNull(grain.OutputArguments);
+                Assert.IsTrue(grain.OutputArguments.TryGetValue("Result", out result));
+                Assert.AreEqual(4, (Int32)result);
+
+
+
+                // Let WF finish the reminder unregistration (we are just after the Written AsyncManualResetEvent).
+                await Task.Yield();
+                outputArguments = null;
+                Console.WriteLine("Recreate from Delay...");
+                grain.Initialize();
+                grain.LoadWorkflowState(2);
+                await grain.RegisterOrUpdateReminderAsync("{urn:orleans.activities/1.0/properties/reminders/bookmarks}1", TimeSpan.FromMilliseconds(100), TimeSpan.FromMinutes(2));
+                Console.WriteLine("RunToCompletionAsync...");
+                outputArguments = await grain.WorkflowHost.RunToCompletionAsync();
+                Console.WriteLine("Written.WaitAsync...");
+                grain.Written.Reset();
+                await grain.Written.WaitAsync(1);
+                Console.WriteLine("---DONE---");
+
+                Assert.AreEqual(false, grain.Completed.IsSet);
+                Assert.AreEqual(4, grain.WorkflowStatesCount);
+                Assert.AreEqual(false, grain.UnhandledException.IsSet);
+
+                Assert.IsNotNull(outputArguments);
+                Assert.IsTrue(outputArguments.TryGetValue("Result", out result));
+                Assert.AreEqual(4, (Int32)result);
+            });
+        }
+
+        [TestMethod]
+        public async Task ShortRunningComputationalWithoutIdleWithException()
+        {
+            await RunAsyncWithReentrantSingleThreadedScheduler(async () =>
+            {
+                Grain grain = new Grain(typeof(Computational));
+                grain.Parameters = new Parameters(idlePersistenceMode: IdlePersistenceMode.Always);
+                grain.Initialize();
+
+                grain.WorkflowHost.OnStartAsync = () => Task.FromResult<IDictionary<string, object>>(new Dictionary<string, object>()
+                    { { "Delay", TimeSpan.Zero }, { "ShouldThrow", true }, { "Argument", 2 } });
+                IDictionary<string, object> outputArguments = null;
+                try
+                {
+                    Console.WriteLine("RunToCompletionAsync...");
+                    outputArguments = await grain.WorkflowHost.RunToCompletionAsync();
+                    Assert.Fail("RunToCompletionAsync completed");
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("...Exception thrown " + e.GetType());
+                    Assert.AreEqual(typeof(TestException), e.GetType());
+                }
+                Console.WriteLine("---DONE---");
+
+                Assert.AreEqual(false, grain.Completed.IsSet);
+                Assert.AreEqual(0, grain.WorkflowStatesCount);
+                Assert.AreEqual(false, grain.UnhandledException.IsSet);
+
+                Assert.IsNull(outputArguments);
+            });
+        }
+
+        [TestMethod]
+        public async Task ShortRunningComputationalWithIdleWithException()
+        {
+            await RunAsyncWithReentrantSingleThreadedScheduler(async () =>
+            {
+                Grain grain = new Grain(typeof(Computational));
+                grain.Parameters = new Parameters(idlePersistenceMode: IdlePersistenceMode.Always);
+                grain.Initialize();
+
+                grain.WorkflowHost.OnStartAsync = () => Task.FromResult<IDictionary<string, object>>(new Dictionary<string, object>()
+                    { { "Delay", TimeSpan.FromMilliseconds(100) }, { "ShouldThrow", true }, { "Argument", 2 } });
+                IDictionary<string, object> outputArguments = null;
+                try
+                {
+                    Console.WriteLine("RunToCompletionAsync...");
+                    outputArguments = await grain.WorkflowHost.RunToCompletionAsync();
+                    Assert.Fail("RunToCompletionAsync completed");
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("...Exception thrown " + e.GetType());
+                    Assert.AreEqual(typeof(TestException), e.GetType());
+                }
+                Console.WriteLine("---DONE---");
+
+                Assert.AreEqual(false, grain.Completed.IsSet);
+                Assert.AreEqual(1, grain.WorkflowStatesCount);
+                Assert.AreEqual(false, grain.UnhandledException.IsSet);
+
+                Assert.IsNull(outputArguments);
+            });
+        }
+
+        [TestMethod]
+        public async Task ShortRunningComputationalWithIdleWithExceptionAndCancel()
+        {
+            await RunAsyncWithReentrantSingleThreadedScheduler(async () =>
+            {
+                Grain grain = new Grain(typeof(Computational));
+                grain.Parameters = new Parameters(idlePersistenceMode: IdlePersistenceMode.Always, unhandledExceptionAction: UnhandledExceptionAction.Cancel);
+                grain.Initialize();
+
+                grain.WorkflowHost.OnStartAsync = () => Task.FromResult<IDictionary<string, object>>(new Dictionary<string, object>()
+                    { { "Delay", TimeSpan.FromMilliseconds(100) }, { "ShouldThrow", true }, { "Argument", 2 } });
+                IDictionary<string, object> outputArguments = null;
+                try
+                {
+                    Console.WriteLine("RunToCompletionAsync...");
+                    outputArguments = await grain.WorkflowHost.RunToCompletionAsync();
+                    Assert.Fail("RunToCompletionAsync completed");
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("...Exception thrown " + e.GetType());
+                    Assert.AreEqual(typeof(TestException), e.GetType());
+                }
+                Console.WriteLine("---DONE---");
+
+                Assert.AreEqual(false, grain.Completed.IsSet);
+                Assert.AreEqual(1, grain.WorkflowStatesCount);
+                Assert.AreEqual(false, grain.UnhandledException.IsSet);
+
+                Assert.IsNull(outputArguments);
+            });
+        }
+
+        [TestMethod]
+        public async Task ShortRunningComputationalWithIdleWithExceptionAndTerminate()
+        {
+            await RunAsyncWithReentrantSingleThreadedScheduler(async () =>
+            {
+                Grain grain = new Grain(typeof(Computational));
+                grain.Parameters = new Parameters(idlePersistenceMode: IdlePersistenceMode.Always, unhandledExceptionAction: UnhandledExceptionAction.Terminate);
+                grain.Initialize();
+
+                grain.WorkflowHost.OnStartAsync = () => Task.FromResult<IDictionary<string, object>>(new Dictionary<string, object>()
+                    { { "Delay", TimeSpan.FromMilliseconds(100) }, { "ShouldThrow", true }, { "Argument", 2 } });
+                IDictionary<string, object> outputArguments = null;
+                try
+                {
+                    Console.WriteLine("RunToCompletionAsync...");
+                    outputArguments = await grain.WorkflowHost.RunToCompletionAsync();
+                    Assert.Fail("RunToCompletionAsync completed");
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("...Exception thrown " + e.GetType());
+                    Assert.AreEqual(typeof(TestException), e.GetType());
+                }
+                Console.WriteLine("---DONE---");
+
+                Assert.AreEqual(false, grain.Completed.IsSet);
+                Assert.AreEqual(1, grain.WorkflowStatesCount);
+                Assert.AreEqual(false, grain.UnhandledException.IsSet);
+
+                Assert.IsNull(outputArguments);
+            });
+        }
+
+        [TestMethod]
+        public async Task ShortRunningComputationalWithIdleWithExceptionDuringPersistence()
+        {
+            await RunAsyncWithReentrantSingleThreadedScheduler(async () =>
+            {
+                Grain grain = new Grain(typeof(Computational));
+                grain.Parameters = new Parameters(idlePersistenceMode: IdlePersistenceMode.Always, unhandledExceptionAction: UnhandledExceptionAction.Terminate);
+                grain.Initialize();
+
+                grain.throwDuringPersistence = true;
+                grain.WorkflowHost.OnStartAsync = () => Task.FromResult<IDictionary<string, object>>(new Dictionary<string, object>()
+                    { { "Delay", TimeSpan.FromMilliseconds(100) }, { "ShouldThrow", false }, { "Argument", 2 } });
+                IDictionary<string, object> outputArguments = null;
+                try
+                {
+                    Console.WriteLine("RunToCompletionAsync...");
+                    outputArguments = await grain.WorkflowHost.RunToCompletionAsync();
+                    Assert.Fail("RunToCompletionAsync completed");
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("...Exception thrown " + e.GetType());
+                    Assert.AreEqual(typeof(TestException), e.GetType());
+                    Assert.AreEqual("During persistence", e.Message);
+                }
+                Console.WriteLine("---DONE---");
+
+                Assert.AreEqual(false, grain.Completed.IsSet);
+                Assert.AreEqual(0, grain.WorkflowStatesCount);
+                Assert.AreEqual(false, grain.UnhandledException.IsSet);
+
+                Assert.IsNull(outputArguments);
             });
         }
     }

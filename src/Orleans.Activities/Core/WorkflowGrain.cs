@@ -62,14 +62,18 @@ namespace Orleans.Activities
         #region ctor and properties for DI
 
         /// <summary>
+        /// The factories are executed only after the first incoming grain request that creates/starts the grain, factories can use values in the grain state set by this first request.
+        /// Though, even the request is repeated, these values can't be modified, use the Immutable helper class.
         /// </summary>
         /// <param name="workflowDefinitionFactory">Can return the same singleton Activity instance for all the grains that use it.
         /// There is no need to recreate the workflow activity for each grain instance.</param>
         /// <param name="workflowDefinitionIdentityFactory">Can be null.</param>
         protected WorkflowGrain(Func<TGrainState, WorkflowIdentity, Activity> workflowDefinitionFactory, Func<TGrainState, WorkflowIdentity> workflowDefinitionIdentityFactory)
         {
+            if (workflowDefinitionFactory == null)
+                throw new ArgumentNullException(nameof(workflowDefinitionFactory));
             if (!typeof(TGrain).IsAssignableFrom(GetType()))
-                throw new InvalidProgramException($"Type '{typeof(TGrain).GetFriendlyName()}' is not assignable from current type '{GetType().GetFriendlyName()}'!");
+                throw new InvalidProgramException($"Type '{typeof(TGrain).GetFriendlyName()}' is not assignable from current type '{GetType().GetFriendlyName()}'.");
 
             workflowHost = new WorkflowHost(new WorkflowHostCallback(this),
                 (WorkflowIdentity workflowIdentity) => workflowDefinitionFactory(State, workflowIdentity),

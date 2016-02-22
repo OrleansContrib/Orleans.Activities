@@ -106,6 +106,36 @@ namespace Orleans.Activities.Hosting
         public Task RunAsync() =>
             PrepareInstanceAsync(Parameters.ResumeInfrastructureTimeout);
 
+        public async Task<IDictionary<string, object>> RunToCompletionAsync()
+        {
+            TaskCompletionSource<object> taskCompletionSource = new TaskCompletionSource<object>();
+            IDictionary<string, object> outputArguments = null;
+            Exception terminationException = null;
+            OnCompletedAsync = (ActivityInstanceState _activityInstanceState, IDictionary<string, object> _outputArguments, Exception _terminationException) =>
+            {
+                outputArguments = _outputArguments;
+                terminationException = _terminationException;
+                taskCompletionSource.SetResult(null);
+                return TaskConstants.Completed;
+            };
+
+            try
+            {
+                // We run the instance like an operation, but without scheduling a bookmark resumption. And not a SendResponse activity sets the TCS but the OnCompleted event.
+                await PrepareInstanceAsync(Parameters.ResumeInfrastructureTimeout, taskCompletionSource);
+                // RunInstanceAsync will throw if wasn't successful, so awaiting TCS is safe now.
+                await taskCompletionSource.Task;
+            }
+            finally
+            {
+                activeTaskCompletionSources.Remove(taskCompletionSource);
+            }
+
+            if (terminationException != null)
+                throw terminationException;
+            return outputArguments;
+        }
+
         public Task AbortAsync(Exception reason) =>
             ScheduleInstanceAsync(Parameters.ResumeInfrastructureTimeout, () => instance.AbortAsync(reason));
 
@@ -320,6 +350,21 @@ namespace Orleans.Activities.Hosting
             }
         }
 
+        protected async Task PrepareInstanceAsync<TResponseParameter>(TimeSpan timeout, TaskCompletionSource<TResponseParameter> taskCompletionSource)
+            where TResponseParameter : class
+        {
+            await WaitIdleAsync(timeout);
+            try
+            {
+                await PrepareInstanceAsync();
+                activeTaskCompletionSources.Add(taskCompletionSource);
+            }
+            finally // Yes, finally, because there is no RunAsync(), it's already happend optionally during PrepareInstanceAsync().
+            {
+                idle.Set();
+            }
+        }
+
         protected async Task ScheduleInstanceAsync(TimeSpan timeout, Func<Task> asyncActionToSchedule)
         {
             await WaitIdleAsync(timeout);
@@ -328,7 +373,7 @@ namespace Orleans.Activities.Hosting
                 await PrepareInstanceAsync();
                 await asyncActionToSchedule();
             }
-            finally // Yes, finally, because there is no RunAsync().
+            finally // Yes, finally, because there is no RunAsync(), it's already happend optionally during PrepareInstanceAsync().
             {
                 idle.Set();
             }
