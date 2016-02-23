@@ -89,17 +89,21 @@ namespace Orleans.Activities.Extensions
         }
 
         // Called by WorkflowHost.
-        public void ThrowPreviousResponseParameter(string operationName, Type responseParameterType,
-            Func<object, string, OperationRepeatedException> createOperationRepeatedException)
+        public Exception CreatePreviousResponseParameterException<TResponseParameter>(string operationName, Type responseParameterType)
+            where TResponseParameter : class
         {
             ResponseParameter previousResponseParameter;
             if (!previousResponseParameters.TryGetValue(operationName, out previousResponseParameter))
-                throw new InvalidOperationException($"Operation '{operationName}' is unexpected.");
+                return new InvalidOperationException($"Operation '{operationName}' is unexpected.");
             if (previousResponseParameter.IsCanceled)
-                throw new OperationCanceledException($"Operation '{operationName}' is already canceled.");
+                return new OperationCanceledException($"Operation '{operationName}' is already canceled.");
             if (previousResponseParameter.Type != responseParameterType)
-                throw new ArgumentException($"Operation '{operationName}' has different ResponseParameter type '{responseParameterType}' then the previous operation '{previousResponseParameter.Type}' had.");
-            throw createOperationRepeatedException(previousResponseParameter.Value, $"Operation '{operationName}' is already executed.");
+                return new ArgumentException($"Operation '{operationName}' has different ResponseParameter type '{responseParameterType}' then the previous operation '{previousResponseParameter.Type}' had.");
+            string message = $"Operation '{operationName}' is already executed.";
+            if (responseParameterType == typeof(void))
+                return new OperationRepeatedException(message);
+            else
+                return new OperationRepeatedException<TResponseParameter>(previousResponseParameter.Value as TResponseParameter, message);
         }
 
         #region PersistenceParticipant members

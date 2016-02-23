@@ -893,6 +893,30 @@ namespace Orleans.Activities.Test
                 Assert.AreEqual(null, grain.TerminationException);
                 Assert.AreEqual(1, grain.WorkflowStatesCount);
                 Assert.AreEqual(false, grain.UnhandledException.IsSet);
+
+
+
+                Console.WriteLine("Recreate from persisted canceled state...");
+                grain.Initialize();
+                grain.LoadWorkflowState(0);
+
+                Console.WriteLine("RunToCompletionAsync...");
+                try
+                {
+                    IDictionary<string, object> outputArguments = await grain.WorkflowHost.RunToCompletionAsync();
+                    Assert.Fail("RunToCompletionAsync completed");
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("...Exception thrown " + e.GetType());
+                    Assert.IsInstanceOfType(e, typeof(OperationCanceledException));
+                }
+                Console.WriteLine("---DONE---");
+
+                Assert.AreEqual(1, grain.WorkflowStatesCount);
+                Assert.AreEqual(false, grain.UnhandledException.IsSet);
+                Assert.AreEqual(false, grain.Completed.IsSet);
+                Assert.AreEqual(false, grain.Written.IsSet);
             });
         }
 
@@ -922,6 +946,30 @@ namespace Orleans.Activities.Test
                 Assert.AreEqual(typeof(TestException), grain.TerminationException.GetType());
                 Assert.AreEqual(1, grain.WorkflowStatesCount);
                 Assert.AreEqual(false, grain.UnhandledException.IsSet);
+
+
+
+                Console.WriteLine("Recreate from persisted terminated state...");
+                grain.Initialize();
+                grain.LoadWorkflowState(0);
+
+                Console.WriteLine("RunToCompletionAsync...");
+                try
+                {
+                    IDictionary<string, object> outputArguments = await grain.WorkflowHost.RunToCompletionAsync();
+                    Assert.Fail("RunToCompletionAsync completed");
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("...Exception thrown " + e.GetType());
+                    Assert.IsInstanceOfType(e, typeof(TestException));
+                }
+                Console.WriteLine("---DONE---");
+
+                Assert.AreEqual(1, grain.WorkflowStatesCount);
+                Assert.AreEqual(false, grain.UnhandledException.IsSet);
+                Assert.AreEqual(false, grain.Completed.IsSet);
+                Assert.AreEqual(false, grain.Written.IsSet);
             });
         }
 
@@ -1031,6 +1079,43 @@ namespace Orleans.Activities.Test
                 Assert.AreEqual(ActivityInstanceState.Closed, grain.CompletionState);
                 Assert.AreEqual(5, grain.WorkflowStatesCount);
                 Assert.AreEqual(false, grain.UnhandledException.IsSet);
+
+
+
+                Console.WriteLine("Recreate from persisted completed state...");
+                grain.Initialize();
+                grain.LoadWorkflowState(1);
+
+                Console.WriteLine("OperationAsync...");
+                try
+                {
+                    string response = await grain.WorkflowHost.OperationAsync<string, string>("IWorkflowInterface.OperationWithParamsAsync",
+                        () => Task.FromResult("requestResult"));
+                    Assert.Fail("OperationWithParamsAsync completed, response: " + response);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("...Exception thrown " + e.GetType());
+                    Assert.AreEqual(typeof(OperationRepeatedException<string>), e.GetType());
+                    Assert.AreEqual("responseParameter", (e as OperationRepeatedException<string>).PreviousResponseParameter);
+                }
+                try
+                {
+                    await grain.WorkflowHost.OperationAsync("IWorkflowInterface.OperationWithoutParamsAsync",
+                        () => TaskConstants.Completed);
+                    Assert.Fail("OperationWithoutParamsAsync completed");
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("...Exception thrown " + e.GetType());
+                    Assert.AreEqual(typeof(OperationCanceledException), e.GetType());
+                }
+                Console.WriteLine("---DONE---");
+
+                Assert.AreEqual(5, grain.WorkflowStatesCount);
+                Assert.AreEqual(false, grain.UnhandledException.IsSet);
+                Assert.AreEqual(false, grain.Completed.IsSet);
+                Assert.AreEqual(false, grain.Written.IsSet);
             });
         }
 
@@ -1839,6 +1924,26 @@ namespace Orleans.Activities.Test
                 Assert.IsNotNull(outputArguments);
                 Assert.IsTrue(outputArguments.TryGetValue("Result", out result));
                 Assert.AreEqual(4, (Int32)result);
+
+
+
+                // Let WF finish the reminder unregistration (we are just after the Written AsyncManualResetEvent).
+                await Task.Yield();
+                outputArguments = null;
+                Console.WriteLine("Recreate from Completed state...");
+                grain.Initialize();
+                grain.LoadWorkflowState(0);
+                Console.WriteLine("RunToCompletionAsync...");
+                outputArguments = await grain.WorkflowHost.RunToCompletionAsync();
+                Console.WriteLine("---DONE---");
+
+                Assert.AreEqual(false, grain.Completed.IsSet);
+                Assert.AreEqual(4, grain.WorkflowStatesCount);
+                Assert.AreEqual(false, grain.UnhandledException.IsSet);
+
+                Assert.IsNotNull(outputArguments);
+                Assert.IsTrue(outputArguments.TryGetValue("Result", out result));
+                Assert.AreEqual(4, (Int32)result);
             });
         }
 
@@ -2006,6 +2111,97 @@ namespace Orleans.Activities.Test
                 Assert.AreEqual(false, grain.UnhandledException.IsSet);
 
                 Assert.IsNull(outputArguments);
+            });
+        }
+
+        [TestMethod]
+        public async Task AbortCancelTerminateResumeCompletedWorkflow()
+        {
+            await RunAsyncWithReentrantSingleThreadedScheduler(async () =>
+            {
+                try
+                {
+                    Grain grain = new Grain(typeof(NOOP));
+                    grain.Initialize();
+                    Console.WriteLine("RunAsync...");
+                    await grain.WorkflowHost.RunAsync();
+                    Console.WriteLine("Completed.WaitAsync...");
+                    await grain.Completed.WaitAsync(1);
+                    Console.WriteLine("Written.WaitAsync...");
+                    await grain.Written.WaitAsync(1);
+                    Console.WriteLine("---DONE---");
+
+                    Console.WriteLine("AbortAsync...");
+                    await grain.WorkflowHost.AbortAsync(new TestException());
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("...Exception thrown " + e.GetType());
+                    Assert.IsInstanceOfType(e, typeof(InvalidOperationException));
+                }
+
+                try
+                {
+                    Grain grain = new Grain(typeof(NOOP));
+                    grain.Initialize();
+                    Console.WriteLine("RunAsync...");
+                    await grain.WorkflowHost.RunAsync();
+                    Console.WriteLine("Completed.WaitAsync...");
+                    await grain.Completed.WaitAsync(1);
+                    Console.WriteLine("Written.WaitAsync...");
+                    await grain.Written.WaitAsync(1);
+                    Console.WriteLine("---DONE---");
+
+                    Console.WriteLine("CancelAsync...");
+                    await grain.WorkflowHost.CancelAsync();
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("...Exception thrown " + e.GetType());
+                    Assert.IsInstanceOfType(e, typeof(InvalidOperationException));
+                }
+
+                try
+                {
+                    Grain grain = new Grain(typeof(NOOP));
+                    grain.Initialize();
+                    Console.WriteLine("RunAsync...");
+                    await grain.WorkflowHost.RunAsync();
+                    Console.WriteLine("Completed.WaitAsync...");
+                    await grain.Completed.WaitAsync(1);
+                    Console.WriteLine("Written.WaitAsync...");
+                    await grain.Written.WaitAsync(1);
+                    Console.WriteLine("---DONE---");
+
+                    Console.WriteLine("TerminateAsync...");
+                    await grain.WorkflowHost.TerminateAsync(new TestException());
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("...Exception thrown " + e.GetType());
+                    Assert.IsInstanceOfType(e, typeof(InvalidOperationException));
+                }
+
+                try
+                {
+                    Grain grain = new Grain(typeof(NOOP));
+                    grain.Initialize();
+                    Console.WriteLine("RunAsync...");
+                    await grain.WorkflowHost.RunAsync();
+                    Console.WriteLine("Completed.WaitAsync...");
+                    await grain.Completed.WaitAsync(1);
+                    Console.WriteLine("Written.WaitAsync...");
+                    await grain.Written.WaitAsync(1);
+                    Console.WriteLine("---DONE---");
+
+                    Console.WriteLine("OperationAsync...");
+                    await grain.WorkflowHost.OperationAsync("Foo", null);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("...Exception thrown " + e.GetType());
+                    Assert.IsInstanceOfType(e, typeof(InvalidOperationException));
+                }
             });
         }
     }
