@@ -62,6 +62,7 @@ namespace Orleans.Activities.Hosting
         protected IWorkflowHostCallback grain;
         protected WorkflowIdentity workflowDefinitionIdentity;
         protected IWorkflowInstance instance;
+        protected IWorkflowCompletionState completionState;
 
         #endregion
 
@@ -82,12 +83,18 @@ namespace Orleans.Activities.Hosting
 
         #region IWorkflowHost/IWorkflowHostInfrastructure members
 
-        public Task DeactivateAsync()
+        public async Task DeactivateAsync()
         {
-            if (instance != null && instance.WorkflowInstanceState != WorkflowInstanceState.Aborted)
-                return ScheduleInstanceAsync(Parameters.ResumeInfrastructureTimeout, () => instance.DeactivateAsync());
-            else
-                return TaskConstants.Completed;
+            await WaitIdleAsync(Parameters.ResumeInfrastructureTimeout);
+            try
+            {
+                if (instance != null && instance.WorkflowInstanceState != WorkflowInstanceState.Aborted)
+                    await instance.DeactivateAsync();
+            }
+            finally
+            {
+                idle.Set();
+            }
         }
 
         public Task ReminderAsync(string reminderName) =>
@@ -103,17 +110,138 @@ namespace Orleans.Activities.Hosting
 
         public Func<ActivityInstanceState, IDictionary<string, object>, Exception, Task> OnCompletedAsync { private get; set; }
 
-        public Task RunAsync() =>
-            PrepareInstanceAsync(Parameters.ResumeInfrastructureTimeout);
+        public async Task RunAsync()
+        {
+            await WaitIdleAsync(Parameters.ResumeInfrastructureTimeout);
+            try
+            {
+                await PrepareAsync();
+            }
+            finally
+            {
+                idle.Set();
+            }
+        }
 
-        public Task AbortAsync(Exception reason) =>
-            ScheduleInstanceAsync(Parameters.ResumeInfrastructureTimeout, () => instance.AbortAsync(reason));
+        public async Task<IDictionary<string, object>> RunToCompletionAsync()
+        {
+            await WaitIdleAsync(Parameters.ResumeInfrastructureTimeout);
+            try
+            {
+                if (completionState == null)
+                {
+                    TaskCompletionSource<object> taskCompletionSource = new TaskCompletionSource<object>();
+                    OnCompletedAsync = (ActivityInstanceState _activityInstanceState, IDictionary<string, object> _outputArguments, Exception _terminationException) =>
+                    {
+                        taskCompletionSource.SetResult(null);
+                        return TaskConstants.Completed;
+                    };
+                    try
+                    {
+                        // We run the instance like an operation, but without scheduling a bookmark resumption. And not a SendResponse activity sets the TCS but the OnCompleted event.
+                        await PrepareAsync();
 
-        public Task CancelAsync() =>
-            ScheduleAndRunInstanceAsync(Parameters.ResumeInfrastructureTimeout, () => instance.ScheduleCancelAsync());
+                        if (completionState == null)
+                        {
+                            try
+                            {
+                                activeTaskCompletionSources.Add(taskCompletionSource);
+                                idle.Set();
+                                await taskCompletionSource.Task;
+                            }
+                            finally
+                            {
+                                activeTaskCompletionSources.Remove(taskCompletionSource);
+                            }
+                        }
+                        else
+                            idle.Set();
+                    }
+                    finally
+                    {
+                        OnCompletedAsync = null;
+                    }
+                }
+                else
+                    idle.Set();
+            }
+            catch
+            {
+                // TODO shouldn't we only set idle, if RunAsync() wasn't successful and instance.WorkflowInstanceState != WorkflowInstanceState.Runnable ???
+                idle.Set();
+                throw;
+            }
+            return completionState.Result;
+        }
 
-        public Task TerminateAsync(Exception reason) =>
-            ScheduleAndRunInstanceAsync(Parameters.ResumeInfrastructureTimeout, () => instance.TerminateAsync(reason));
+        public async Task AbortAsync(Exception reason)
+        {
+            await WaitIdleAsync(Parameters.ResumeInfrastructureTimeout);
+            try
+            {
+                await PrepareAsync();
+                if (completionState == null)
+                {
+                    if (instance.WorkflowInstanceState == WorkflowInstanceState.Complete)
+                        throw CreateCompletedException();
+                    await instance.AbortAsync(reason);
+                }
+                else
+                    throw CreateCompletedException();
+            }
+            finally
+            {
+                idle.Set();
+            }
+        }
+
+        public async Task CancelAsync()
+        {
+            await WaitIdleAsync(Parameters.ResumeInfrastructureTimeout);
+            try
+            {
+                await PrepareAsync();
+                if (completionState == null)
+                {
+                    if (instance.WorkflowInstanceState == WorkflowInstanceState.Complete)
+                        throw CreateCompletedException();
+                    await instance.ScheduleCancelAsync();
+                    await instance.RunAsync();
+                }
+                else
+                    throw CreateCompletedException();
+            }
+            catch
+            {
+                // TODO shouldn't we only set idle, if RunAsync() wasn't successful and instance.WorkflowInstanceState != WorkflowInstanceState.Runnable ???
+                idle.Set();
+                throw;
+            }
+        }
+
+        public async Task TerminateAsync(Exception reason)
+        {
+            await WaitIdleAsync(Parameters.ResumeInfrastructureTimeout);
+            try
+            {
+                await PrepareAsync();
+                if (completionState == null)
+                {
+                    if (instance.WorkflowInstanceState == WorkflowInstanceState.Complete)
+                        throw CreateCompletedException();
+                    await instance.TerminateAsync(reason);
+                    await instance.RunAsync();
+                }
+                else
+                    throw CreateCompletedException();
+            }
+            catch
+            {
+                // TODO shouldn't we only set idle, if RunAsync() wasn't successful and instance.WorkflowInstanceState != WorkflowInstanceState.Runnable ???
+                idle.Set();
+                throw;
+            }
+        }
 
         #endregion
 
@@ -122,95 +250,130 @@ namespace Orleans.Activities.Hosting
         public Task<TResponseParameter> OperationAsync<TRequestResult, TResponseParameter>(string operationName, Func<Task<TRequestResult>> requestResult)
                 where TRequestResult : class
                 where TResponseParameter : class =>
-            ResumeOperationBookmarkAsync<TResponseParameter>(operationName, requestResult);
+            ResumeOperationBookmarkAsync<TResponseParameter>(operationName, requestResult, typeof(TResponseParameter));
 
         public Task OperationAsync<TRequestResult>(string operationName, Func<Task<TRequestResult>> requestResult)
                 where TRequestResult : class =>
-            ResumeOperationBookmarkAsync(operationName, requestResult);
+            ResumeOperationBookmarkAsync<object>(operationName, requestResult, typeof(void));
 
         public Task<TResponseParameter> OperationAsync<TResponseParameter>(string operationName, Func<Task> requestResult)
                 where TResponseParameter : class =>
-            ResumeOperationBookmarkAsync<TResponseParameter>(operationName, requestResult);
+            ResumeOperationBookmarkAsync<TResponseParameter>(operationName, requestResult, typeof(TResponseParameter));
 
         public Task OperationAsync(string operationName, Func<Task> requestResult) =>
-            ResumeOperationBookmarkAsync(operationName, requestResult);
+            ResumeOperationBookmarkAsync<object>(operationName, requestResult, typeof(void));
 
         #endregion
 
         #region IWorkflowHost members helper methods
 
-        // It waits for scheduling the resumption, and than waits for the response from the SendResponse activity, through the TaskCompletionSource.
-        private async Task ResumeOperationBookmarkAsync(string operationName, object requestResult)
-        {
-            TaskCompletionSource<object> taskCompletionSource = new TaskCompletionSource<object>();
-            try
-            {
-                await ResumeOperationBookmarkAsync(operationName, taskCompletionSource, requestResult, typeof(void),
-                    (responseParameter, message) => new OperationRepeatedException(message));
-                // ScheduleAndRunInstanceAsync will throw if scheduling the operation wasn't successful, so awaiting TCS is safe now.
-                await taskCompletionSource.Task;
-            }
-            finally
-            {
-                activeTaskCompletionSources.Remove(taskCompletionSource);
-            }
-        }
-
-        // It waits for scheduling the resumption, and than waits for the response from the SendResponse activity, through the TaskCompletionSource.
-        private async Task<TResponseParameter> ResumeOperationBookmarkAsync<TResponseParameter>(string operationName, object requestResult)
-            where TResponseParameter : class
-        {
-            TaskCompletionSource<TResponseParameter> taskCompletionSource = new TaskCompletionSource<TResponseParameter>();
-            try
-            {
-                await ResumeOperationBookmarkAsync(operationName, taskCompletionSource, requestResult, typeof(TResponseParameter),
-                    (responseParameter, message) => new OperationRepeatedException<TResponseParameter>(responseParameter as TResponseParameter, message));
-                // ScheduleAndRunInstanceAsync will throw if scheduling the operation wasn't successful, so awaiting TCS is safe now.
-                return await taskCompletionSource.Task;
-            }
-            finally
-            {
-                activeTaskCompletionSources.Remove(taskCompletionSource);
-            }
-        }
-
         // If the resumption didn't timed out nor aborted, but not found, it tries to return the previous response parameter if the operation was idempotent,
         // ie. throws OperationRepeatedException, or throws InvalidOperationException if the previous response is not known (didn't happen or not idempotent).
-        private async Task ResumeOperationBookmarkAsync<TResponseParameter>(string operationName, TaskCompletionSource<TResponseParameter> taskCompletionSource,
-                object requestResult, Type responseParameterType,
-                Func<object, string, OperationRepeatedException> createOperationRepeatedException)
+        private async Task<TResponseParameter> ResumeOperationBookmarkAsync<TResponseParameter>(string operationName, object requestResult, Type responseParameterType)
             where TResponseParameter : class
         {
-            BookmarkResumptionResult result = await ScheduleAndRunInstanceAsync(Parameters.ResumeOperationTimeout,
-                () => instance.ScheduleOperationBookmarkResumptionAsync(operationName, new object[] { taskCompletionSource, requestResult }),
-                (_result) => _result == BookmarkResumptionResult.Success,
-                taskCompletionSource);
-            WorkflowInstanceState workflowInstanceState = instance.WorkflowInstanceState;
-
-            if (result == BookmarkResumptionResult.NotFound
-                || result == BookmarkResumptionResult.NotReady && workflowInstanceState == WorkflowInstanceState.Complete)
-                previousResponseParameterExtension.ThrowPreviousResponseParameter(operationName, responseParameterType, createOperationRepeatedException);
-            else if (result == BookmarkResumptionResult.NotReady) // && !Complete
-                // Instance is created but the initialization RunAsync() hasn't been called, this is impossible.
-                throw new InvalidOperationException($"Instance state is '{workflowInstanceState}', instance is not ready to process operation '{operationName}'.");
-            //else // Success
+            await WaitIdleAsync(Parameters.ResumeOperationTimeout);
+            try
+            {
+                await PrepareAsync();
+                if (completionState == null)
+                {
+                    TaskCompletionSource<TResponseParameter> taskCompletionSource = new TaskCompletionSource<TResponseParameter>();
+                    BookmarkResumptionResult result = await instance.ScheduleOperationBookmarkResumptionAsync(operationName, new object[] { taskCompletionSource, requestResult });
+                    WorkflowInstanceState workflowInstanceState = instance.WorkflowInstanceState;
+                    if (result == BookmarkResumptionResult.Success)
+                    {
+                        try
+                        {
+                            activeTaskCompletionSources.Add(taskCompletionSource);
+                            await instance.RunAsync();
+                            return await taskCompletionSource.Task;
+                        }
+                        finally
+                        {
+                            activeTaskCompletionSources.Remove(taskCompletionSource);
+                        }
+                    }
+                    else
+                    {
+                        if (result == BookmarkResumptionResult.NotReady && workflowInstanceState != WorkflowInstanceState.Complete)
+                            // Instance is created but the initialization RunAsync() hasn't been called, this is impossible.
+                            throw new InvalidOperationException($"Instance state is '{workflowInstanceState}', instance is not ready to process operation '{operationName}'.");
+                        else // NotFound or NotReady && Complete, though the later is also not possible at this point, completionState != null after prepare in that case
+                            throw previousResponseParameterExtension.CreatePreviousResponseParameterException<TResponseParameter>(operationName, responseParameterType);
+                    }
+                }
+                else
+                    throw previousResponseParameterExtension.CreatePreviousResponseParameterException<TResponseParameter>(operationName, responseParameterType);
+            }
+            catch
+            {
+                // TODO shouldn't we only set idle, if RunAsync() wasn't successful and instance.WorkflowInstanceState != WorkflowInstanceState.Runnable ???
+                idle.Set();
+                throw;
+            }
         }
 
         private async Task ResumeReminderBookmarkAsync(string reminderName)
         {
-            BookmarkResumptionResult result = await ScheduleAndRunInstanceAsync(Parameters.ResumeInfrastructureTimeout,
-                () => instance.ScheduleReminderBookmarkResumptionAsync(reminderName),
-                (_result) => _result == BookmarkResumptionResult.Success);
-            WorkflowInstanceState workflowInstanceState = instance.WorkflowInstanceState;
+            await WaitIdleAsync(Parameters.ResumeInfrastructureTimeout);
+            try
+            {
+                await PrepareAsync();
+                if (completionState == null)
+                {
+                    BookmarkResumptionResult result = await instance.ScheduleReminderBookmarkResumptionAsync(reminderName);
+                    WorkflowInstanceState workflowInstanceState = instance.WorkflowInstanceState;
+                    if (result == BookmarkResumptionResult.Success)
+                        await instance.RunAsync();
+                    else
+                    {
+                        if (result == BookmarkResumptionResult.NotReady && workflowInstanceState != WorkflowInstanceState.Complete)
+                            // Instance is created but the initialization RunAsync() hasn't been called, this is impossible.
+                            throw new InvalidOperationException($"Instance state is '{workflowInstanceState}', instance is not ready to process reminder '{reminderName}'.");
+                        else // NotFound or NotReady && Complete, though the later is also not possible at this point, completionState != null after prepare in that case
+                            // If we don't find a reminder, it's not an issue, maybe the grain/silo crashed after the reminder was created but before the workflow state was persisted,
+                            // or the grain/silo crashed after persistence but before the reminder was unregistered,
+                            // it will be unregistered on the next persistence event.
+                            // See ReminderTable for the detailed description of the algorithm.
+                            idle.Set();
+                    }
+                }
+                else
+                {
+                    await grain.UnregisterReminderAsync(reminderName);
+                    idle.Set();
+                }
+            }
+            catch
+            {
+                // TODO shouldn't we only set idle, if RunAsync() wasn't successful and instance.WorkflowInstanceState != WorkflowInstanceState.Runnable ???
+                idle.Set();
+                throw;
+            }
+        }
 
-            if (result == BookmarkResumptionResult.NotReady && workflowInstanceState != WorkflowInstanceState.Complete)
-                // Instance is created but the initialization RunAsync() hasn't been called, this is impossible.
-                throw new InvalidOperationException($"Instance state is '{workflowInstanceState}', instance is not ready to process reminder '{reminderName}'.");
-            //else // NotFound, Complete or Success
-                // If we don't find a reminder, it's not an issue, maybe the grain/silo crashed after the reminder was created but before the workflow state was persisted,
-                // or the grain/silo crashed after persistence but before the reminder was unregistered,
-                // it will be unregistered on the next persistence event.
-                // See ReminderTable for the detailed description of the algorithm.
+        private async Task<BookmarkResumptionResult> ResumeBookmarkAsync(Bookmark bookmark, object value, TimeSpan timeout)
+        {
+            await WaitIdleAsync(timeout);
+            try
+            {
+                await PrepareAsync();
+
+                BookmarkResumptionResult result = await instance.ScheduleBookmarkResumptionAsync(bookmark, value);
+                if (result == BookmarkResumptionResult.Success)
+                    await instance.RunAsync();
+                else
+                    idle.Set();
+
+                return result;
+            }
+            catch
+            {
+                // TODO shouldn't we only set idle, if RunAsync() wasn't successful and instance.WorkflowInstanceState != WorkflowInstanceState.Runnable ???
+                idle.Set();
+                throw;
+            }
         }
 
         #endregion
@@ -224,6 +387,9 @@ namespace Orleans.Activities.Hosting
             ? previousResponseParameterExtension.Yield()
             : ExtensionsFactory().Append(previousResponseParameterExtension);
 
+        private IEnumerable<object> HostExtensions =>
+            previousResponseParameterExtension.Yield();
+
         private Task<IDictionary<string, object>> RaiseOnStartAsync() =>
             OnStartAsync == null
             ? TaskConstants<IDictionary<string, object>>.Default
@@ -233,6 +399,9 @@ namespace Orleans.Activities.Hosting
             OnCompletedAsync == null
             ? TaskConstants.Completed
             : OnCompletedAsync(completionState, outputArguments, terminationException);
+
+        private Exception CreateCompletedException() =>
+            new InvalidOperationException("The workflow has already completed.");
 
         private async Task WaitIdleAsync(TimeSpan timeout)
         {
@@ -251,152 +420,69 @@ namespace Orleans.Activities.Hosting
 
         // TODO handle timeout? TimeoutException on this task, and finish preparation in the background and set idle at the end, problem: it shouldn't know about idle!
         // Can be called only after a successful WaitIdleAsync()!
-        private async Task PrepareInstanceAsync()
+        private async Task PrepareAsync()
         {
-            if (instance != null && instance.WorkflowInstanceState == WorkflowInstanceState.Aborted)
+            if (completionState == null)
             {
-                // We try to restart or reload it from the previous persisted state.
-                await grain.LoadWorkflowStateAsync();
-                instance = null;
-            }
-            if (instance == null)
-            {
-                IWorkflowState workflowState = grain.WorkflowState;
-                WorkflowIdentity workflowDefinitionIdentity;
-                IWorkflowInstance instance;
-                if (workflowState.InstanceValues == null)
+                if (instance != null && instance.WorkflowInstanceState == WorkflowInstanceState.Aborted)
                 {
-                    // Start, there is no previous persisted state.
-                    workflowDefinitionIdentity = workflowDefinitionIdentityFactory();
-                    instance = new WorkflowInstance(this, workflowDefinitionFactory(workflowDefinitionIdentity), workflowDefinitionIdentity);
-                    instance.Start(await RaiseOnStartAsync(), Extensions);
+                    // We try to restart or reload it from the previous persisted state.
+                    await grain.LoadWorkflowStateAsync();
+                    instance = null;
                 }
-                else
+                if (instance == null)
                 {
-                    // Load previous persisted state.
-                    instance = new WorkflowInstance(this, workflowDefinitionFactory(workflowState.WorkflowDefinitionIdentity), workflowState.WorkflowDefinitionIdentity);
+                    IWorkflowState workflowState = grain.WorkflowState;
+                    WorkflowIdentity workflowDefinitionIdentity = null;
+                    IWorkflowInstance instance = null;
+                    WorkflowCompletionState completionState = null;
+                    if (workflowState.InstanceValues == null)
+                    {
+                        // Start, there is no previous persisted state.
+                        workflowDefinitionIdentity = workflowDefinitionIdentityFactory();
+                        instance = new WorkflowInstance(this, workflowDefinitionFactory(workflowDefinitionIdentity), workflowDefinitionIdentity);
+                        instance.Start(await RaiseOnStartAsync(), Extensions);
+                    }
+                    else if (!WorkflowInstance.IsCompleted(workflowState.InstanceValues))
+                    {
+                        // Load previous persisted state.
+                        instance = new WorkflowInstance(this, workflowDefinitionFactory(workflowState.WorkflowDefinitionIdentity), workflowState.WorkflowDefinitionIdentity);
 
-                    // TODO If workflowState.WorkflowDefinitionIdentity differs from workflowDefinitionIdentity, we should create a DynamicUpdateMap and update the loaded instance.
-                    //      Currently we downgrade the workflowDefinitionIdentity to the loaded value.
-                    // NOTE The workflowDefinitionFactory usually yields the same singleton workflow definition (ie. activity) for the same WorkflowDefinitionIdentity,
-                    //      what happens with these activity trees during update???
-                    // await instance.LoadAsync(workflowState.InstanceValues, GetExtensions(), >>>DynamicUpdateMap: workflowState.WorkflowDefinitionIdentity -> workflowDefinitionIdentity<<<);
+                        // TODO If workflowState.WorkflowDefinitionIdentity differs from workflowDefinitionIdentity, we should create a DynamicUpdateMap and update the loaded instance.
+                        //      Currently we downgrade the workflowDefinitionIdentity to the loaded value.
+                        // NOTE The workflowDefinitionFactory usually yields the same singleton workflow definition (ie. activity) for the same WorkflowDefinitionIdentity,
+                        //      what happens with these activity trees during update???
+                        // await instance.LoadAsync(workflowState.InstanceValues, GetExtensions(), >>>DynamicUpdateMap: workflowState.WorkflowDefinitionIdentity -> workflowDefinitionIdentity<<<);
 
-                    await instance.LoadAsync(workflowState.InstanceValues, Extensions);
-                    workflowDefinitionIdentity = workflowState.WorkflowDefinitionIdentity;
+                        await instance.LoadAsync(workflowState.InstanceValues, Extensions);
+                        workflowDefinitionIdentity = workflowState.WorkflowDefinitionIdentity;
+                    }
+                    else
+                    {
+                        completionState = new WorkflowCompletionState();
+                        await completionState.LoadAsync(workflowState.InstanceValues, HostExtensions, Parameters);
+                    }
+                    // Set the the values only, when the instance/completionState was successfully initialized.
+                    this.workflowDefinitionIdentity = workflowDefinitionIdentity;
+                    this.instance = instance;
+                    this.completionState = completionState;
                 }
-                // Set the the values only, when the instance was successfully initialized.
-                this.workflowDefinitionIdentity = workflowDefinitionIdentity;
-                this.instance = instance;
-            }
-            if (instance.WorkflowInstanceState == WorkflowInstanceState.Runnable)
-            {
-                TaskCompletionSource<object> taskCompletionSource = new TaskCompletionSource<object>();
-                try
+                if (instance != null && instance.WorkflowInstanceState == WorkflowInstanceState.Runnable)
                 {
-                    activeTaskCompletionSources.ProtectionLevel = ActiveTaskCompletionSources.TaskCompletionSourceProtectionLevel.Preparation;
-                    activeTaskCompletionSources.Add(taskCompletionSource);
-                    await instance.RunAsync();
-                    await taskCompletionSource.Task;
+                    TaskCompletionSource<object> taskCompletionSource = new TaskCompletionSource<object>();
+                    try
+                    {
+                        activeTaskCompletionSources.ProtectionLevel = ActiveTaskCompletionSources.TaskCompletionSourceProtectionLevel.Preparation;
+                        activeTaskCompletionSources.Add(taskCompletionSource);
+                        await instance.RunAsync();
+                        await taskCompletionSource.Task;
+                    }
+                    finally
+                    {
+                        activeTaskCompletionSources.ProtectionLevel = ActiveTaskCompletionSources.TaskCompletionSourceProtectionLevel.Normal;
+                        activeTaskCompletionSources.Remove(taskCompletionSource);
+                    }
                 }
-                finally
-                {
-                    activeTaskCompletionSources.ProtectionLevel = ActiveTaskCompletionSources.TaskCompletionSourceProtectionLevel.Normal;
-                    activeTaskCompletionSources.Remove(taskCompletionSource);
-                }
-            }
-        }
-
-        protected async Task PrepareInstanceAsync(TimeSpan timeout)
-        {
-            await WaitIdleAsync(timeout);
-            try
-            {
-                await PrepareInstanceAsync();
-            }
-            finally // Yes, finally, because there is no RunAsync(), it's already happend optionally during PrepareInstanceAsync().
-            {
-                idle.Set();
-            }
-        }
-
-        protected async Task ScheduleInstanceAsync(TimeSpan timeout, Func<Task> asyncActionToSchedule)
-        {
-            await WaitIdleAsync(timeout);
-            try
-            {
-                await PrepareInstanceAsync();
-                await asyncActionToSchedule();
-            }
-            finally // Yes, finally, because there is no RunAsync().
-            {
-                idle.Set();
-            }
-        }
-
-        protected async Task ScheduleAndRunInstanceAsync(TimeSpan timeout, Func<Task> asyncActionToSchedule)
-        {
-            await WaitIdleAsync(timeout);
-            try
-            {
-                await PrepareInstanceAsync();
-                await asyncActionToSchedule();
-                await instance.RunAsync();
-            }
-            catch
-            {
-                // TODO shouldn't we only set idle, if RunAsync() wasn't successful and instance.WorkflowInstanceState != WorkflowInstanceState.Runnable ???
-                idle.Set();
-                throw;
-            }
-        }
-
-        protected async Task<TResult> ScheduleAndRunInstanceAsync<TResult>(TimeSpan timeout, Func<Task<TResult>> asyncFunctionToSchedule,
-            Func<TResult, bool> isScheduleSuccessful)
-        {
-            await WaitIdleAsync(timeout);
-            try
-            {
-                await PrepareInstanceAsync();
-                TResult result = await asyncFunctionToSchedule();
-                if (isScheduleSuccessful(result))
-                    await instance.RunAsync();
-                else
-                    idle.Set();
-                return result;
-            }
-            catch
-            {
-                // TODO shouldn't we only set idle, if RunAsync() wasn't successful and instance.WorkflowInstanceState != WorkflowInstanceState.Runnable ???
-                idle.Set();
-                throw;
-            }
-        }
-
-        // If schedule is not successful, caller musn't await TCS, because it will never be completed (nor the WF, nor the host will complete it in any way)!
-        protected async Task<TResult> ScheduleAndRunInstanceAsync<TResult, TResponseParameter>(TimeSpan timeout, Func<Task<TResult>> asyncFunctionToSchedule,
-                Func<TResult, bool> isScheduleSuccessful, TaskCompletionSource<TResponseParameter> taskCompletionSource)
-            where TResponseParameter : class
-        {
-            await WaitIdleAsync(timeout);
-            try
-            {
-                await PrepareInstanceAsync();
-                TResult result = await asyncFunctionToSchedule();
-                if (isScheduleSuccessful(result))
-                {
-                    activeTaskCompletionSources.Add(taskCompletionSource);
-                    await instance.RunAsync();
-                }
-                else
-                    idle.Set();
-                return result;
-            }
-            catch
-            {
-                // TODO shouldn't we only set idle, if RunAsync() wasn't successful and instance.WorkflowInstanceState != WorkflowInstanceState.Runnable ???
-                idle.Set();
-                throw;
             }
         }
 
@@ -418,7 +504,17 @@ namespace Orleans.Activities.Hosting
 
         void IWorkflowInstanceCallback.OnNotifyIdle()
         {
-            if (!activeTaskCompletionSources.TrySetCompleted())
+            bool isTrySetCompleted = activeTaskCompletionSources.TrySetCompleted();
+            if (completionState != null)
+            {
+                if (instance.WorkflowInstanceState == WorkflowInstanceState.Complete)
+                    // Completed as expected.
+                    instance = null;
+                else
+                    // Typically aborted after completion due to a persistence failure.
+                    completionState = null;
+            }
+            if (!isTrySetCompleted)
                 idle.Set();
         }
 
@@ -429,13 +525,14 @@ namespace Orleans.Activities.Hosting
             return grain.OnUnhandledExceptionAsync(exception, source);
         }
 
-        Task IWorkflowInstanceCallback.OnCompletedAsync(ActivityInstanceState completionState, IDictionary<string, object> outputArguments, Exception terminationException) =>
-            RaiseOnCompletedAsync(completionState, outputArguments, terminationException);
+        Task IWorkflowInstanceCallback.OnCompletedAsync(ActivityInstanceState completionState, IDictionary<string, object> outputArguments, Exception terminationException)
+        {
+            this.completionState = new WorkflowCompletionState(completionState, outputArguments, terminationException);
+            return RaiseOnCompletedAsync(completionState, outputArguments, terminationException);
+        }
 
         Task<BookmarkResumptionResult> IWorkflowInstanceCallback.ResumeBookmarkAsync(Bookmark bookmark, object value, TimeSpan timeout) =>
-            ScheduleAndRunInstanceAsync(timeout,
-                () => instance.ScheduleBookmarkResumptionAsync(bookmark, value),
-                (_result) => _result == BookmarkResumptionResult.Success);
+            ResumeBookmarkAsync(bookmark, value, timeout);
 
         Task IWorkflowInstanceCallback.AbortAsync(Exception reason) => AbortAsync(reason);
 

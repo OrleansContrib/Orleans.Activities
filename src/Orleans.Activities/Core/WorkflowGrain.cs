@@ -18,6 +18,24 @@ namespace Orleans.Activities
     // - each WorkflowHost hosts a WorkflowInstance (and recreates it when it aborts)
     // - if you want to access another workflow, access the WorkflowGrain that hosts it
 
+    public interface IEmptyWorkflowInterface
+    { }
+
+    /// <summary>
+    /// Base class for workflow backed grains where there is no TWorkflowInterface and TWorkflowCallbackInterface defined.
+    /// See <see cref="WorkflowGrain{TGrain, TGrainState, TWorkflowInterface, TWorkflowCallbackInterface}"/>.
+    /// </summary>
+    /// <typeparam name="TGrain"></typeparam>
+    /// <typeparam name="TGrainState"></typeparam>
+    public abstract class WorkflowGrain<TGrain, TGrainState> : WorkflowGrain<TGrain, TGrainState, IEmptyWorkflowInterface, IEmptyWorkflowInterface>, IEmptyWorkflowInterface
+        where TGrain : WorkflowGrain<TGrain, TGrainState>
+        where TGrainState : GrainState, IWorkflowState
+    {
+        protected WorkflowGrain(Func<TGrainState, WorkflowIdentity, Activity> workflowDefinitionFactory, Func<TGrainState, WorkflowIdentity> workflowDefinitionIdentityFactory)
+            : base(workflowDefinitionFactory, workflowDefinitionIdentityFactory)
+        { }
+    }
+
     /// <summary>
     /// Base class for workflow backed grains.
     /// <para>IMPORTANT: See the type parameters' description! These types must be interfaces and must have methods with required signatures!</para>
@@ -62,14 +80,18 @@ namespace Orleans.Activities
         #region ctor and properties for DI
 
         /// <summary>
+        /// The factories are executed only after the first incoming grain request that creates/starts the grain, factories can use values in the grain state set by this first request.
+        /// Though, even the request is repeated, these values can't be modified, use the Immutable helper class.
         /// </summary>
         /// <param name="workflowDefinitionFactory">Can return the same singleton Activity instance for all the grains that use it.
         /// There is no need to recreate the workflow activity for each grain instance.</param>
         /// <param name="workflowDefinitionIdentityFactory">Can be null.</param>
         protected WorkflowGrain(Func<TGrainState, WorkflowIdentity, Activity> workflowDefinitionFactory, Func<TGrainState, WorkflowIdentity> workflowDefinitionIdentityFactory)
         {
+            if (workflowDefinitionFactory == null)
+                throw new ArgumentNullException(nameof(workflowDefinitionFactory));
             if (!typeof(TGrain).IsAssignableFrom(GetType()))
-                throw new InvalidProgramException($"Type '{typeof(TGrain).GetFriendlyName()}' is not assignable from current type '{GetType().GetFriendlyName()}'!");
+                throw new InvalidProgramException($"Type '{typeof(TGrain).GetFriendlyName()}' is not assignable from current type '{GetType().GetFriendlyName()}'.");
 
             workflowHost = new WorkflowHost(new WorkflowHostCallback(this),
                 (WorkflowIdentity workflowIdentity) => workflowDefinitionFactory(State, workflowIdentity),

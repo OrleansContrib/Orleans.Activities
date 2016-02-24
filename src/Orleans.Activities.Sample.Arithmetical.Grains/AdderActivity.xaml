@@ -1,0 +1,72 @@
+﻿<Activity mc:Ignorable="sap sap2010 sads" x:Class="Orleans.Activities.Sample.Arithmetical.Grains.AdderActivity"
+ xmlns="http://schemas.microsoft.com/netfx/2009/xaml/activities"
+ xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+ xmlns:mca="clr-namespace:Microsoft.CSharp.Activities;assembly=System.Activities"
+ xmlns:sads="http://schemas.microsoft.com/netfx/2010/xaml/activities/debugger"
+ xmlns:sap="http://schemas.microsoft.com/netfx/2009/xaml/activities/presentation"
+ xmlns:sap2010="http://schemas.microsoft.com/netfx/2010/xaml/activities/presentation"
+ xmlns:sco="clr-namespace:System.Collections.ObjectModel;assembly=mscorlib"
+ xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <x:Members>
+    <x:Property Name="arg1" Type="InArgument(x:Int32)" />
+    <x:Property Name="arg2" Type="InArgument(x:Int32)" />
+    <x:Property Name="result" Type="OutArgument(x:Int32)" />
+  </x:Members>
+  <sap2010:ExpressionActivityEditor.ExpressionActivityEditor>C#</sap2010:ExpressionActivityEditor.ExpressionActivityEditor>
+  <TextExpression.NamespacesForImplementation>
+    <sco:Collection x:TypeArguments="x:String">
+      <x:String>System</x:String>
+      <x:String>System.Collections.Generic</x:String>
+      <x:String>System.Data</x:String>
+      <x:String>System.Linq</x:String>
+      <x:String>System.Text</x:String>
+    </sco:Collection>
+  </TextExpression.NamespacesForImplementation>
+  <TextExpression.ReferencesForImplementation>
+    <sco:Collection x:TypeArguments="AssemblyReference">
+      <AssemblyReference>Microsoft.CodeAnalysis</AssemblyReference>
+      <AssemblyReference>Microsoft.CodeAnalysis.CSharp</AssemblyReference>
+      <AssemblyReference>Newtonsoft.Json</AssemblyReference>
+      <AssemblyReference>Orleans</AssemblyReference>
+      <AssemblyReference>OrleansCodeGenerator</AssemblyReference>
+      <AssemblyReference>System</AssemblyReference>
+      <AssemblyReference>Microsoft.CSharp</AssemblyReference>
+      <AssemblyReference>System.Activities</AssemblyReference>
+      <AssemblyReference>System.Collections.Immutable</AssemblyReference>
+      <AssemblyReference>System.Core</AssemblyReference>
+      <AssemblyReference>System.Data</AssemblyReference>
+      <AssemblyReference>System.Data.DataSetExtensions</AssemblyReference>
+      <AssemblyReference>System.Reflection.Metadata</AssemblyReference>
+      <AssemblyReference>System.Xml</AssemblyReference>
+      <AssemblyReference>System.Xml.Linq</AssemblyReference>
+      <AssemblyReference>Orleans.Activities.Sample.Arithmetical.GrainInterfaces</AssemblyReference>
+      <AssemblyReference>Orleans.Activities</AssemblyReference>
+      <AssemblyReference>System.ServiceModel</AssemblyReference>
+      <AssemblyReference>System.ServiceModel.Activities</AssemblyReference>
+      <AssemblyReference>System.Xaml</AssemblyReference>
+      <AssemblyReference>mscorlib</AssemblyReference>
+      <AssemblyReference>Orleans.Activities.Sample.Arithmetical.Grains</AssemblyReference>
+    </sco:Collection>
+  </TextExpression.ReferencesForImplementation>
+  <Assign>
+    <Assign.To>
+      <OutArgument x:TypeArguments="x:Int32">
+        <mca:CSharpReference x:TypeArguments="x:Int32">result</mca:CSharpReference>
+      </OutArgument>
+    </Assign.To>
+    <Assign.Value>
+      <InArgument x:TypeArguments="x:Int32">
+        <mca:CSharpValue x:TypeArguments="x:Int32">arg1 + arg2</mca:CSharpValue>
+      </InArgument>
+    </Assign.Value>
+    <sap2010:WorkflowViewState.IdRef>Assign_1</sap2010:WorkflowViewState.IdRef>
+    <sads:DebugSymbol.Symbol>d3FaOlxQcml2YXRlXEdpdEh1YlxsbWFneWFyXE9ybGVhbnMuQWN0aXZpdGllc1xzcmNcT3JsZWFucy5BY3Rpdml0aWVzLlNhbXBsZS5Bcml0aG1ldGljYWwuR3JhaW5zXEFkZGVyQWN0aXZpdHkueGFtbAMzA0AMAgEBOwk7UQIBBjYJNlQCAQI=</sads:DebugSymbol.Symbol>
+  </Assign>
+  <sap2010:WorkflowViewState.IdRef>Orleans.Activities.Sample.Arithmetical.Grains.AdderActivity_1</sap2010:WorkflowViewState.IdRef>
+  <sap2010:WorkflowViewState.ViewStateManager>
+    <sap2010:ViewStateManager>
+      <sap2010:ViewStateData Id="Assign_1" sap:VirtualizedContainerService.HintSize="242,62" />
+      <sap2010:ViewStateData Id="Orleans.Activities.Sample.Arithmetical.Grains.AdderActivity_1" sap:VirtualizedContainerService.HintSize="282,142" />
+    </sap2010:ViewStateManager>
+  </sap2010:WorkflowViewState.ViewStateManager>
+</Activity>

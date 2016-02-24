@@ -68,6 +68,9 @@ namespace Orleans.Activities.Hosting
     /// </summary>
     public class WorkflowInstance : System.Activities.Hosting.WorkflowInstance, IWorkflowInstance, IActivityContext
     {
+        public static bool IsCompleted(IDictionary<XName, InstanceValue> instanceValues) =>
+            WorkflowStatus.IsCompleted(instanceValues[WorkflowNamespace.Status].Value as string);
+
         #region protected/private fields
 
         protected IWorkflowInstanceCallback host;
@@ -358,35 +361,33 @@ namespace Orleans.Activities.Hosting
                 instanceValues[WorkflowNamespace.Workflow] = new InstanceValue(Controller.PrepareForSerialization());
                 if (IsStarting)
                     instanceValues[WorkflowNamespace.IsStarting] = new InstanceValue(true);
-                if (Parameters.PersistWriteOnlyValues)
-                    instanceValues[WorkflowNamespace.Status] = new InstanceValue(Controller.State == WorkflowInstanceState.Idle ? "Idle" : "Executing", InstanceValueOptions.WriteOnly);
+                instanceValues[WorkflowNamespace.Status] = new InstanceValue(Controller.State == WorkflowInstanceState.Idle ? WorkflowStatus.Idle : WorkflowStatus.Executing);
             }
             else // Complete
             {
-                instanceValues[WorkflowNamespace.Workflow] = new InstanceValue(Controller.PrepareForSerialization(), InstanceValueOptions.Optional);
                 if (Parameters.PersistWriteOnlyValues)
-                {
-                    ActivityInstanceState completionState;
-                    IDictionary<string, object> outputs;
-                    Exception terminationException;
-                    completionState = Controller.GetCompletionState(out outputs, out terminationException);
+                    instanceValues[WorkflowNamespace.Workflow] = new InstanceValue(Controller.PrepareForSerialization(), InstanceValueOptions.Optional);
 
-                    if (completionState == ActivityInstanceState.Closed)
-                    {
-                        instanceValues[WorkflowNamespace.Status] = new InstanceValue("Closed", InstanceValueOptions.WriteOnly);
-                        if (outputs != null)
-                            foreach (KeyValuePair<string, object> output in outputs)
-                                instanceValues[WorkflowNamespace.OutputPath.GetName(output.Key)] = new InstanceValue(output.Value, InstanceValueOptions.WriteOnly | InstanceValueOptions.Optional);
-                    }
-                    else if (completionState == ActivityInstanceState.Canceled)
-                    {
-                        instanceValues[WorkflowNamespace.Status] = new InstanceValue("Canceled", InstanceValueOptions.WriteOnly);
-                    }
-                    else // Faulted
-                    {
-                        instanceValues[WorkflowNamespace.Status] = new InstanceValue("Faulted", InstanceValueOptions.WriteOnly);
-                        instanceValues[WorkflowNamespace.Exception] = new InstanceValue(terminationException, InstanceValueOptions.WriteOnly | InstanceValueOptions.Optional);
-                    }
+                ActivityInstanceState completionState;
+                IDictionary<string, object> outputs;
+                Exception terminationException;
+                completionState = Controller.GetCompletionState(out outputs, out terminationException);
+
+                if (completionState == ActivityInstanceState.Closed)
+                {
+                    instanceValues[WorkflowNamespace.Status] = new InstanceValue(WorkflowStatus.Closed);
+                    if (outputs != null)
+                        foreach (KeyValuePair<string, object> output in outputs)
+                            instanceValues[WorkflowNamespace.OutputPath.GetName(output.Key)] = new InstanceValue(output.Value);
+                }
+                else if (completionState == ActivityInstanceState.Canceled)
+                {
+                    instanceValues[WorkflowNamespace.Status] = new InstanceValue(WorkflowStatus.Canceled);
+                }
+                else // Faulted
+                {
+                    instanceValues[WorkflowNamespace.Status] = new InstanceValue(WorkflowStatus.Faulted);
+                    instanceValues[WorkflowNamespace.Exception] = new InstanceValue(terminationException);
                 }
             }
             return instanceValues;

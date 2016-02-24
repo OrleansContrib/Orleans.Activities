@@ -4,7 +4,7 @@ Based on Orleans [Hello World](https://dotnet.github.io/orleans/Samples-Overview
 
 ## Overview
 
-![SequenceDiagram](https://raw.githubusercontent.com/OrleansContrib/Orleans.Activities/master/docs/HelloWorld/HelloWorld-Overview.png)
+![HelloWorld-Overview](https://raw.githubusercontent.com/OrleansContrib/Orleans.Activities/master/docs/HelloWorld/HelloWorld-Overview.png)
 
 ## Interface
 
@@ -18,7 +18,7 @@ public interface IHello : IGrainWithGuidKey
 }
 ```
 
-## Grain
+## Grain prerequisites
 
 Before the grain, you have to define 3 things: Grain State, Workflow Interface and Workflow Callback Interface
 
@@ -64,7 +64,7 @@ public interface IHelloWorkflowCallbackInterface
 }
 ```
 
-### Grain
+## Grain
 
 The class definition, where we define the TGrain, TGrainState, TWorkflowInterface and TWorkflowCallbackInterface type parameters.
 
@@ -75,7 +75,9 @@ public sealed class HelloGrain : WorkflowGrain<HelloGrain, HelloGrainState, IHel
   IHello, IHelloWorkflowCallbackInterface
 ```
 
-Constructor, in this example without Dependency Injection, just define the workflow definition (ie. activity) factory and leave the workflow definition identity factory null.
+### Constructor
+
+In this example without Dependency Injection, just define the workflow definition (ie. activity) factory and leave the workflow definition identity factory null.
 
 Optionally, to see what happens during the workflow execution with tracking, we add a TrackingParticipant extension. The ExtensionsFactory property can also be null.
 
@@ -87,6 +89,8 @@ public HelloGrain()
 }
 ```
 
+### Unhandled exception handler
+
 A mandatory (boilerplate) implementation of the unhandled exception handler. Because workflows can run in the backround after an incoming call returns the result, we can't propagate back exceptions after this point. Workflow will by default abort in case of unhandled exception, depending on the `Parameters` property.
 
 ```c#
@@ -96,6 +100,8 @@ protected override Task OnUnhandledExceptionAsync(Exception exception, Activity 
   return Task.CompletedTask;
 }
 ```
+
+### Incoming operations
 
 The public `SayHello()` grain interface method, that does nothing just calls the workflow's `GreetClient()` WorkflowInterface operation. A normal grain can store data from the incoming message in the state, call other grains, closure the necessary data into the parameter delegate. After the await, it can build a complex response message based on the value the workflow returned and the grain state, or any other information.
 
@@ -142,6 +148,8 @@ public async Task<string> SayBye()
 }
 ```
 
+### Outgoing operations
+
 This is the explicit implementation of the workflow's `WhatShouldISay()` WorkflowCallbackInterface operation, that does nearly nothing. A normal grain can modify the grain's State, call other grain's operations or do nearly anything a normal grain method can.  
 
 The return value delegate executed when the workflow accepts the outgoing call's response.
@@ -168,4 +176,4 @@ That's all. Ctrl+F5, and it works.
 
 If you want to dig deep into the source and understand the detailed events in the background, this sequence diagram can help (this is not a completely valid diagram, but displaying every asnyc details, even the AsyncAutoResetEvent idle-queue, this would be 2 times bigger).
 
-![SequenceDiagram](https://raw.githubusercontent.com/OrleansContrib/Orleans.Activities/master/docs/HelloWorld/HelloWorld-Details.png)
+![HelloWorld-Details](https://raw.githubusercontent.com/OrleansContrib/Orleans.Activities/master/docs/HelloWorld/HelloWorld-Details.png)

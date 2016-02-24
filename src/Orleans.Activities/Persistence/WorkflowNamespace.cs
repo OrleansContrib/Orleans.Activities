@@ -20,7 +20,6 @@ namespace Orleans.Activities.Persistence
         private static readonly XNamespace variablesPath = XNamespace.Get(BaseNamespace + "/variables");
         public static XNamespace VariablesPath => variablesPath;
 
-        // WriteOnly
         private static readonly XNamespace outputPath = XNamespace.Get(BaseNamespace + "/output");
         public static XNamespace OutputPath => outputPath;
 
@@ -41,11 +40,9 @@ namespace Orleans.Activities.Persistence
         private static readonly XName isStarting = workflowPath.GetName(nameof(IsStarting));
         public static XName IsStarting => isStarting;
 
-        // WriteOnly
         private static readonly XName status = workflowPath.GetName(nameof(Status));
         public static XName Status => status;
 
-        // WriteOnly
         private static readonly XName exception = workflowPath.GetName(nameof(Exception));
         public static XName Exception => exception;
     }

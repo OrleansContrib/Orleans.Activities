@@ -1,16 +1,16 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="..\packages\Microsoft.Orleans.Templates.Grains.1.1.2\build\Microsoft.Orleans.Templates.Grains.props" Condition="Exists('..\packages\Microsoft.Orleans.Templates.Grains.1.1.2\build\Microsoft.Orleans.Templates.Grains.props')" />
-  <Import Project="$(SolutionDir)packages\Microsoft.Orleans.Templates.Grains.1.1.0\build\Microsoft.Orleans.Templates.Grains.props" Condition="Exists('$(SolutionDir)packages\Microsoft.Orleans.Templates.Grains.1.1.0\build\Microsoft.Orleans.Templates.Grains.props')" />
+  <Import Project="..\packages\Microsoft.Orleans.Templates.Interfaces.1.1.2\build\Microsoft.Orleans.Templates.Interfaces.props" Condition="Exists('..\packages\Microsoft.Orleans.Templates.Interfaces.1.1.2\build\Microsoft.Orleans.Templates.Interfaces.props')" />
+  <Import Project="$(SolutionDir)packages\Microsoft.Orleans.Templates.Interfaces.1.1.0\build\Microsoft.Orleans.Templates.Interfaces.props" Condition="Exists('$(SolutionDir)packages\Microsoft.Orleans.Templates.Interfaces.1.1.0\build\Microsoft.Orleans.Templates.Interfaces.props')" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform>AnyCPU</Platform>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{AEF8F4AD-4F32-480A-91C1-4DB819AB51B0}</ProjectGuid>
+    <ProjectGuid>{AD719AED-9327-4F64-A6AC-0C11E613A394}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Orleans.Activities.Sample.HelloWorld.Grains</RootNamespace>
-    <AssemblyName>Orleans.Activities.Sample.HelloWorld.Grains</AssemblyName>
+    <RootNamespace>Orleans.Activities.Sample.Arithmetical.GrainInterfaces</RootNamespace>
+    <AssemblyName>Orleans.Activities.Sample.Arithmetical.GrainInterfaces</AssemblyName>
     <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <NuGetPackageImportStamp>
@@ -26,6 +26,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
+    <NoWarn>CSE0001 CSE0003</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -35,6 +36,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <Prefer32Bit>false</Prefer32Bit>
+    <NoWarn>CSE0001 CSE0003</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Microsoft.CodeAnalysis, Version=1.1.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
@@ -59,7 +61,6 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Activities" />
     <Reference Include="System.Collections.Immutable, Version=1.1.37.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Collections.Immutable.1.1.37\lib\dotnet\System.Collections.Immutable.dll</HintPath>
       <Private>True</Private>
@@ -67,32 +68,18 @@
     <Reference Include="System.Core" />
     <Reference Include="System.Data" />
     <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="System.Drawing" />
     <Reference Include="System.Reflection.Metadata, Version=1.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Reflection.Metadata.1.1.0\lib\dotnet5.2\System.Reflection.Metadata.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="System.ServiceModel" />
-    <Reference Include="System.ServiceModel.Activities" />
-    <Reference Include="System.Xaml" />
     <Reference Include="System.Xml" />
     <Reference Include="System.Xml.Linq" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="GrainTrackingParticipant.cs" />
-    <Compile Include="HelloGrain.cs" />
-    <Compile Include="Properties\orleans.codegen.cs" />
+    <Compile Include="IMultiplier.cs" />
+    <Compile Include="IAdder.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Orleans.Activities.Sample.HelloWorld.GrainInterfaces\Orleans.Activities.Sample.HelloWorld.GrainInterfaces.csproj">
-      <Project>{2a2508a0-34a7-467c-9aa7-ea2b319da474}</Project>
-      <Name>Orleans.Activities.Sample.HelloWorld.GrainInterfaces</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Orleans.Activities\Orleans.Activities.csproj">
-      <Project>{e25af3dd-2199-4f56-8aee-7458358e3fd7}</Project>
-      <Name>Orleans.Activities</Name>
-    </ProjectReference>
+    <Compile Include="Properties\orleans.codegen.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
@@ -102,22 +89,16 @@
     <Analyzer Include="..\packages\Microsoft.CodeAnalysis.Analyzers.1.1.0\analyzers\dotnet\cs\Microsoft.CodeAnalysis.Analyzers.dll" />
     <Analyzer Include="..\packages\Microsoft.CodeAnalysis.Analyzers.1.1.0\analyzers\dotnet\cs\Microsoft.CodeAnalysis.CSharp.Analyzers.dll" />
   </ItemGroup>
-  <ItemGroup>
-    <XamlAppDef Include="HelloActivity.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </XamlAppDef>
-  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <Import Project="$(SolutionDir)packages\Microsoft.Orleans.Templates.Grains.1.1.0\build\Microsoft.Orleans.Templates.Grains.targets" Condition="Exists('$(SolutionDir)packages\Microsoft.Orleans.Templates.Grains.1.1.0\build\Microsoft.Orleans.Templates.Grains.targets')" />
+  <Import Project="$(SolutionDir)packages\Microsoft.Orleans.Templates.Interfaces.1.1.0\build\Microsoft.Orleans.Templates.Interfaces.targets" Condition="Exists('$(SolutionDir)packages\Microsoft.Orleans.Templates.Interfaces.1.1.0\build\Microsoft.Orleans.Templates.Interfaces.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
-    <Error Condition="!Exists('..\packages\Microsoft.Orleans.Templates.Grains.1.1.2\build\Microsoft.Orleans.Templates.Grains.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.Orleans.Templates.Grains.1.1.2\build\Microsoft.Orleans.Templates.Grains.props'))" />
-    <Error Condition="!Exists('..\packages\Microsoft.Orleans.Templates.Grains.1.1.2\build\Microsoft.Orleans.Templates.Grains.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.Orleans.Templates.Grains.1.1.2\build\Microsoft.Orleans.Templates.Grains.targets'))" />
+    <Error Condition="!Exists('..\packages\Microsoft.Orleans.Templates.Interfaces.1.1.2\build\Microsoft.Orleans.Templates.Interfaces.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.Orleans.Templates.Interfaces.1.1.2\build\Microsoft.Orleans.Templates.Interfaces.props'))" />
+    <Error Condition="!Exists('..\packages\Microsoft.Orleans.Templates.Interfaces.1.1.2\build\Microsoft.Orleans.Templates.Interfaces.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.Orleans.Templates.Interfaces.1.1.2\build\Microsoft.Orleans.Templates.Interfaces.targets'))" />
   </Target>
-  <Import Project="..\packages\Microsoft.Orleans.Templates.Grains.1.1.2\build\Microsoft.Orleans.Templates.Grains.targets" Condition="Exists('..\packages\Microsoft.Orleans.Templates.Grains.1.1.2\build\Microsoft.Orleans.Templates.Grains.targets')" />
+  <Import Project="..\packages\Microsoft.Orleans.Templates.Interfaces.1.1.2\build\Microsoft.Orleans.Templates.Interfaces.targets" Condition="Exists('..\packages\Microsoft.Orleans.Templates.Interfaces.1.1.2\build\Microsoft.Orleans.Templates.Interfaces.targets')" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
