@@ -18,6 +18,24 @@ namespace Orleans.Activities
     // - each WorkflowHost hosts a WorkflowInstance (and recreates it when it aborts)
     // - if you want to access another workflow, access the WorkflowGrain that hosts it
 
+    public interface IEmptyWorkflowInterface
+    { }
+
+    /// <summary>
+    /// Base class for workflow backed grains where there is no TWorkflowInterface and TWorkflowCallbackInterface defined.
+    /// See <see cref="WorkflowGrain{TGrain, TGrainState, TWorkflowInterface, TWorkflowCallbackInterface}"/>.
+    /// </summary>
+    /// <typeparam name="TGrain"></typeparam>
+    /// <typeparam name="TGrainState"></typeparam>
+    public abstract class WorkflowGrain<TGrain, TGrainState> : WorkflowGrain<TGrain, TGrainState, IEmptyWorkflowInterface, IEmptyWorkflowInterface>, IEmptyWorkflowInterface
+        where TGrain : WorkflowGrain<TGrain, TGrainState>
+        where TGrainState : GrainState, IWorkflowState
+    {
+        protected WorkflowGrain(Func<TGrainState, WorkflowIdentity, Activity> workflowDefinitionFactory, Func<TGrainState, WorkflowIdentity> workflowDefinitionIdentityFactory)
+            : base(workflowDefinitionFactory, workflowDefinitionIdentityFactory)
+        { }
+    }
+
     /// <summary>
     /// Base class for workflow backed grains.
     /// <para>IMPORTANT: See the type parameters' description! These types must be interfaces and must have methods with required signatures!</para>
