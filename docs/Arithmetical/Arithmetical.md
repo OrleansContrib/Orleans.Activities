@@ -91,7 +91,7 @@ The mandatory (boilerplate) implementation of the unhandled exception handler (t
 protected override Task OnUnhandledExceptionAsync(Exception exception, Activity source)
 {
   GetLogger().Error(0, $"OnUnhandledExceptionAsync: the workflow is going to {Parameters.UnhandledExceptionAction}", exception);
-    return Task.CompletedTask;
+  return Task.CompletedTask;
 }
 ```
 

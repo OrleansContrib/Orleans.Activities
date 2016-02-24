@@ -16,7 +16,7 @@ __NOTE:__ This project currently is an __experiment__, not production quality! T
 [![Ready](https://badge.waffle.io/OrleansContrib/Orleans.Activities.svg?label=Phase-Ready&title=Ready)](http://waffle.io/OrleansContrib/Orleans.Activities)
 [![In Progress](https://badge.waffle.io/OrleansContrib/Orleans.Activities.svg?label=Phase-In%20Progress&title=In%20Progress)](http://waffle.io/OrleansContrib/Orleans.Activities)
 
-~~Documentation~~ (see [HelloWorld](https://github.com/OrleansContrib/Orleans.Activities/blob/master/docs/HelloWorld/HelloWorld.md) sample)
+~~Documentation~~ (see [Samples](https://github.com/OrleansContrib/Orleans.Activities#samples) below)
 
 [Coding Guidelines](https://github.com/dotnet/corefx/blob/master/Documentation/coding-guidelines/coding-style.md)
 
@@ -81,6 +81,8 @@ And there are nearly unlimited [Open issues](http://waffle.io/OrleansContrib/Orl
 ## Samples
 
 [HelloWorld](https://github.com/OrleansContrib/Orleans.Activities/blob/master/docs/HelloWorld/HelloWorld.md)
+
+[Arithmetical](https://github.com/OrleansContrib/Orleans.Activities/blob/master/docs/Arithmetical/Arithmetical.md)
 
 ## Details
 
