@@ -70,6 +70,7 @@ namespace Orleans.Activities.Hosting
             }
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1065:DoNotRaiseExceptionsInUnexpectedLocations")]
         public IDictionary<string, object> Result
         {
             get

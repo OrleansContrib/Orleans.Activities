@@ -40,7 +40,7 @@ namespace Orleans.Activities.Sample.Arithmetical.Grains
         {
             // IMPORTANT: Do not copy values from the grain's state into the input arguments, because input arguments will be persisted by the workflow also.
             // Closure directly the necessary values from the incoming public grain method call's parameters into the delegate.
-            WorkflowControl.OnStartAsync = () => Task.FromResult<IDictionary<string, object>>(new Dictionary<string, object>()
+            WorkflowControl.StartingAsync = () => Task.FromResult<IDictionary<string, object>>(new Dictionary<string, object>()
             {
                 { nameof(arg1), arg1 },
                 { nameof(arg2), arg2 },

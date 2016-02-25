@@ -70,6 +70,7 @@ namespace Orleans.Activities.Test
         public WorkflowIdentity WorkflowDefinitionIdentity { get; set; }
     }
 
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1063:ImplementIDisposableCorrectly")]
     public class Grain : IWorkflowHostCallback, IDisposable
     {
         private Type workflowDefinitionType;
@@ -150,7 +151,7 @@ namespace Orleans.Activities.Test
                 etwTrackingParticipant.TrackingProfile = trackingProfile;
                 return etwTrackingParticipant.Yield();
             };
-            wf.OnCompletedAsync = (ActivityInstanceState completionState, IDictionary<string, object> outputArguments, Exception terminationException) =>
+            wf.CompletedAsync = (ActivityInstanceState completionState, IDictionary<string, object> outputArguments, Exception terminationException) =>
             {
                 CompletionState = completionState;
                 OutputArguments = outputArguments;
@@ -179,10 +180,11 @@ namespace Orleans.Activities.Test
                 state = InstanceValueDictionarySerializer.Deserialize(workflowStates[index]) as IWorkflowState;
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1063:ImplementIDisposableCorrectly")]
         public void Dispose()
         {
             foreach (TaskTimer timer in timers.Values)
-                timer.Cancel();
+                timer.Dispose();
         }
 
         #region IWorkflowHostCallback members
@@ -1836,7 +1838,7 @@ namespace Orleans.Activities.Test
                 grain.Parameters = new Parameters(idlePersistenceMode: IdlePersistenceMode.Always);
                 grain.Initialize();
 
-                grain.WorkflowHost.OnStartAsync = () => Task.FromResult<IDictionary<string, object>>(new Dictionary<string, object>()
+                grain.WorkflowHost.StartingAsync = () => Task.FromResult<IDictionary<string, object>>(new Dictionary<string, object>()
                     { { "Delay", TimeSpan.Zero }, { "ShouldThrow", false }, { "Argument", 2 } });
                 Console.WriteLine("RunToCompletionAsync...");
                 IDictionary<string, object> outputArguments = await grain.WorkflowHost.RunToCompletionAsync();
@@ -1862,7 +1864,7 @@ namespace Orleans.Activities.Test
                 grain.Parameters = new Parameters(idlePersistenceMode: IdlePersistenceMode.Always);
                 grain.Initialize();
 
-                grain.WorkflowHost.OnStartAsync = () => Task.FromResult<IDictionary<string, object>>(new Dictionary<string, object>()
+                grain.WorkflowHost.StartingAsync = () => Task.FromResult<IDictionary<string, object>>(new Dictionary<string, object>()
                     { { "Delay", TimeSpan.FromMilliseconds(100) }, { "ShouldThrow", false }, { "Argument", 2 } });
                 Console.WriteLine("RunToCompletionAsync...");
                 IDictionary<string, object> outputArguments = await grain.WorkflowHost.RunToCompletionAsync();
@@ -1956,7 +1958,7 @@ namespace Orleans.Activities.Test
                 grain.Parameters = new Parameters(idlePersistenceMode: IdlePersistenceMode.Always);
                 grain.Initialize();
 
-                grain.WorkflowHost.OnStartAsync = () => Task.FromResult<IDictionary<string, object>>(new Dictionary<string, object>()
+                grain.WorkflowHost.StartingAsync = () => Task.FromResult<IDictionary<string, object>>(new Dictionary<string, object>()
                     { { "Delay", TimeSpan.Zero }, { "ShouldThrow", true }, { "Argument", 2 } });
                 IDictionary<string, object> outputArguments = null;
                 try
@@ -1989,7 +1991,7 @@ namespace Orleans.Activities.Test
                 grain.Parameters = new Parameters(idlePersistenceMode: IdlePersistenceMode.Always);
                 grain.Initialize();
 
-                grain.WorkflowHost.OnStartAsync = () => Task.FromResult<IDictionary<string, object>>(new Dictionary<string, object>()
+                grain.WorkflowHost.StartingAsync = () => Task.FromResult<IDictionary<string, object>>(new Dictionary<string, object>()
                     { { "Delay", TimeSpan.FromMilliseconds(100) }, { "ShouldThrow", true }, { "Argument", 2 } });
                 IDictionary<string, object> outputArguments = null;
                 try
@@ -2022,7 +2024,7 @@ namespace Orleans.Activities.Test
                 grain.Parameters = new Parameters(idlePersistenceMode: IdlePersistenceMode.Always, unhandledExceptionAction: UnhandledExceptionAction.Cancel);
                 grain.Initialize();
 
-                grain.WorkflowHost.OnStartAsync = () => Task.FromResult<IDictionary<string, object>>(new Dictionary<string, object>()
+                grain.WorkflowHost.StartingAsync = () => Task.FromResult<IDictionary<string, object>>(new Dictionary<string, object>()
                     { { "Delay", TimeSpan.FromMilliseconds(100) }, { "ShouldThrow", true }, { "Argument", 2 } });
                 IDictionary<string, object> outputArguments = null;
                 try
@@ -2055,7 +2057,7 @@ namespace Orleans.Activities.Test
                 grain.Parameters = new Parameters(idlePersistenceMode: IdlePersistenceMode.Always, unhandledExceptionAction: UnhandledExceptionAction.Terminate);
                 grain.Initialize();
 
-                grain.WorkflowHost.OnStartAsync = () => Task.FromResult<IDictionary<string, object>>(new Dictionary<string, object>()
+                grain.WorkflowHost.StartingAsync = () => Task.FromResult<IDictionary<string, object>>(new Dictionary<string, object>()
                     { { "Delay", TimeSpan.FromMilliseconds(100) }, { "ShouldThrow", true }, { "Argument", 2 } });
                 IDictionary<string, object> outputArguments = null;
                 try
@@ -2089,7 +2091,7 @@ namespace Orleans.Activities.Test
                 grain.Initialize();
 
                 grain.throwDuringPersistence = true;
-                grain.WorkflowHost.OnStartAsync = () => Task.FromResult<IDictionary<string, object>>(new Dictionary<string, object>()
+                grain.WorkflowHost.StartingAsync = () => Task.FromResult<IDictionary<string, object>>(new Dictionary<string, object>()
                     { { "Delay", TimeSpan.FromMilliseconds(100) }, { "ShouldThrow", false }, { "Argument", 2 } });
                 IDictionary<string, object> outputArguments = null;
                 try

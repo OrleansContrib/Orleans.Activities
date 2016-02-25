@@ -8,6 +8,7 @@ using System.Threading;
 
 namespace Orleans.Activities.Test
 {
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1063:ImplementIDisposableCorrectly")]
     public class TaskTimer : IDisposable
     {
         private CancellationTokenSource cts;
@@ -44,9 +45,10 @@ namespace Orleans.Activities.Test
             cts.Cancel();
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1063:ImplementIDisposableCorrectly")]
         public void Dispose()
         {
-            cts.Cancel();
+            cts.Dispose();
         }
     }
 }
