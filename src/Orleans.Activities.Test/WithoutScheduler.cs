@@ -88,31 +88,31 @@ namespace Orleans.Activities.Test
 
     public class WorkflowCallbackInterface : ITestWorkflowCallbackInterface2
     {
-        Task<Func<Task<string>>> ITestWorkflowCallbackInterface2Base.SayHello1(string requestParameter)
+        public Task<Func<Task<string>>> SayHello1(string requestParameter)
         {
             Console.WriteLine($"ITestWorkflowCallbackInterfaceBase.SayHello1({requestParameter})");
             return Task.FromResult<Func<Task<string>>>(() => TaskConstants.StringEmpty);
         }
 
-        Task<Func<Task>> ITestWorkflowCallbackInterface2Base.SayHello2(string requestParameter)
+        public Task<Func<Task>> SayHello2(string requestParameter)
         {
             Console.WriteLine($"ITestWorkflowCallbackInterfaceBase.SayHello2({requestParameter})");
             return Task.FromResult<Func<Task>>(() => TaskConstants.BooleanFalse);
         }
 
-        Task<Func<Task<string>>> ITestWorkflowCallbackInterface2Base.SayHello3()
+        public Task<Func<Task<string>>> SayHello3()
         {
             Console.WriteLine("ITestWorkflowCallbackInterfaceBase.SayHello3");
             return Task.FromResult<Func<Task<string>>>(() => TaskConstants.StringEmpty);
         }
 
-        Task<Func<Task>> ITestWorkflowCallbackInterface2Base.SayHello4()
+        public Task<Func<Task>> SayHello4()
         {
             Console.WriteLine("ITestWorkflowCallbackInterfaceBase.SayHello4");
             return Task.FromResult<Func<Task>>(() => Task.FromResult(false));
         }
 
-        Task<Func<Task>> ITestWorkflowCallbackInterface2.SayHello44()
+        public Task<Func<Task>> SayHello44()
         {
             Console.WriteLine("ITestWorkflowCallbackInterface2.SayHello44");
             return Task.FromResult<Func<Task>>(() => Task.FromResult(false));
@@ -143,11 +143,11 @@ namespace Orleans.Activities.Test
             Assert.IsTrue(IdlePersistenceModeExtensions.ShouldSave(IdlePersistenceMode.OnPersistableIdle, WorkflowInstanceState.Idle, isStarting: false));
             Assert.IsFalse(IdlePersistenceModeExtensions.ShouldSave(IdlePersistenceMode.OnPersistableIdle, WorkflowInstanceState.Complete, isStarting: false));
 
-            Assert.IsFalse(IdlePersistenceModeExtensions.ShouldSave(IdlePersistenceMode.OnStart, WorkflowInstanceState.Aborted, isStarting: false));
-            Assert.IsFalse(IdlePersistenceModeExtensions.ShouldSave(IdlePersistenceMode.OnStart, WorkflowInstanceState.Runnable, isStarting: false));
-            Assert.IsTrue(IdlePersistenceModeExtensions.ShouldSave(IdlePersistenceMode.OnStart, WorkflowInstanceState.Idle, isStarting: true));
-            Assert.IsFalse(IdlePersistenceModeExtensions.ShouldSave(IdlePersistenceMode.OnStart, WorkflowInstanceState.Idle, isStarting: false));
-            Assert.IsFalse(IdlePersistenceModeExtensions.ShouldSave(IdlePersistenceMode.OnStart, WorkflowInstanceState.Complete, isStarting: false));
+            Assert.IsFalse(IdlePersistenceModeExtensions.ShouldSave(IdlePersistenceMode.OnStarting, WorkflowInstanceState.Aborted, isStarting: false));
+            Assert.IsFalse(IdlePersistenceModeExtensions.ShouldSave(IdlePersistenceMode.OnStarting, WorkflowInstanceState.Runnable, isStarting: false));
+            Assert.IsTrue(IdlePersistenceModeExtensions.ShouldSave(IdlePersistenceMode.OnStarting, WorkflowInstanceState.Idle, isStarting: true));
+            Assert.IsFalse(IdlePersistenceModeExtensions.ShouldSave(IdlePersistenceMode.OnStarting, WorkflowInstanceState.Idle, isStarting: false));
+            Assert.IsFalse(IdlePersistenceModeExtensions.ShouldSave(IdlePersistenceMode.OnStarting, WorkflowInstanceState.Complete, isStarting: false));
         }
 
         [TestMethod]

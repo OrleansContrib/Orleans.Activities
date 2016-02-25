@@ -43,7 +43,7 @@ public sealed class AdderGrain : WorkflowGrain<AdderGrain, WorkflowState>, IAdde
 public sealed class MultiplierGrain : WorkflowGrain<MultiplierGrain, WorkflowState>, IMultiplier
 ```
 
-Typically the parameters of the grain methods become the input arguments of the workflow and the output arguments of the OnCompleted event get back to the caller. There are 2 versions:
+Typically the parameters of the grain methods become the input arguments of the workflow and the output arguments of the Completed event get back to the caller. There are 2 versions:
 
 * Method like execution: the output arguments become the return value of the method (__AdderGrain__).
 * Execution with a callback to the client/caller grain: the output arguments become the callback method's argument (__MultiplierGrain__).
@@ -64,9 +64,9 @@ public AdderGrain()
 }
 ```
 
-The MultiplierGrain also sets the OnCompleted event to send back the result to the client.
+The MultiplierGrain also sets the Completed event to send back the result to the client.
 
-NOTE: This sample can't demonstrate a failure during the callback (the observation is a one-way call), but the workflow persistence happens after the OnCompleted event: if the callback fails, the workflow will abort and continue from the last persisted state by a reactivation reminder. Don't use callbacks when there is no implicit or explicit persistence before (like in the sample), because the incoming request that started the workflow will run the workflow to the first idle moment, if the first idle is the completion, the callback will happen during the incoming request (usually also a problem), and the exception during the callback will be propagated back to the caller and the caller has to repeat the incoming request to restart the workflow.
+NOTE: This sample can't demonstrate a failure during the callback (the observation is a one-way call), but the workflow persistence happens after the Completed event: if the callback fails, the workflow will abort and continue from the last persisted state by a reactivation reminder. Don't use callbacks when there is no implicit or explicit persistence before (like in the sample), because the incoming request that started the workflow will run the workflow to the first idle moment, if the first idle is the completion, the callback will happen during the incoming request (usually also a problem), and the exception during the callback will be propagated back to the caller and the caller has to repeat the incoming request to restart the workflow.
 
 ```c#
 public MultiplierGrain()
@@ -75,7 +75,7 @@ public MultiplierGrain()
   Parameters = new Parameters(idlePersistenceMode: IdlePersistenceMode.Always);
   WorkflowControl.ExtensionsFactory = () => new GrainTrackingParticipant(GetLogger()).Yield();
 
-  WorkflowControl.OnCompletedAsync = (ActivityInstanceState activityInstanceState, IDictionary<string, object> outputArguments, Exception terminationException) =>
+  WorkflowControl.CompletedAsync = (ActivityInstanceState activityInstanceState, IDictionary<string, object> outputArguments, Exception terminationException) =>
   {
     _subsManager.Notify(s => s.ReceiveResult((int)outputArguments["result"]));
     return Task.CompletedTask;
@@ -104,7 +104,7 @@ __IMPORTANT__: Do not copy values from the grain's state into the input argument
 ```c#
 public async Task<int> AddAsync(int arg1, int arg2)
 {
-  WorkflowControl.OnStartAsync = () => Task.FromResult<IDictionary<string, object>>(new Dictionary<string, object>()
+  WorkflowControl.StartingAsync = () => Task.FromResult<IDictionary<string, object>>(new Dictionary<string, object>()
   {
     { nameof(arg1), arg1 },
     { nameof(arg2), arg2 },
@@ -116,12 +116,12 @@ public async Task<int> AddAsync(int arg1, int arg2)
 }
 ```
 
-MultiplierGrain only executes the workflow until it gets idle, from that moment the workflow executes in the "background" and calls the OnCompleted event when it completes.
+MultiplierGrain only executes the workflow until it gets idle, from that moment the workflow executes in the "background" and calls the Completed event when it completes.
 
 ```c#
 public async Task MultiplyAsync(int arg1, int arg2)
 {
-  WorkflowControl.OnStartAsync = () => Task.FromResult<IDictionary<string, object>>(new Dictionary<string, object>()
+  WorkflowControl.StartingAsync = () => Task.FromResult<IDictionary<string, object>>(new Dictionary<string, object>()
   {
     { nameof(arg1), arg1 },
     { nameof(arg2), arg2 },

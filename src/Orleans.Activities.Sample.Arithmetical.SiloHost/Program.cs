@@ -52,7 +52,8 @@ namespace Orleans.Activities.Sample.Arithmetical.SiloHost
             Console.BackgroundColor = backgroundColor;
         }
 
-        public class MultiplierResultReceiver : IMultiplierResultReceiver
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1063:ImplementIDisposableCorrectly")]
+        public class MultiplierResultReceiver : IMultiplierResultReceiver, IDisposable
         {
             private AutoResetEvent completed;
 
@@ -71,6 +72,12 @@ namespace Orleans.Activities.Sample.Arithmetical.SiloHost
                 WriteLine("Multiplier result received\n\n");
                 WriteLine($"{result}\n\n");
                 completed.Set();
+            }
+
+            [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1063:ImplementIDisposableCorrectly")]
+            public void Dispose()
+            {
+                completed.Dispose();
             }
         }
 

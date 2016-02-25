@@ -25,12 +25,12 @@ namespace Orleans.Activities.Sample.Arithmetical.Grains
 
             WorkflowControl.ExtensionsFactory = () => new GrainTrackingParticipant(GetLogger()).Yield();
 
-            // NOTE: This sample can't demonstrate a failure during the callback (the observation is a one-way call), but the workflow persistence happens after the OnCompleted
+            // NOTE: This sample can't demonstrate a failure during the callback (the observation is a one-way call), but the workflow persistence happens after the Completed
             // event: if the callback fails, the workflow will abort and continue from the last persisted state by a reactivation reminder.
             // Don't use callbacks when there is no implicit or explicit persistence before (like in the sample), because the incoming request that started the workflow will run
             // the workflow to the first idle moment, if the first idle is the completion, the callback will happen during the incoming request (usually also a problem),
             // and the exception during the callback will be propagated back to the caller and the caller has to repeat the incoming request to restart the workflow.
-            WorkflowControl.OnCompletedAsync = (ActivityInstanceState activityInstanceState, IDictionary<string, object> outputArguments, Exception terminationException) =>
+            WorkflowControl.CompletedAsync = (ActivityInstanceState activityInstanceState, IDictionary<string, object> outputArguments, Exception terminationException) =>
             {
                 _subsManager.Notify(s => s.ReceiveResult((int)outputArguments["result"]));
                 return Task.CompletedTask;
@@ -43,12 +43,12 @@ namespace Orleans.Activities.Sample.Arithmetical.Grains
             return Task.CompletedTask;
         }
 
-        // MultiplierGrain only executes the workflow until it gets idle, from that moment the workflow executes in the "background" and calls the OnCompleted event when it completes.
+        // MultiplierGrain only executes the workflow until it gets idle, from that moment the workflow executes in the "background" and calls the Completed event when it completes.
         public async Task MultiplyAsync(int arg1, int arg2)
         {
             // IMPORTANT: Do not copy values from the grain's state into the input arguments, because input arguments will be persisted by the workflow also.
             // Closure directly the necessary values from the incoming public grain method call's parameters into the delegate.
-            WorkflowControl.OnStartAsync = () => Task.FromResult<IDictionary<string, object>>(new Dictionary<string, object>()
+            WorkflowControl.StartingAsync = () => Task.FromResult<IDictionary<string, object>>(new Dictionary<string, object>()
             {
                 { nameof(arg1), arg1 },
                 { nameof(arg2), arg2 },

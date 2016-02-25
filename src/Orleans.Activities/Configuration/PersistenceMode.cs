@@ -23,7 +23,7 @@ namespace Orleans.Activities.Configuration
         /// </summary>
         OnCompleted = 1,
         /// <summary>
-        /// Saves workflow state when it is idle during execution, except the first idle state after start (see <see cref="IdlePersistenceMode.OnStart"/>). Combine it with other flags.
+        /// Saves workflow state when it is idle during execution, except the first idle state after start (see <see cref="IdlePersistenceMode.OnStarting"/>). Combine it with other flags.
         /// </summary>
         OnPersistableIdle = 2,
         /// <summary>
@@ -33,8 +33,8 @@ namespace Orleans.Activities.Configuration
         /// the persistence will skip only the first persistable idle state and after processing the first incoming request (whether successful or not)
         /// this flag has no effect on persistence (see <see cref="IdlePersistenceMode.OnPersistableIdle"/>).</para>
         /// </summary>
-        OnStart = 4,
-        Always = OnStart | OnPersistableIdle | OnCompleted,
+        OnStarting = 4,
+        Always = OnStarting | OnPersistableIdle | OnCompleted,
     }
 
     public static class IdlePersistenceModeExtensions
@@ -44,7 +44,7 @@ namespace Orleans.Activities.Configuration
         {
             if (workflowInstanceState == WorkflowInstanceState.Idle)
                 if (isStarting)
-                    return idlePersistenceMode.HasFlag(IdlePersistenceMode.OnStart);
+                    return idlePersistenceMode.HasFlag(IdlePersistenceMode.OnStarting);
                 else
                     return idlePersistenceMode.HasFlag(IdlePersistenceMode.OnPersistableIdle);
             if (workflowInstanceState == WorkflowInstanceState.Complete)
