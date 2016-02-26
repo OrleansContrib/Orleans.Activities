@@ -1,7 +1,7 @@
 - environment:
     productversion: 0.0.0
   init:
-    set /p productversion=<productversion.txt & appveyor SetVariable -Name productversion -Value %productversion%
+  - cmd: set /p productversion=<productversion.txt & appveyor SetVariable -Name productversion -Value %productversion%
   version: $(productversion)-{branch}{build}
   branches:
     only:
@@ -24,7 +24,7 @@
 - environment:
     productversion: 0.0.0
   init:
-    set /p productversion=<productversion.txt & appveyor SetVariable -Name productversion -Value %productversion%
+  - cmd: set /p productversion=<productversion.txt & appveyor SetVariable -Name productversion -Value %productversion%
   version: $(productversion)-{branch}{build}
   branches:
     only:
