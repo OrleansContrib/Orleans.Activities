@@ -2,7 +2,7 @@
 
 ![Orleans logo](https://raw.githubusercontent.com/OrleansContrib/Orleans.Activities/master/src/Orleans.Activities.png)
 
-Workflow Foundation (.Net 4.x System.Activities workflows) over Orleans framework to provide stable, long-running, extremely scalable processes with XAML designer support.
+Workflow Foundation (.Net 4.x System.Activities workflows) over Microsoft.Orleans framework to provide stable, long-running, extremely scalable processes with XAML designer support.
 
 __NOTE:__ This project currently is an __experiment__, not production quality! There is no NuGet package for it.
 
