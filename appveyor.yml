@@ -1,11 +1,10 @@
-- environment:
-    productversion: 0.0.0
-  init:
-  - appveyor.init.ps1
-  version: $(productversion)-{branch}{build}
-  branches:
+- branches:
     only:
       - master
+  version: -{branch}{build}
+  init:
+  - ps: Set-AppveyorBuildVariable -Name productversion -Value [IO.File]::ReadAllText(".\productversion.txt")
+  - ps: Update-AppveyorBuild -Version [IO.File]::ReadAllText(".\productversion.txt") + $version
   os: Visual Studio 2015
   configuration: Debug
   assembly_info:
@@ -21,14 +20,13 @@
     publish_nuget: true
     publish_nuget_symbols: true
     verbosity: minimal
-- environment:
-    productversion: 0.0.0
-  init:
-  - appveyor.init.ps1
-  version: $(productversion)-{branch}{build}
-  branches:
+- branches:
     only:
       - stable
+  version: -{branch}{build}
+  init:
+  - ps: Set-AppveyorBuildVariable -Name productversion -Value [IO.File]::ReadAllText(".\productversion.txt")
+  - ps: Update-AppveyorBuild -Version [IO.File]::ReadAllText(".\productversion.txt") + $version
   os: Visual Studio 2015
   configuration: Release
   assembly_info:
