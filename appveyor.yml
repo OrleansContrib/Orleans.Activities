@@ -11,9 +11,9 @@
   assembly_info:
     patch: true
     file: src\GlobalAssemblyInfo.cs
-    assembly_version: '{productversion}'
-    assembly_file_version: '{productversion}'
-    assembly_informational_version: '{productversion}-{branch}.{build}'
+    assembly_version: $(productversion)
+    assembly_file_version: $(productversion)
+    assembly_informational_version: $(productversion)-{branch}.{build}
   cache: src\packages
   before_build:
   - cmd: nuget restore src\Orleans.Activities.sln
@@ -34,9 +34,9 @@
   assembly_info:
     patch: true
     file: src\GlobalAssemblyInfo.cs
-    assembly_version: '{productversion}'
-    assembly_file_version: '{productversion}'
-    assembly_informational_version: '{productversion}'
+    assembly_version: $(productversion)
+    assembly_file_version: $(productversion)
+    assembly_informational_version: $(productversion)
   cache: src\packages
   before_build:
   - cmd: nuget restore src\Orleans.Activities.sln
