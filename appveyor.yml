@@ -1,20 +1,46 @@
-version: 0.2.0.{build}
-branches:
-  only:
-  - master
-os: Visual Studio 2015
-configuration: Release
-assembly_info:
-  patch: true
-  file: src\GlobalAssemblyInfo.cs
-  assembly_version: '{version}'
-  assembly_file_version: '{version}'
-  assembly_informational_version: '{version}-alpha'
-cache: src\packages
-before_build:
-- cmd: nuget restore src\Orleans.Activities.sln
-build:
-  verbosity: minimal
-artifacts:
-- path: src\Orleans.Activities\bin\Release\Orleans.Activities.???
-  name: Binaries
+-
+  # modify productversion in each branch config!!!
+  environment:
+    productversion: 0.2.0
+  version: $(productversion).{build}-{branch}
+  branches:
+    only:
+      - master
+  os: Visual Studio 2015
+  configuration: Debug
+  assembly_info:
+    patch: true
+    file: src\GlobalAssemblyInfo.cs
+    assembly_version: '{productversion}'
+    assembly_file_version: '{productversion}'
+    assembly_informational_version: '{productversion}-{branch}.{build}'
+  cache: src\packages
+  before_build:
+  - cmd: nuget restore src\Orleans.Activities.sln
+  build:
+    publish_nuget: true
+    publish_nuget_symbols: true
+    verbosity: minimal
+-
+  # modify productversion in each branch config!!!
+  environment:
+    productversion: 0.2.0
+  version: $(productversion).{build}-{branch}
+  branches:
+    only:
+      - stable
+  os: Visual Studio 2015
+  configuration: Release
+  assembly_info:
+    patch: true
+    file: src\GlobalAssemblyInfo.cs
+    assembly_version: '{productversion}'
+    assembly_file_version: '{productversion}'
+    assembly_informational_version: '{productversion}'
+  cache: src\packages
+  before_build:
+  - cmd: nuget restore src\Orleans.Activities.sln
+  build:
+    publish_nuget: true
+    publish_nuget_symbols: true
+    verbosity: minimal
