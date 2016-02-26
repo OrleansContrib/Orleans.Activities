@@ -2,7 +2,7 @@
     only:
       - master
   version: -{branch}{build}
-  init:
+  install:
   - ps: Set-AppveyorBuildVariable -Name productversion -Value [IO.File]::ReadAllText(".\productversion.txt")
   - ps: Update-AppveyorBuild -Version [IO.File]::ReadAllText(".\productversion.txt") + $version
   os: Visual Studio 2015
@@ -24,7 +24,7 @@
     only:
       - stable
   version: -{branch}{build}
-  init:
+  install:
   - ps: Set-AppveyorBuildVariable -Name productversion -Value [IO.File]::ReadAllText(".\productversion.txt")
   - ps: Update-AppveyorBuild -Version [IO.File]::ReadAllText(".\productversion.txt") + $version
   os: Visual Studio 2015
