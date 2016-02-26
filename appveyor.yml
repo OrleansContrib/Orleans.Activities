@@ -3,8 +3,8 @@
       - master
   version: -{branch}{build}
   install:
-  - ps: Set-AppveyorBuildVariable -Name productversion -Value "$([IO.File]::ReadAllText(".\productversion.txt"))"
-  - ps: Update-AppveyorBuild -Version "$([IO.File]::ReadAllText(".\productversion.txt"))$version"
+  - ps: Set-AppveyorBuildVariable -Name productversion -Value "$([IO.File]::ReadAllText("$env:APPVEYOR_BUILD_FOLDER\productversion.txt"))"
+  - ps: Update-AppveyorBuild -Version "$([IO.File]::ReadAllText("$env:APPVEYOR_BUILD_FOLDER\productversion.txt"))$env:version"
   os: Visual Studio 2015
   configuration: Debug
   assembly_info:
@@ -25,8 +25,8 @@
       - stable
   version: -{branch}{build}
   install:
-  - ps: Set-AppveyorBuildVariable -Name productversion -Value "$([IO.File]::ReadAllText(".\productversion.txt"))"
-  - ps: Update-AppveyorBuild -Version "$([IO.File]::ReadAllText(".\productversion.txt"))$version"
+  - ps: Set-AppveyorBuildVariable -Name productversion -Value "$([IO.File]::ReadAllText("$env:APPVEYOR_BUILD_FOLDER\productversion.txt"))"
+  - ps: Update-AppveyorBuild -Version "$([IO.File]::ReadAllText("$env:APPVEYOR_BUILD_FOLDER\productversion.txt"))$env:version"
   os: Visual Studio 2015
   configuration: Release
   assembly_info:
