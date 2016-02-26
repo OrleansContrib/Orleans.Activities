@@ -2,7 +2,7 @@
   # modify productversion in each branch config!!!
   environment:
     productversion: 0.2.0
-  version: $(productversion).{build}-{branch}
+  version: $(productversion)-{branch}{build}
   branches:
     only:
       - master
@@ -25,7 +25,7 @@
   # modify productversion in each branch config!!!
   environment:
     productversion: 0.2.0
-  version: $(productversion).{build}-{branch}
+  version: $(productversion)-{branch}{build}
   branches:
     only:
       - stable
