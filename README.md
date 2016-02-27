@@ -10,7 +10,7 @@ __Stable:__
 
 __Master:__
 [![Build status](https://ci.appveyor.com/api/projects/status/dy600wk9qn1fppqw/branch/master?svg=true)](https://ci.appveyor.com/project/OrleansContrib/orleans-activities)
-AppVeyor project feed (NuGet source): https://ci.appveyor.com/nuget/orleans-activities-xqh82aku7sb3
+[AppVeyor project feed (NuGet source)](https://ci.appveyor.com/nuget/orleans-activities-xqh82aku7sb3)
 
 __Stats:__
 [![Issue Stats PR](http://www.issuestats.com/github/OrleansContrib/Orleans.Activities/badge/pr)](http://www.issuestats.com/github/OrleansContrib/Orleans.Activities)
