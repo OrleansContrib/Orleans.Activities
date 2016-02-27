@@ -1,20 +1,48 @@
-version: 0.2.0.{build}
-branches:
-  only:
-  - master
-os: Visual Studio 2015
-configuration: Release
-assembly_info:
-  patch: true
-  file: src\GlobalAssemblyInfo.cs
-  assembly_version: '{version}'
-  assembly_file_version: '{version}'
-  assembly_informational_version: '{version}-alpha'
-cache: src\packages
-before_build:
-- cmd: nuget restore src\Orleans.Activities.sln
-build:
-  verbosity: minimal
-artifacts:
-- path: src\Orleans.Activities\bin\Release\Orleans.Activities.???
-  name: Binaries
+- branches:
+    only:
+      - samples-master
+  version: -{branch}-{build}
+  install:
+    - ps: Update-AppveyorBuild -Version "$([regex]::match([IO.File]::ReadAllText("$env:APPVEYOR_BUILD_FOLDER\Samples\src\GlobalAssemblyInfo.cs"), 'AssemblyInformationalVersion\(\"(\d+\.\d+\.\d+)\"\)').Groups[1].Value)$env:APPVEYOR_BUILD_VERSION"
+    - ps: Set-AppveyorBuildVariable -Name productversion -Value "$([regex]::match([IO.File]::ReadAllText("$env:APPVEYOR_BUILD_FOLDER\Samples\src\GlobalAssemblyInfo.cs"), 'AssemblyInformationalVersion\(\"(\d+\.\d+\.\d+)\"\)').Groups[1].Value)"
+  os: Visual Studio 2015
+  configuration: Debug
+  assembly_info:
+    patch: true
+    file: Samples\src\GlobalAssemblyInfo.cs
+    assembly_version: $(productversion)
+    assembly_file_version: $(productversion)
+    assembly_informational_version: $(productversion)-{branch}-{build}
+  cache:
+    - src\packages -> appveyor.yml
+    - Samples\src\packages -> appveyor.yml
+  nuget:
+    project_feed: true
+  before_build:
+    - cmd: nuget restore Samples\src\Orleans.Activities.Samples.sln
+  build:
+    verbosity: minimal
+- branches:
+    only:
+      - samples-stable
+  version: -{branch}-{build}
+  install:
+    - ps: Update-AppveyorBuild -Version "$([regex]::match([IO.File]::ReadAllText("$env:APPVEYOR_BUILD_FOLDER\Samples\src\GlobalAssemblyInfo.cs"), 'AssemblyInformationalVersion\(\"(\d+\.\d+\.\d+)\"\)').Groups[1].Value)$env:APPVEYOR_BUILD_VERSION"
+    - ps: Set-AppveyorBuildVariable -Name productversion -Value "$([regex]::match([IO.File]::ReadAllText("$env:APPVEYOR_BUILD_FOLDER\Samples\src\GlobalAssemblyInfo.cs"), 'AssemblyInformationalVersion\(\"(\d+\.\d+\.\d+)\"\)').Groups[1].Value)"
+  os: Visual Studio 2015
+  configuration: Release
+  assembly_info:
+    patch: true
+    file: Samples\src\GlobalAssemblyInfo.cs
+    assembly_version: $(productversion)
+    assembly_file_version: $(productversion)
+    assembly_informational_version: $(productversion)
+  cache:
+    - src\packages -> appveyor.yml
+    - Samples\src\packages -> appveyor.yml
+  nuget:
+    project_feed: true
+  before_build:
+    - cmd: nuget restore Samples\src\Orleans.Activities.Samples.sln
+  build:
+    verbosity: minimal
