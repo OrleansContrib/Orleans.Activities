@@ -1,13 +1,15 @@
 # Arithmetical
 
+Shows how to execute the complete workflow like a method.
+
 These are workflows that don't send and receive requests. They are executed like a method from start to completion. Though, they can initiate outgoing requests and can accept incoming callback requests. The main difference compared to the HelloWorld like workflows, that these workflows don't start with accepting a request, they start by a direct Run() call.
 
 Typically all the necessary persistable state is in the workflows variables, based on input arguments. You can add several custom activities to manipulate the workflows variables.
 
 ## Overview
 
-![Arithmetical-Adder-Overview](https://raw.githubusercontent.com/OrleansContrib/Orleans.Activities/master/docs/Arithmetical/Arithmetical-Adder-Overview.png)
-![Arithmetical-Multiplier-Overview](https://raw.githubusercontent.com/OrleansContrib/Orleans.Activities/master/docs/Arithmetical/Arithmetical-Multiplier-Overview.png)
+![Arithmetical-Adder-Overview](https://raw.githubusercontent.com/OrleansContrib/Orleans.Activities/docs-master/docs/Arithmetical/Arithmetical-Adder-Overview.png)
+![Arithmetical-Multiplier-Overview](https://raw.githubusercontent.com/OrleansContrib/Orleans.Activities/docs-master/docs/Arithmetical/Arithmetical-Multiplier-Overview.png)
 
 ## Interfaces
 
@@ -137,8 +139,8 @@ The subscription methods for the MultiplierGrain are the same as in the [Observe
 
 ### Adder
 
-![AdderActivity.xaml](https://raw.githubusercontent.com/OrleansContrib/Orleans.Activities/master/docs/Arithmetical/AdderActivity.png)
+![AdderActivity.xaml](https://raw.githubusercontent.com/OrleansContrib/Orleans.Activities/docs-master/docs/Arithmetical/AdderActivity.png)
 
 ### Multiplier
 
-![AdderActivity.xaml](https://raw.githubusercontent.com/OrleansContrib/Orleans.Activities/master/docs/Arithmetical/MultiplierActivity.png)
+![AdderActivity.xaml](https://raw.githubusercontent.com/OrleansContrib/Orleans.Activities/docs-master/docs/Arithmetical/MultiplierActivity.png)

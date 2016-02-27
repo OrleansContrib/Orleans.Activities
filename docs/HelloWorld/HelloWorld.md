@@ -2,9 +2,11 @@
 
 Based on Orleans [Hello World](https://dotnet.github.io/orleans/Samples-Overview/Hello-World) sample.
 
+Shows how to communicate with the workflow through custom interfaces.
+
 ## Overview
 
-![HelloWorld-Overview](https://raw.githubusercontent.com/OrleansContrib/Orleans.Activities/master/docs/HelloWorld/HelloWorld-Overview.png)
+![HelloWorld-Overview](https://raw.githubusercontent.com/OrleansContrib/Orleans.Activities/docs-master/docs/HelloWorld/HelloWorld-Overview.png)
 
 ## Interface
 
@@ -168,7 +170,7 @@ And see the Workflow:
 * Then it waits 1 minute for the `FarewellClient()` operation, if it times out, it cancels the operation and completes.
 * Both `GreetClient()` and `FarewellClient()` operations are idempotent, so the responses are persisted (in our concrete example, `FarewellClient()` operation times out, so the fact that it was canceled is persisted).
 
-![HelloActivity.xaml](https://raw.githubusercontent.com/OrleansContrib/Orleans.Activities/master/docs/HelloWorld/HelloActivity.png)
+![HelloActivity.xaml](https://raw.githubusercontent.com/OrleansContrib/Orleans.Activities/docs-master/docs/HelloWorld/HelloActivity.png)
 
 That's all. Ctrl+F5, and it works.
 
@@ -176,4 +178,4 @@ That's all. Ctrl+F5, and it works.
 
 If you want to dig deep into the source and understand the detailed events in the background, this sequence diagram can help (this is not a completely valid diagram, but displaying every asnyc details, even the AsyncAutoResetEvent idle-queue, this would be 2 times bigger).
 
-![HelloWorld-Details](https://raw.githubusercontent.com/OrleansContrib/Orleans.Activities/master/docs/HelloWorld/HelloWorld-Details.png)
+![HelloWorld-Details](https://raw.githubusercontent.com/OrleansContrib/Orleans.Activities/docs-master/docs/HelloWorld/HelloWorld-Details.png)
