@@ -54,7 +54,7 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="Orleans.Activities, Version=0.2.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Orleans.Activities.0.2.0-master-10044\lib\net46\Orleans.Activities.dll</HintPath>
+      <HintPath>..\packages\Orleans.Activities.0.2.0\lib\net46\Orleans.Activities.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="OrleansCodeGenerator, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
