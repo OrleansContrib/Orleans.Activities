@@ -16,6 +16,8 @@
   cache:
     - src\packages -> appveyor.yml
     - Samples\src\packages -> appveyor.yml
+  nuget:
+    project_feed: true
   before_build:
     - cmd: nuget restore Samples\src\Orleans.Activities.Samples.sln
   build:
@@ -38,6 +40,8 @@
   cache:
     - src\packages -> appveyor.yml
     - Samples\src\packages -> appveyor.yml
+  nuget:
+    project_feed: true
   before_build:
     - cmd: nuget restore Samples\src\Orleans.Activities.Samples.sln
   build:
