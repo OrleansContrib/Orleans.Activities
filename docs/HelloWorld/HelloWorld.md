@@ -79,13 +79,15 @@ public sealed class HelloGrain : WorkflowGrain<HelloGrain, HelloGrainState, IHel
 
 ### Constructor
 
-In this example without Dependency Injection, just define the workflow definition (ie. activity) factory and leave the workflow definition identity factory null.
+In this example without Dependency Injection, just define the singleton workflow definition (ie. activity) factory and leave the workflow definition identity factory null.
 
 Optionally, to see what happens during the workflow execution with tracking, we add a TrackingParticipant extension. The ExtensionsFactory property can also be null.
 
 ```c#
+private static Activity workflowDefinition = new HelloActivity();
+
 public HelloGrain()
-  : base(((grainState, workflowIdentity)) => new HelloActivity(), null)
+  : base((grainState, workflowIdentity) => workflowDefinition, null)			
 {
   WorkflowControl.ExtensionsFactory = () => new GrainTrackingParticipant(GetLogger()).Yield();
 }

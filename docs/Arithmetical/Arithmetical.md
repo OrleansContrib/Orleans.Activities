@@ -58,8 +58,10 @@ In the constructor we:
 * Optionally add a TrackingParticipant extension to see what happens during the workflow execution with tracking.
 
 ```c#
+private static Activity workflowDefinition = new AdderActivity();
+
 public AdderGrain()
-  : base((grainState, workflowIdentity) => new AdderActivity(), null)
+  : base((grainState, workflowIdentity) => workflowDefinition, null)
 {
   Parameters = new Parameters(idlePersistenceMode: IdlePersistenceMode.Always);
   WorkflowControl.ExtensionsFactory = () => new GrainTrackingParticipant(GetLogger()).Yield();
@@ -71,8 +73,10 @@ The MultiplierGrain also sets the Completed event to send back the result to the
 NOTE: This sample can't demonstrate a failure during the callback (the observation is a one-way call), but the workflow persistence happens after the Completed event: if the callback fails, the workflow will abort and continue from the last persisted state by a reactivation reminder. Don't use callbacks when there is no implicit or explicit persistence before (like in the sample), because the incoming request that started the workflow will run the workflow to the first idle moment, if the first idle is the completion, the callback will happen during the incoming request (usually also a problem), and the exception during the callback will be propagated back to the caller and the caller has to repeat the incoming request to restart the workflow.
 
 ```c#
+private static Activity workflowDefinition = new MultiplierActivity();
+
 public MultiplierGrain()
-  : base((grainState, workflowIdentity) => new MultiplierActivity(), null)
+  : base((grainState, workflowIdentity) => workflowDefinition, null)
 {
   Parameters = new Parameters(idlePersistenceMode: IdlePersistenceMode.Always);
   WorkflowControl.ExtensionsFactory = () => new GrainTrackingParticipant(GetLogger()).Yield();
