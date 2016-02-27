@@ -5,7 +5,7 @@
 Workflow Foundation (.Net 4.x System.Activities workflows) over Microsoft.Orleans framework to provide stable, long-running, extremely scalable processes with XAML designer support.
 
 __Stable:__
-[![GitHub version](https://badge.fury.io/gh/OrleansContrib%2FOrleans.Activities.svg)](https://badge.fury.io/gh/OrleansContrib%2FOrleans.Activities)
+[![GitHub version](https://img.shields.io/github/tag/OrleansContrib/Orleans.Activities.svg)](https://github.com/OrleansContrib/Orleans.Activities/releases)
 [![NuGet version](https://badge.fury.io/nu/Orleans.Activities.svg)](https://badge.fury.io/nu/Orleans.Activities)
 
 __Master:__
