@@ -35,9 +35,11 @@ namespace Orleans.Activities.Samples.HelloWorld.Grains
 
     public sealed class HelloGrain : WorkflowGrain<HelloGrain, HelloGrainState, IHelloWorkflowInterface, IHelloWorkflowCallbackInterface>, IHello, IHelloWorkflowCallbackInterface
     {
-        // Without DI and versioning, just directly create the workflow definition.
+        // Without DI and versioning, just directly create the singleton workflow definition.
+        private static Activity workflowDefinition = new HelloActivity();
+
         public HelloGrain()
-            : base((grainState, workflowIdentity) => new HelloActivity(), null)
+            : base((grainState, workflowIdentity) => workflowDefinition, null)
         {
             WorkflowControl.ExtensionsFactory = () => new GrainTrackingParticipant(GetLogger()).Yield();
         }
