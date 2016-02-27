@@ -300,6 +300,9 @@
     <None Include="app.config" />
     <None Include="AsyncEx\_README.txt" />
     <Resource Include="Designers\ReceiveRequestSendResponseScope.png" />
+    <None Include="Orleans.Activities.nuspec">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="packages.config" />
     <None Include="_README.txt" />
   </ItemGroup>
