@@ -14,8 +14,7 @@
     assembly_file_version: $(productversion)
     assembly_informational_version: $(productversion)-{branch}-{build}
   cache:
-    - src\packages -> appveyor.yml
-    - Samples\src\packages -> appveyor.yml
+    - src\packages
   before_build:
     - cmd: nuget restore src\Orleans.Activities.sln
   build:
@@ -38,8 +37,7 @@
     assembly_file_version: $(productversion)
     assembly_informational_version: $(productversion)
   cache:
-    - src\packages -> appveyor.yml
-    - Samples\src\packages -> appveyor.yml
+    - src\packages
   before_build:
     - cmd: nuget restore src\Orleans.Activities.sln
   build:
