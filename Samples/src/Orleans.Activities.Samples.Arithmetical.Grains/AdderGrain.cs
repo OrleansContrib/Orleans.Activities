@@ -17,8 +17,10 @@ namespace Orleans.Activities.Samples.Arithmetical.Grains
     // WorkflowGrain<TGrain, TGrainState, TWorkflowInterface, TWorkflowCallbackInterface> base type can be used also if there are outgoing calls or incoming callbacks.
     public sealed class AdderGrain : WorkflowGrain<AdderGrain, WorkflowState>, IAdder
     {
+        private static Activity workflowDefinition = new AdderActivity();
+
         public AdderGrain()
-            : base((grainState, workflowIdentity) => new AdderActivity(), null)
+            : base((grainState, workflowIdentity) => workflowDefinition, null)
         {
             // Set the persistence mode to Always, because the default setting is to not save the workflow on the first idle, to immediately accept the incoming operation.
             Parameters = new Parameters(idlePersistenceMode: IdlePersistenceMode.Always);
