@@ -14,7 +14,6 @@
     assembly_file_version: $(productversion)
     assembly_informational_version: $(productversion)-{branch}-{build}
   cache:
-    - src\packages
     - Samples\src\packages
   nuget:
     project_feed: true
@@ -38,7 +37,6 @@
     assembly_file_version: $(productversion)
     assembly_informational_version: $(productversion)
   cache:
-    - src\packages
     - Samples\src\packages
   nuget:
     project_feed: true
