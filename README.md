@@ -6,10 +6,10 @@ Workflow Foundation (.Net 4.x System.Activities workflows) over Microsoft.Orlean
 
 __Stable:__
 [![GitHub version](https://img.shields.io/github/tag/OrleansContrib/Orleans.Activities.svg)](https://github.com/OrleansContrib/Orleans.Activities/releases)
-[![NuGet version](https://badge.fury.io/nu/Orleans.Activities.svg)](https://badge.fury.io/nu/Orleans.Activities)
+[![NuGet version](https://badge.fury.io/nu/Orleans.Activities.svg)](https://www.nuget.org/packages/Orleans.Activities)
 
 __Master:__
-[![Build status](https://ci.appveyor.com/api/projects/status/dy600wk9qn1fppqw/branch/master?svg=true)](https://ci.appveyor.com/project/OrleansContrib/orleans-activities)
+[![Build status](https://ci.appveyor.com/api/projects/status/dy600wk9qn1fppqw/branch/master?svg=true)](https://ci.appveyor.com/project/OrleansContrib/orleans-activities/history)
 [AppVeyor project feed (NuGet source)](https://ci.appveyor.com/nuget/orleans-activities-xqh82aku7sb3)
 
 __Stats:__
