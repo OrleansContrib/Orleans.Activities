@@ -1,12 +1,12 @@
 # Hello World
 
-Based on Orleans [Hello World](https://dotnet.github.io/orleans/Samples-Overview/Hello-World) sample.
+Based on Orleans [Hello World](https://dotnet.github.io/orleans/Documentation/Samples-Overview/Hello-World) sample.
 
 Shows how to communicate with the workflow through custom interfaces.
 
 ## Overview
 
-![HelloWorld-Overview](https://raw.githubusercontent.com/OrleansContrib/Orleans.Activities/docs-master/docs/HelloWorld/HelloWorld-Overview.png)
+![HelloWorld-Overview](https://github.com/OrleansContrib/Orleans.Activities/raw/docs-master/docs/HelloWorld/HelloWorld-Overview.png)
 
 ## Interface
 
@@ -68,20 +68,20 @@ public interface IHelloWorkflowCallbackInterface
 
 ## Grain
 
-The class definition, where we define the TGrain, TGrainState, TWorkflowInterface and TWorkflowCallbackInterface type parameters.
+The class definition, where we define the `TGrain`, `TGrainState`, `TWorkflowInterface` and `TWorkflowCallbackInterface` type parameters.
 
-__NOTE:__ The grain must implement (if possible explicitly) the TWorkflowCallbackInterface interface (see `IHelloWorkflowCallbackInterface`) and TGrain should be the grain itself.
+__NOTE:__ The grain must implement (if possible explicitly) the `TWorkflowCallbackInterface` interface (see `IHelloWorkflowCallbackInterface`) and `TGrain` should be the grain itself.
 
 ```c#
 public sealed class HelloGrain : WorkflowGrain<HelloGrain, HelloGrainState, IHelloWorkflowInterface, IHelloWorkflowCallbackInterface>,
-  IHello, IHelloWorkflowCallbackInterface
+  IHello, IHelloWorkflowCallbackInterface { ... }
 ```
 
 ### Constructor
 
 In this example without Dependency Injection, just define the singleton workflow definition (ie. activity) factory and leave the workflow definition identity factory null.
 
-Optionally, to see what happens during the workflow execution with tracking, we add a TrackingParticipant extension. The ExtensionsFactory property can also be null.
+Optionally, to see what happens during the workflow execution with tracking, we add a `TrackingParticipant` extension. The `ExtensionsFactory` property can also be null.
 
 ```c#
 private static Activity workflowDefinition = new HelloActivity();
@@ -107,9 +107,9 @@ protected override Task OnUnhandledExceptionAsync(Exception exception, Activity 
 
 ### Incoming operations
 
-The public `SayHello()` grain interface method, that does nothing just calls the workflow's `GreetClient()` WorkflowInterface operation. A normal grain can store data from the incoming message in the state, call other grains, closure the necessary data into the parameter delegate. After the await, it can build a complex response message based on the value the workflow returned and the grain state, or any other information.
+The public `SayHello()` grain interface method, that does nothing just calls the workflow's `GreetClient()` `WorkflowInterface` operation. A normal grain can store data from the incoming message in the state, call other grains, closure the necessary data into the parameter delegate. After the `await`, it can build a complex response message based on the value the workflow returned and the grain's `State`, or any other information.
 
-The parameter delegate executed when the workflow accepts the incoming call.
+The parameter delegate is executed when the workflow accepts the incoming call.
 
 It also shows how to implement idempotent responses for the incoming calls. In the repeated case, the parameter delegate won't be executed!
 
@@ -128,7 +128,7 @@ public async Task<string> SayHello(string greeting)
 }
 ```
 
-The public `SayBye()` grain interface method, that also does nothing just calls the workflow's `FarewellClient()` optional WorkflowInterface operation.
+The public `SayBye()` grain interface method, that also does nothing just calls the workflow's `FarewellClient()` optional `WorkflowInterface` operation.
 The parameter delegate executed when the workflow accepts the incoming call.
 
 It also shows how to implement optional operation's idempotent canceled responses for the incoming calls. Optional in this case means, that after a timeout the workflow cancels the waiting for the operation. In the canceled case, after the timeout, the parameter delegate won't be executed!
@@ -154,9 +154,9 @@ public async Task<string> SayBye()
 
 ### Outgoing operations
 
-This is the explicit implementation of the workflow's `WhatShouldISay()` WorkflowCallbackInterface operation, that does nearly nothing. A normal grain can modify the grain's State, call other grain's operations or do nearly anything a normal grain method can.  
+This is the explicit implementation of the workflow's `WhatShouldISay()` `WorkflowCallbackInterface` operation, that does nearly nothing. A normal grain can modify the grain's `State`, call other grain's operations or do nearly anything a normal grain method can.  
 
-The return value delegate executed when the workflow accepts the outgoing call's response.
+The return value delegate is executed when the workflow accepts the outgoing call's response.
 
 ```c#
 Task<Func<Task<string>>> IHelloWorkflowCallbackInterface.WhatShouldISay(string clientSaid) =>
@@ -172,7 +172,7 @@ And see the Workflow:
 * Then it waits 1 minute for the `FarewellClient()` operation, if it times out, it cancels the operation and completes.
 * Both `GreetClient()` and `FarewellClient()` operations are idempotent, so the responses are persisted (in our concrete example, `FarewellClient()` operation times out, so the fact that it was canceled is persisted).
 
-![HelloActivity.xaml](https://raw.githubusercontent.com/OrleansContrib/Orleans.Activities/docs-master/docs/HelloWorld/HelloActivity.png)
+![HelloActivity.xaml](https://github.com/OrleansContrib/Orleans.Activities/raw/docs-master/docs/HelloWorld/HelloActivity.png)
 
 That's all. Ctrl+F5, and it works.
 
@@ -180,4 +180,4 @@ That's all. Ctrl+F5, and it works.
 
 If you want to dig deep into the source and understand the detailed events in the background, this sequence diagram can help (this is not a completely valid diagram, but displaying every asnyc details, even the AsyncAutoResetEvent idle-queue, this would be 2 times bigger).
 
-![HelloWorld-Details](https://raw.githubusercontent.com/OrleansContrib/Orleans.Activities/docs-master/docs/HelloWorld/HelloWorld-Details.png)
+![HelloWorld-Details](https://github.com/OrleansContrib/Orleans.Activities/raw/docs-master/docs/HelloWorld/HelloWorld-Details.png)
