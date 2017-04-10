@@ -1,6 +1,6 @@
 # Orleans.Activities
 
-![Orleans logo](https://raw.githubusercontent.com/OrleansContrib/Orleans.Activities/master/src/Orleans.Activities.png)
+![Orleans logo](https://github.com/OrleansContrib/Orleans.Activities/raw/master/src/Orleans.Activities.png)
 
 Workflow Foundation (.Net 4.x System.Activities workflows) over Microsoft.Orleans framework to provide stable, long-running, extremely scalable processes with XAML designer support.
 
@@ -36,7 +36,7 @@ This project is licensed under the [Apache License](https://github.com/OrleansCo
 
 ## Concept
 
-![Overview](https://raw.githubusercontent.com/OrleansContrib/Orleans.Activities/docs-master/docs/Orleans.Activities-Overview.png)
+![Overview](https://github.com/OrleansContrib/Orleans.Activities/raw/docs-master/docs/Orleans.Activities-Overview.png)
 
 This is a very high level view:
 
@@ -99,4 +99,4 @@ And there are nearly unlimited [Open issues](http://waffle.io/OrleansContrib/Orl
 
 This is still an overview, all the details of the classes are hidden. The goal is to give a map to understand the relations between the classes. See the comments in the source!
 
-![Overview](https://raw.githubusercontent.com/OrleansContrib/Orleans.Activities/docs-master/docs/Orleans.Activities-Details.png)
+![Overview](https://github.com/OrleansContrib/Orleans.Activities/raw/docs-master/docs/Orleans.Activities-Details.png)
