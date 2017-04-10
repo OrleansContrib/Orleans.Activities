@@ -26,6 +26,8 @@ __Issues:__
 
 [Branching Guidelines](https://github.com/OrleansContrib/Orleans.Activities/blob/docs-master/docs/Branching-Guidelines.md)
 
+[CI Guidelines](https://github.com/OrleansContrib/Orleans.Activities/blob/docs-master/docs/CI-Guidelines.md)
+
 [Coding Guidelines](https://github.com/dotnet/corefx/blob/master/Documentation/coding-guidelines/coding-style.md)
 
 [Design Guidelines](https://github.com/dotnet/corefx/blob/master/Documentation/coding-guidelines/framework-design-guidelines-digest.md)
