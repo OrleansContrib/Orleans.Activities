@@ -1,6 +1,6 @@
 # Hello World
 
-Based on Orleans [Hello World](https://dotnet.github.io/orleans/Documentation/Samples-Overview/Hello-World.html) sample.
+Based on Orleans [Hello World](https://dotnet.github.io/orleans/Documentation/Samples-Overview/Hello-World) sample.
 
 Shows how to communicate with the workflow through custom interfaces.
 
