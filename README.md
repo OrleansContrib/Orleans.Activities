@@ -1,8 +1,6 @@
-# Orleans.Activities
+# ![Orleans logo](https://github.com/OrleansContrib/Orleans.Activities/raw/master/src/Orleans.Activities.png) Orleans.Activities
 
-![Orleans logo](https://github.com/OrleansContrib/Orleans.Activities/raw/master/src/Orleans.Activities.png)
-
-Workflow Foundation (.Net 4.x System.Activities workflows) over Microsoft.Orleans framework to provide stable, long-running, extremely scalable processes with XAML designer support.
+Workflow Foundation (.Net 4.x System.Activities workflows) over [Microsoft Orleans](https://github.com/dotnet/orleans) framework to provide stable, long-running, extremely scalable processes with XAML designer support.
 
 __Stable:__
 [![GitHub version](https://img.shields.io/github/tag/OrleansContrib/Orleans.Activities.svg)](https://github.com/OrleansContrib/Orleans.Activities/releases)
@@ -24,13 +22,11 @@ __Issues:__
 
 ~~Documentation~~ (see [Samples](https://github.com/OrleansContrib/Orleans.Activities#samples) below)
 
-[Branching Guidelines](https://github.com/OrleansContrib/Orleans.Activities/blob/docs-master/docs/Branching-Guidelines.md)
-
-[CI Guidelines](https://github.com/OrleansContrib/Orleans.Activities/blob/docs-master/docs/CI-Guidelines.md)
-
-[Coding Guidelines](https://github.com/dotnet/corefx/blob/master/Documentation/coding-guidelines/coding-style.md)
-
-[Design Guidelines](https://github.com/dotnet/corefx/blob/master/Documentation/coding-guidelines/framework-design-guidelines-digest.md)
+Guidelines
+* [Branching Guidelines](https://github.com/OrleansContrib/Orleans.Activities/blob/docs-master/docs/Branching-Guidelines.md)
+* [CI Guidelines](https://github.com/OrleansContrib/Orleans.Activities/blob/docs-master/docs/CI-Guidelines.md)
+* [Coding Guidelines](https://github.com/dotnet/corefx/blob/master/Documentation/coding-guidelines/coding-style.md)
+* [Design Guidelines](https://github.com/dotnet/corefx/blob/master/Documentation/coding-guidelines/framework-design-guidelines-digest.md)
 
 This project is licensed under the [Apache License](https://github.com/OrleansContrib/Orleans.Activities/blob/master/LICENSE).
 
