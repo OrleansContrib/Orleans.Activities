@@ -2,7 +2,7 @@
 
 [assembly: AssemblyCompany("OrleansContrib")]
 [assembly: AssemblyProduct("Orleans.Activities.Samples - https://github.com/OrleansContrib/Orleans.Activities")]
-[assembly: AssemblyCopyright("Copyright © OrleansContrib 2016")]
+[assembly: AssemblyCopyright("Copyright © 2016-2017 OrleansContrib")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
