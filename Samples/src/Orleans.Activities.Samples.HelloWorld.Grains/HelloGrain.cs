@@ -57,14 +57,18 @@ namespace Orleans.Activities.Samples.HelloWorld.Grains
         // it can modify the grain's State or do nearly anything a normal grain method can (command pattern).
         public async Task<string> SayHelloAsync(string greeting)
         {
+            Task<string> ProcessRequestAsync(string _request) => Task.FromResult(_request);
+            Task<string> CreateResponseAsync(string _responseParameter) => Task.FromResult(_responseParameter);
+
             try
             {
-                return await WorkflowInterface.GreetClientAsync(() =>
-                    Task.FromResult(greeting));
+                return await CreateResponseAsync(
+                    await WorkflowInterface.GreetClientAsync(
+                        async () => await ProcessRequestAsync(greeting)));
             }
             catch (OperationRepeatedException<string> e)
             {
-                return e.PreviousResponseParameter;
+                return await CreateResponseAsync(e.PreviousResponseParameter);
             }
         }
 
@@ -72,14 +76,18 @@ namespace Orleans.Activities.Samples.HelloWorld.Grains
         // it can modify the grain's State or do nearly anything a normal grain method can (command pattern).
         public async Task<string> SayByeAsync()
         {
+            Task ProcessRequestAsync() => Task.CompletedTask;
+            Task<string> CreateResponseAsync(string _responseParameter) => Task.FromResult(_responseParameter);
+
             try
             {
-                return await WorkflowInterface.FarewellClientAsync(() =>
-                    Task.CompletedTask);
+                return await CreateResponseAsync(
+                    await WorkflowInterface.FarewellClientAsync(
+                        async () => await ProcessRequestAsync()));
             }
             catch (OperationRepeatedException<string> e)
             {
-                return e.PreviousResponseParameter;
+                return await CreateResponseAsync(e.PreviousResponseParameter);
             }
             catch (OperationCanceledException)
             {
@@ -89,8 +97,14 @@ namespace Orleans.Activities.Samples.HelloWorld.Grains
 
         // The return value delegate executed when the workflow accepts the outgoing call's response,
         // it can modify the grain's State or do nearly anything a normal grain method can (command pattern).
-        Task<Func<Task<string>>> IHelloWorkflowCallbackInterface.WhatShouldISayAsync(string clientSaid) =>
-            Task.FromResult<Func<Task<string>>>(() =>
-                Task.FromResult(string.IsNullOrEmpty(clientSaid) ? "Who are you?" : "Hello!"));
+        async Task<Func<Task<string>>> IHelloWorkflowCallbackInterface.WhatShouldISayAsync(string clientSaid)
+        {
+            Task<string> CreateRequestAsync(string _requestParameter) => Task.FromResult(_requestParameter);
+            Task<string> SomeExternalStuffAsync(string _request) => Task.FromResult(string.IsNullOrEmpty(_request) ? "Who are you?" : "Hello!");
+            Task<string> ProcessResponseAsync(string _response) => Task.FromResult(_response);
+
+            Task<string> someExternalStuffTask = SomeExternalStuffAsync(await CreateRequestAsync(clientSaid));
+            return async () => await ProcessResponseAsync(await someExternalStuffTask);
+        }
     }
 }
