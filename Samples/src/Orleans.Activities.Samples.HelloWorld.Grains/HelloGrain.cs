@@ -47,7 +47,7 @@ namespace Orleans.Activities.Samples.HelloWorld.Grains
         // Mandatory: at least log the unhandled exceptions (workflow will abort by default, see Parameters property).
         protected override Task OnUnhandledExceptionAsync(Exception exception, Activity source)
         {
-            GetLogger().Error(0, $"OnUnhandledExceptionAsync: the workflow is going to {Parameters.UnhandledExceptionAction}", exception);
+            GetLogger().TrackTrace($"OnUnhandledExceptionAsync: the workflow is going to {Parameters.UnhandledExceptionAction}\n\n{exception}", Runtime.Severity.Error);
             return Task.CompletedTask;
         }
 

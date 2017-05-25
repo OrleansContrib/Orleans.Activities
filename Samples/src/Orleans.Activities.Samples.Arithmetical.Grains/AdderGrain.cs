@@ -30,7 +30,7 @@ namespace Orleans.Activities.Samples.Arithmetical.Grains
 
         protected override Task OnUnhandledExceptionAsync(Exception exception, Activity source)
         {
-            GetLogger().Error(0, $"OnUnhandledExceptionAsync: the workflow is going to {Parameters.UnhandledExceptionAction}", exception);
+            GetLogger().TrackTrace($"OnUnhandledExceptionAsync: the workflow is going to {Parameters.UnhandledExceptionAction}\n\n{exception}", Runtime.Severity.Error);
             return Task.CompletedTask;
         }
 
