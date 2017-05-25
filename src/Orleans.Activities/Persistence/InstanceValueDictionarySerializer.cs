@@ -19,31 +19,24 @@ namespace Orleans.Activities.Persistence
     // ActivityExecutor works only with NetDataContractSerializer and Orleans fails on InstanceValue, that is not [Serializable].
     // Isn't is possible, to use Orleans serializers in some way?
 
-    [RegisterSerializer()]
-    public class InstanceValueDictionarySerializer
+    [Serializer(typeof(Dictionary<XName, InstanceValue>))]
+    public static class InstanceValueDictionarySerializer
     {
-        static InstanceValueDictionarySerializer()
-        {
-            Register();
-        }
-
-        public static void Register()
-        {
-            SerializationManager.Register(typeof(Dictionary<XName, InstanceValue>), DeepCopier, Serializer, Deserializer);
-        }
-
         // TODO It supposes, that workflow state won't change during persistence. Is it true?
-        public static object DeepCopier(object original) => original;
+        [CopierMethod]
+        public static object DeepCopy(object item, ICopyContext context) => item;
 
-        public static void Serializer(object untypedInput, BinaryTokenStreamWriter stream, Type expected)
+        [SerializerMethod]
+        public static void Serializer(object item, ISerializationContext context, Type expected)
         {
-            byte[] buffer = Serialize(untypedInput);
-            stream.Write(buffer.Length);
-            stream.Write(buffer);
+            byte[] buffer = Serialize(item);
+            context.StreamWriter.Write(buffer.Length);
+            context.StreamWriter.Write(buffer);
         }
 
-        public static object Deserializer(Type expected, BinaryTokenStreamReader stream) =>
-            Deserialize(stream.ReadBytes(stream.ReadInt()));
+        [DeserializerMethod]
+        public static object Deserializer(Type expected, IDeserializationContext context) =>
+            Deserialize(context.StreamReader.ReadBytes(context.StreamReader.ReadInt()));
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2202:Do not dispose objects multiple times")]
         public static byte[] Serialize(object graph)
