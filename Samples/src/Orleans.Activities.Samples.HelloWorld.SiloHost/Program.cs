@@ -1,29 +1,8 @@
-﻿/*
-Project Orleans Cloud Service SDK ver. 1.0
- 
-Copyright (c) Microsoft Corporation
- 
-All rights reserved.
- 
-MIT License
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and 
-associated documentation files (the ""Software""), to deal in the Software without restriction,
-including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
-and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so,
-subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO
-THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS
-OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
-TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-*/
-
-using System;
+﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Orleans;
+using Orleans.Runtime.Configuration;
 
 using Orleans.Activities.Samples.HelloWorld.GrainInterfaces;
 
@@ -63,7 +42,8 @@ namespace Orleans.Activities.Samples.HelloWorld.SiloHost
                 AppDomainInitializerArguments = args,
             });
 
-            Orleans.GrainClient.Initialize("DevTestClientConfiguration.xml");
+            var config = ClientConfiguration.LocalhostSilo();
+            GrainClient.Initialize(config);
 
             // TODO: once the previous call returns, the silo is up and running.
             //       This is the place your custom logic, for example calling client logic
@@ -73,13 +53,13 @@ namespace Orleans.Activities.Samples.HelloWorld.SiloHost
             try
             {
                 WriteLine("\n\nCalling SayHello...\n\n");
-                WriteLine($"\n\n{helloGrain.SayHello("Good morning, my friend!").Result}\n\n");
+                WriteLine($"\n\n{helloGrain.SayHelloAsync("Good morning, my friend!").Result}\n\n");
 
                 WriteLine("Let see idempotent forward recovery, calling SayHello again...\n\n");
-                WriteLine($"\n\n{helloGrain.SayHello("Ooops").Result}\n\n");
+                WriteLine($"\n\n{helloGrain.SayHelloAsync("Ooops").Result}\n\n");
 
-                WriteLine("Wait to timeout the waiting for our farewell... (We have to wait at least 1 minute, this is the minimum Reminder time in Orleans.)\n\n");
-                for (int i = 65; i > 0; --i)
+                WriteLine("Wait to timeout the waiting for our farewell...\n\n");
+                for (int i = 10; i > 0; --i)
                 {
                     if (i % 5 == 0)
                         Write(i.ToString());
@@ -89,7 +69,7 @@ namespace Orleans.Activities.Samples.HelloWorld.SiloHost
                 }
 
                 WriteLine("\n\n\nCalling SayBye...\n\n");
-                WriteLine($"{helloGrain.SayBye().Result}\n\n");
+                WriteLine($"{helloGrain.SayByeAsync().Result}\n\n");
             }
             catch (Exception e)
             {
