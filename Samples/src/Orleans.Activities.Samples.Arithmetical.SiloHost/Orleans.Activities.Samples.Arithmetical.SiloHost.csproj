@@ -175,14 +175,6 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="DevTestClientConfiguration.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="DevTestServerConfiguration.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\Orleans.Activities.Samples.Arithmetical.GrainInterfaces\Orleans.Activities.Samples.Arithmetical.GrainInterfaces.csproj">
       <Project>{ad719aed-9327-4f64-a6ac-0c11e613a394}</Project>
       <Name>Orleans.Activities.Samples.Arithmetical.GrainInterfaces</Name>

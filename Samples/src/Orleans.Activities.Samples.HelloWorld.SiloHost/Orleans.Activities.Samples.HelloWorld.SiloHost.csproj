@@ -175,14 +175,6 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="DevTestClientConfiguration.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="DevTestServerConfiguration.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\Orleans.Activities.Samples.HelloWorld.GrainInterfaces\Orleans.Activities.Samples.HelloWorld.GrainInterfaces.csproj">
       <Project>{2a2508a0-34a7-467c-9aa7-ea2b319da474}</Project>
       <Name>Orleans.Activities.Samples.HelloWorld.GrainInterfaces</Name>
