@@ -152,9 +152,7 @@ namespace Orleans.Activities
             private static TimeSpan oneMinuteTimeSpan = TimeSpan.FromMinutes(1);
 
             public Task RegisterOrUpdateReminderAsync(string reminderName, TimeSpan dueTime, TimeSpan period) =>
-                grain.RegisterOrUpdateReminder(reminderName,
-                    dueTime < oneMinuteTimeSpan ? oneMinuteTimeSpan : dueTime,
-                    period < oneMinuteTimeSpan ? oneMinuteTimeSpan : period);
+                grain.RegisterOrUpdateReminder(reminderName, dueTime, period < oneMinuteTimeSpan ? oneMinuteTimeSpan : period);
 
             public async Task UnregisterReminderAsync(string reminderName)
             {
