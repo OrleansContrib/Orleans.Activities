@@ -110,10 +110,10 @@ namespace Orleans.Activities.Samples.Arithmetical.SiloHost
                     Thread.Sleep(TimeSpan.FromSeconds(1));
                 }
 
-                WriteLine("\n\nCalling Multiply again...\n");
+                WriteLine("\n\n\nCalling Multiply again...\n");
                 multiplierGrain.MultiplyAsync(3, 3).Wait();
 
-                WriteLine("\n\nWaiting for result...\n\n");
+                WriteLine("\nWaiting for result...\n\n");
                 multiplierResultReceiver.WaitForCompletion();
 
                 WriteLine("Unsubscribing from Multiplier...\n\n");
