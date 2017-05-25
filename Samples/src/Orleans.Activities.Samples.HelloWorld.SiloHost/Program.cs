@@ -53,10 +53,10 @@ namespace Orleans.Activities.Samples.HelloWorld.SiloHost
             try
             {
                 WriteLine("\n\nCalling SayHello...\n\n");
-                WriteLine($"\n\n{helloGrain.SayHello("Good morning, my friend!").Result}\n\n");
+                WriteLine($"\n\n{helloGrain.SayHelloAsync("Good morning, my friend!").Result}\n\n");
 
                 WriteLine("Let see idempotent forward recovery, calling SayHello again...\n\n");
-                WriteLine($"\n\n{helloGrain.SayHello("Ooops").Result}\n\n");
+                WriteLine($"\n\n{helloGrain.SayHelloAsync("Ooops").Result}\n\n");
 
                 WriteLine("Wait to timeout the waiting for our farewell...\n\n");
                 for (int i = 10; i > 0; --i)
@@ -69,7 +69,7 @@ namespace Orleans.Activities.Samples.HelloWorld.SiloHost
                 }
 
                 WriteLine("\n\n\nCalling SayBye...\n\n");
-                WriteLine($"{helloGrain.SayBye().Result}\n\n");
+                WriteLine($"{helloGrain.SayByeAsync().Result}\n\n");
             }
             catch (Exception e)
             {

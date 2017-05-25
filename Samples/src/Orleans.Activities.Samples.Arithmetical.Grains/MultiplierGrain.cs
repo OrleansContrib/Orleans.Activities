@@ -67,17 +67,17 @@ namespace Orleans.Activities.Samples.Arithmetical.Grains
 
         public override async Task OnActivateAsync()
         {
-            _subsManager = new ObserverSubscriptionManager<IMultiplierResultReceiver>();
             await base.OnActivateAsync();
+            _subsManager = new ObserverSubscriptionManager<IMultiplierResultReceiver>();
         }
 
-        public Task Subscribe(IMultiplierResultReceiver observer)
+        public Task SubscribeAsync(IMultiplierResultReceiver observer)
         {
             _subsManager.Subscribe(observer);
             return Task.CompletedTask;
         }
 
-        public Task Unsubscribe(IMultiplierResultReceiver observer)
+        public Task UnsubscribeAsync(IMultiplierResultReceiver observer)
         {
             _subsManager.Unsubscribe(observer);
             return Task.CompletedTask;

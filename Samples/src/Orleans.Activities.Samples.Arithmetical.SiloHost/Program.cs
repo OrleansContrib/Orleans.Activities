@@ -91,7 +91,7 @@ namespace Orleans.Activities.Samples.Arithmetical.SiloHost
                 WriteLine("Subscribing to Multiplier...\n\n");
                 var multiplierResultReceiver = new MultiplierResultReceiver();
                 var obj = GrainClient.GrainFactory.CreateObjectReference<IMultiplierResultReceiver>(multiplierResultReceiver).Result;
-                multiplierGrain.Subscribe(obj).Wait();
+                multiplierGrain.SubscribeAsync(obj).Wait();
 
                 WriteLine("Calling Multiply...\n\n");
                 multiplierGrain.MultiplyAsync(2, 3).Wait();
@@ -117,7 +117,7 @@ namespace Orleans.Activities.Samples.Arithmetical.SiloHost
                 multiplierResultReceiver.WaitForCompletion();
 
                 WriteLine("Unsubscribing from Multiplier...\n\n");
-                multiplierGrain.Unsubscribe(obj).Wait();
+                multiplierGrain.UnsubscribeAsync(obj).Wait();
             }
             catch (Exception e)
             {

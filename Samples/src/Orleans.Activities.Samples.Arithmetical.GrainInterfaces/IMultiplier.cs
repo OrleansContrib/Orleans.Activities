@@ -9,8 +9,8 @@ namespace Orleans.Activities.Samples.Arithmetical.GrainInterfaces
     {
         Task MultiplyAsync(int arg1, int arg2);
 
-        Task Subscribe(IMultiplierResultReceiver observer);
-        Task Unsubscribe(IMultiplierResultReceiver observer);
+        Task SubscribeAsync(IMultiplierResultReceiver observer);
+        Task UnsubscribeAsync(IMultiplierResultReceiver observer);
     }
 
     public interface IMultiplierResultReceiver : IGrainObserver

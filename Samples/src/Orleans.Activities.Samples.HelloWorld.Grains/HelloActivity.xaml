@@ -70,7 +70,7 @@
             <Variable x:TypeArguments="x:String" Name="clientSaid" />
             <Variable x:TypeArguments="x:String" Name="iSay" />
           </Sequence.Variables>
-          <oa:ReceiveRequest x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="ReceiveRequest`1_3" OperationName="IHelloWorkflowInterface.GreetClient">
+          <oa:ReceiveRequest x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="ReceiveRequest`1_3" OperationName="IHelloWorkflowInterface.GreetClientAsync">
             <oa:ReceiveRequest.RequestResult>
               <OutArgument x:TypeArguments="x:String">
                 <mca:CSharpReference x:TypeArguments="x:String">clientSaid</mca:CSharpReference>
@@ -79,7 +79,7 @@
           </oa:ReceiveRequest>
           <oa:SendRequestReceiveResponseScope sap2010:WorkflowViewState.IdRef="SendRequestReceiveResponseScope_2">
             <Sequence sap2010:WorkflowViewState.IdRef="Sequence_4">
-              <oa:SendRequest x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="SendRequest`1_2" OperationName="IHelloWorkflowCallbackInterface.WhatShouldISay">
+              <oa:SendRequest x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="SendRequest`1_2" OperationName="IHelloWorkflowCallbackInterface.WhatShouldISayAsync">
                 <oa:SendRequest.RequestParameter>
                   <InArgument x:TypeArguments="x:String">
                     <mca:CSharpValue x:TypeArguments="x:String">clientSaid</mca:CSharpValue>
@@ -108,7 +108,7 @@
         <Pick sap2010:WorkflowViewState.IdRef="Pick_1">
           <PickBranch DisplayName="Branch1" sap2010:WorkflowViewState.IdRef="PickBranch_1">
             <PickBranch.Trigger>
-              <oa:ReceiveRequest sap2010:WorkflowViewState.IdRef="ReceiveRequest_1" OperationName="IHelloWorkflowInterface.FarewellClient" />
+              <oa:ReceiveRequest sap2010:WorkflowViewState.IdRef="ReceiveRequest_1" OperationName="IHelloWorkflowInterface.FarewellClientAsync" />
             </PickBranch.Trigger>
             <oa:SendResponse x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="SendResponse`1_4" Idempotent="True" ResponseParameter="Bye, my friend!" ThrowIfReloaded="False" />
           </PickBranch>
@@ -124,7 +124,7 @@
         </Pick>
       </oa:ReceiveRequestSendResponseScope>
     </Sequence>
-    <sads:DebugSymbol.Symbol>d4UBWjpcTG9jYWxcR2l0SHViXGxtYWd5YXJcT3JsZWFucy5BY3Rpdml0aWVzX3NhbXBsZXMtbWFzdGVyXFNhbXBsZXNcc3JjXE9ybGVhbnMuQWN0aXZpdGllcy5TYW1wbGVzLkhlbGxvV29ybGQuR3JhaW5zXEhlbGxvQWN0aXZpdHkueGFtbBdBA4ABGQIBAUIFfhACAQJDB2osAgEQawd9LAIBA0QJaRQCARVsCXwQAgEISQtPHwIBKVALYTACARpiC2gdAgEWbQtyGAIBDHMLexgCAQlMEUxhAgEqZRFlewIBF28Pb44BAgEPcQ1xvAECAQ11D3kXAgEKUQ1gGAIBIHGQAXGhAQIBDncTd2oCAQtSD1ggAgElWQ9fJAIBIVUVVV0CASZcFVxfAgEi</sads:DebugSymbol.Symbol>
+    <sads:DebugSymbol.Symbol>d4UBWjpcTG9jYWxcR2l0SHViXGxtYWd5YXJcT3JsZWFucy5BY3Rpdml0aWVzX3NhbXBsZXMtbWFzdGVyXFNhbXBsZXNcc3JjXE9ybGVhbnMuQWN0aXZpdGllcy5TYW1wbGVzLkhlbGxvV29ybGQuR3JhaW5zXEhlbGxvQWN0aXZpdHkueGFtbBdBA4ABGQIBAUIFfhACAQJDB2osAgEQawd9LAIBA0QJaRQCARVsCXwQAgEISQtPHwIBKVALYTACARpiC2gdAgEWbQtyGAIBDHMLexgCAQlMEUxhAgEqZRFlewIBF28Pb5MBAgEPcQ1xvAECAQ11D3kXAgEKUQ1gGAIBIHGQAXGhAQIBDncTd2oCAQtSD1ggAgElWQ9fJAIBIVUVVV0CASZcFVxfAgEi</sads:DebugSymbol.Symbol>
   </oa:WorkflowActivity>
   <sap2010:WorkflowViewState.ViewStateManager>
     <sap2010:ViewStateManager>
