@@ -15,8 +15,8 @@ IHello is nearly the same, an optional `SayBye()` method is added.
 ```c#
 public interface IHello : IGrainWithGuidKey
 {
-  Task<string> SayHello(string greeting);
-  Task<string> SayBye();
+  Task<string> SayHelloAsync(string greeting);
+  Task<string> SayByeAsync();
 }
 ```
 
@@ -45,8 +45,8 @@ There are 2 restrictions on the methods:
 ```c#
 public interface IHelloWorkflowInterface
 {
-  Task<string> GreetClient(Func<Task<string>> clientSaid);
-  Task<string> FarewellClient(Func<Task> request);
+  Task<string> GreetClientAsync(Func<Task<string>> clientSaid);
+  Task<string> FarewellClientAsync(Func<Task> request);
 }
 ```
 
@@ -62,7 +62,7 @@ There are 2 restrictions on the methods:
 ```c#
 public interface IHelloWorkflowCallbackInterface
 {
-  Task<Func<Task<string>>> WhatShouldISay(string clientSaid);
+  Task<Func<Task<string>>> WhatShouldISayAsync(string clientSaid);
 }
 ```
 
@@ -100,25 +100,25 @@ A mandatory (boilerplate) implementation of the unhandled exception handler. Bec
 ```c#
 protected override Task OnUnhandledExceptionAsync(Exception exception, Activity source)
 {
-  GetLogger().Error(0, $"OnUnhandledExceptionAsync: the workflow is going to {Parameters.UnhandledExceptionAction}", exception);
+  GetLogger().TrackTrace($"OnUnhandledExceptionAsync: the workflow is going to {Parameters.UnhandledExceptionAction}\n\n{exception}", Runtime.Severity.Error);
   return Task.CompletedTask;
 }
 ```
 
 ### Incoming operations
 
-The public `SayHello()` grain interface method, that does nothing just calls the workflow's `GreetClient()` `WorkflowInterface` operation. A normal grain can store data from the incoming message in the state, call other grains, closure the necessary data into the parameter delegate. After the `await`, it can build a complex response message based on the value the workflow returned and the grain's `State`, or any other information.
+The public `SayHelloAsync()` grain interface method, that does nothing just calls the workflow's `GreetClientAsync()` `WorkflowInterface` operation. A normal grain can store data from the incoming message in the state, call other grains, closure the necessary data into the parameter delegate. After the `await`, it can build a complex response message based on the value the workflow returned and the grain's `State`, or any other information.
 
 The parameter delegate is executed when the workflow accepts the incoming call.
 
 It also shows how to implement idempotent responses for the incoming calls. In the repeated case, the parameter delegate won't be executed!
 
 ```c#
-public async Task<string> SayHello(string greeting)
+public async Task<string> SayHelloAsync(string greeting)
 {
   try
   {
-    return await WorkflowInterface.GreetClient(() =>
+    return await WorkflowInterface.GreetClientAsync(() =>
       Task.FromResult(greeting));
   }
   catch (OperationRepeatedException<string> e)
@@ -128,17 +128,17 @@ public async Task<string> SayHello(string greeting)
 }
 ```
 
-The public `SayBye()` grain interface method, that also does nothing just calls the workflow's `FarewellClient()` optional `WorkflowInterface` operation.
+The public `SayByeAsync()` grain interface method, that also does nothing just calls the workflow's `FarewellClientAsync()` optional `WorkflowInterface` operation.
 The parameter delegate executed when the workflow accepts the incoming call.
 
 It also shows how to implement optional operation's idempotent canceled responses for the incoming calls. Optional in this case means, that after a timeout the workflow cancels the waiting for the operation. In the canceled case, after the timeout, the parameter delegate won't be executed!
 
 ```c#
-public async Task<string> SayBye()
+public async Task<string> SayByeAsync()
 {
   try
   {
-    return await WorkflowInterface.FarewellClient(() =>
+    return await WorkflowInterface.FarewellClientAsync(() =>
       Task.CompletedTask);
   }
   catch (OperationRepeatedException<string> e)
@@ -159,7 +159,7 @@ This is the explicit implementation of the workflow's `WhatShouldISay()` `Workfl
 The return value delegate is executed when the workflow accepts the outgoing call's response.
 
 ```c#
-Task<Func<Task<string>>> IHelloWorkflowCallbackInterface.WhatShouldISay(string clientSaid) =>
+Task<Func<Task<string>>> IHelloWorkflowCallbackInterface.WhatShouldISayAsync(string clientSaid) =>
   Task.FromResult<Func<Task<string>>>(() =>
     Task.FromResult(string.IsNullOrEmpty(clientSaid) ? "Who are you?" : "Hello!"));
 ```
@@ -168,9 +168,9 @@ Task<Func<Task<string>>> IHelloWorkflowCallbackInterface.WhatShouldISay(string c
 
 And see the Workflow:
 
-* First it accepts the incoming `GreetClient()` operation, calls back the grain with `WhatShouldISay()` operation, and returns the response to the grain.
-* Then it waits 1 minute for the `FarewellClient()` operation, if it times out, it cancels the operation and completes.
-* Both `GreetClient()` and `FarewellClient()` operations are idempotent, so the responses are persisted (in our concrete example, `FarewellClient()` operation times out, so the fact that it was canceled is persisted).
+* First it accepts the incoming `GreetClientAsync()` operation, calls back the grain with `WhatShouldISayAsync()` operation, and returns the response to the grain.
+* Then it waits 5 seconds for the `FarewellClientAsync()` operation, if it times out, it cancels the operation and completes.
+* Both `GreetClientAsync()` and `FarewellClientAsync()` operations are idempotent, so the responses are persisted (in our concrete example, `FarewellClientAsync()` operation times out, so the fact that it was canceled is persisted).
 
 ![HelloActivity.xaml](https://github.com/OrleansContrib/Orleans.Activities/raw/docs-master/docs/HelloWorld/HelloActivity.png)
 

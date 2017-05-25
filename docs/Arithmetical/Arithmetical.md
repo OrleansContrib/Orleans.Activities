@@ -25,8 +25,8 @@ public interface IMultiplier : IGrainWithGuidKey
 {
   Task MultiplyAsync(int arg1, int arg2);
 
-  Task Subscribe(IMultiplierResultReceiver observer);
-  Task Unsubscribe(IMultiplierResultReceiver observer);
+  Task SubscribeAsync(IMultiplierResultReceiver observer);
+  Task UnsubscribeAsync(IMultiplierResultReceiver observer);
 }
 
 public interface IMultiplierResultReceiver : IGrainObserver
@@ -68,9 +68,9 @@ public AdderGrain()
 }
 ```
 
-The `MultiplierGrain` also sets the `CompletedAsync` event to send back the result to the client.
+The `MultiplierGrain` additionally sets the `CompletedAsync` event to send back the result to the client.
 
-__NOTE:__ This sample can't demonstrate a failure during the callback (the observation is a one-way call), but the workflow persistence happens after the Completed workflow event: if the callback fails, the workflow will abort and continue from the last persisted state by a reactivation reminder. Don't use callbacks when there is no implicit or explicit persistence before (like in the sample), because the incoming request that started the workflow will run the workflow to the first idle moment, if the first idle is the completion, the callback will happen during the incoming request (usually also a problem), and the exception during the callback will be propagated back to the caller and the caller has to repeat the incoming request to restart the workflow.
+__NOTE:__ This sample can't demonstrate a failure during the callback (the observation is a one-way call), but the workflow persistence happens after the Completed workflow event: if the callback fails, the workflow will abort and continue from the last persisted state by a reactivation reminder. __Don't use callbacks on Completed event when there is no implicit or explicit persistence before__, because the incoming request that started the workflow and called `RunAsync()` will run the workflow to the first idle moment, if the first idle is the completion, the callback will happen during the incoming request (usually also a problem), and the exception during the callback will be propagated back to the caller and the caller has to repeat the incoming request to restart the workflow.
 
 ```c#
 private static Activity workflowDefinition = new MultiplierActivity();
@@ -96,7 +96,7 @@ The mandatory (boilerplate) implementation of the unhandled exception handler (t
 ```c#
 protected override Task OnUnhandledExceptionAsync(Exception exception, Activity source)
 {
-  GetLogger().Error(0, $"OnUnhandledExceptionAsync: the workflow is going to {Parameters.UnhandledExceptionAction}", exception);
+  GetLogger().TrackTrace($"OnUnhandledExceptionAsync: the workflow is going to {Parameters.UnhandledExceptionAction}\n\n{exception}", Runtime.Severity.Error);
   return Task.CompletedTask;
 }
 ```
