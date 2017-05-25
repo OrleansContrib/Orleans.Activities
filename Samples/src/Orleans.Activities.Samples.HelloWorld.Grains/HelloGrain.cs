@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Orleans;
+using Orleans.Providers;
 
 using System.Activities;
 using Orleans.Activities;
@@ -33,6 +34,7 @@ namespace Orleans.Activities.Samples.HelloWorld.Grains
         Task<Func<Task<string>>> WhatShouldISay(string clientSaid);
     }
 
+    [StorageProvider(ProviderName = "MemoryStore")]
     public sealed class HelloGrain : WorkflowGrain<HelloGrain, HelloGrainState, IHelloWorkflowInterface, IHelloWorkflowCallbackInterface>, IHello, IHelloWorkflowCallbackInterface
     {
         // Without DI and versioning, just directly create the singleton workflow definition.

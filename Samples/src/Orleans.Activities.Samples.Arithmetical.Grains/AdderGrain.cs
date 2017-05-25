@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Orleans;
+using Orleans.Providers;
 
 using System.Activities;
 using Orleans.Activities;
@@ -15,6 +16,7 @@ namespace Orleans.Activities.Samples.Arithmetical.Grains
     // In this sample we don't use custom TGrainState, TWorkflowInterface and TWorkflowCallbackInterface type parameters, we use the less generic
     // WorkflowGrain<TGrain, TGrainState> base type with the default WorkflowState as TGrainState. But this is optional, the full blown
     // WorkflowGrain<TGrain, TGrainState, TWorkflowInterface, TWorkflowCallbackInterface> base type can be used also if there are outgoing calls or incoming callbacks.
+    [StorageProvider(ProviderName = "MemoryStore")]
     public sealed class AdderGrain : WorkflowGrain<AdderGrain, WorkflowState>, IAdder
     {
         private static Activity workflowDefinition = new AdderActivity();

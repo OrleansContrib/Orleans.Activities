@@ -1,31 +1,10 @@
-﻿/*
-Project Orleans Cloud Service SDK ver. 1.0
- 
-Copyright (c) Microsoft Corporation
- 
-All rights reserved.
- 
-MIT License
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and 
-associated documentation files (the ""Software""), to deal in the Software without restriction,
-including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
-and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so,
-subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO
-THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS
-OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
-TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-*/
-
-using System;
+﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
+using Orleans;
+using Orleans.Runtime.Configuration;
 
 using Orleans.Activities.Samples.Arithmetical.GrainInterfaces;
-using System.Threading;
 
 namespace Orleans.Activities.Samples.Arithmetical.SiloHost
 {
@@ -64,7 +43,7 @@ namespace Orleans.Activities.Samples.Arithmetical.SiloHost
 
             public void WaitForCompletion()
             {
-                completed.WaitOne(TimeSpan.FromSeconds(5));
+                completed.WaitOne(TimeSpan.FromSeconds(10));
             }
 
             public void ReceiveResult(int result)
@@ -92,7 +71,8 @@ namespace Orleans.Activities.Samples.Arithmetical.SiloHost
                 AppDomainInitializerArguments = args,
             });
 
-            Orleans.GrainClient.Initialize("DevTestClientConfiguration.xml");
+            var config = ClientConfiguration.LocalhostSilo();
+            GrainClient.Initialize(config);
 
             // TODO: once the previous call returns, the silo is up and running.
             //       This is the place your custom logic, for example calling client logic
@@ -119,7 +99,22 @@ namespace Orleans.Activities.Samples.Arithmetical.SiloHost
                 WriteLine("\n\nWaiting for result...\n\n");
                 multiplierResultReceiver.WaitForCompletion();
 
-                WriteLine("--- Idempotent forward recovery is not applicable for this situation, grain would repeat the callback in case of failure if it was previously persisted before completion, the Multiply operation would simply do nothing when repeated. ---\n\n");
+                WriteLine("--- Idempotent forward recovery is not applicable for this situation, grain would repeat the callback in case of failure after reactivation from it's previously persisted state, the Multiply operation would simply do nothing when repeated. ---\n\n");
+                WriteLine("Wait the workflow to complete...\n\n");
+                for (int i = 5; i > 0; --i)
+                {
+                    if (i % 5 == 0)
+                        Write(i.ToString());
+                    else
+                        Write(".");
+                    Thread.Sleep(TimeSpan.FromSeconds(1));
+                }
+
+                WriteLine("\n\nCalling Multiply again...\n");
+                multiplierGrain.MultiplyAsync(3, 3).Wait();
+
+                WriteLine("\n\nWaiting for result...\n\n");
+                multiplierResultReceiver.WaitForCompletion();
 
                 WriteLine("Unsubscribing from Multiplier...\n\n");
                 multiplierGrain.Unsubscribe(obj).Wait();

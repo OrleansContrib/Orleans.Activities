@@ -21,26 +21,43 @@
   </TextExpression.NamespacesForImplementation>
   <TextExpression.ReferencesForImplementation>
     <sco:Collection x:TypeArguments="AssemblyReference">
-      <AssemblyReference>Microsoft.CodeAnalysis</AssemblyReference>
-      <AssemblyReference>Microsoft.CodeAnalysis.CSharp</AssemblyReference>
+      <AssemblyReference>Microsoft.Extensions.DependencyInjection</AssemblyReference>
+      <AssemblyReference>Microsoft.Extensions.DependencyInjection.Abstractions</AssemblyReference>
+      <AssemblyReference>Microsoft.Win32.Primitives</AssemblyReference>
       <AssemblyReference>Newtonsoft.Json</AssemblyReference>
       <AssemblyReference>Orleans</AssemblyReference>
-      <AssemblyReference>OrleansCodeGenerator</AssemblyReference>
+      <AssemblyReference>Orleans.Activities</AssemblyReference>
       <AssemblyReference>System</AssemblyReference>
       <AssemblyReference>Microsoft.CSharp</AssemblyReference>
       <AssemblyReference>System.Activities</AssemblyReference>
+      <AssemblyReference>System.AppContext</AssemblyReference>
       <AssemblyReference>System.Collections.Immutable</AssemblyReference>
+      <AssemblyReference>System.ComponentModel.Composition</AssemblyReference>
+      <AssemblyReference>System.Console</AssemblyReference>
       <AssemblyReference>System.Core</AssemblyReference>
       <AssemblyReference>System.Data</AssemblyReference>
-      <AssemblyReference>System.Data.DataSetExtensions</AssemblyReference>
+      <AssemblyReference>System.Diagnostics.DiagnosticSource</AssemblyReference>
+      <AssemblyReference>System.Drawing</AssemblyReference>
+      <AssemblyReference>System.Globalization.Calendars</AssemblyReference>
+      <AssemblyReference>System.IO.Compression</AssemblyReference>
+      <AssemblyReference>System.IO.Compression.FileSystem</AssemblyReference>
+      <AssemblyReference>System.IO.Compression.ZipFile</AssemblyReference>
+      <AssemblyReference>System.IO.FileSystem</AssemblyReference>
+      <AssemblyReference>System.IO.FileSystem.Primitives</AssemblyReference>
+      <AssemblyReference>System.Net.Http</AssemblyReference>
+      <AssemblyReference>System.Net.Sockets</AssemblyReference>
+      <AssemblyReference>System.Numerics</AssemblyReference>
       <AssemblyReference>System.Reflection.Metadata</AssemblyReference>
-      <AssemblyReference>System.ServiceModel</AssemblyReference>
-      <AssemblyReference>System.ServiceModel.Activities</AssemblyReference>
+      <AssemblyReference>System.Runtime.InteropServices.RuntimeInformation</AssemblyReference>
+      <AssemblyReference>System.Security.Cryptography.Algorithms</AssemblyReference>
+      <AssemblyReference>System.Security.Cryptography.Encoding</AssemblyReference>
+      <AssemblyReference>System.Security.Cryptography.Primitives</AssemblyReference>
+      <AssemblyReference>System.Security.Cryptography.X509Certificates</AssemblyReference>
       <AssemblyReference>System.Xaml</AssemblyReference>
       <AssemblyReference>System.Xml</AssemblyReference>
       <AssemblyReference>System.Xml.Linq</AssemblyReference>
+      <AssemblyReference>System.Xml.ReaderWriter</AssemblyReference>
       <AssemblyReference>Orleans.Activities.Samples.HelloWorld.GrainInterfaces</AssemblyReference>
-      <AssemblyReference>Orleans.Activities</AssemblyReference>
       <AssemblyReference>mscorlib</AssemblyReference>
       <AssemblyReference>Orleans.Activities.Samples.HelloWorld.Grains</AssemblyReference>
     </sco:Collection>
@@ -88,29 +105,26 @@
         </Sequence>
       </oa:ReceiveRequestSendResponseScope>
       <oa:ReceiveRequestSendResponseScope sap2010:WorkflowViewState.IdRef="ReceiveRequestSendResponseScope_4">
-        <Pick>
-          <PickBranch DisplayName="Branch1">
+        <Pick sap2010:WorkflowViewState.IdRef="Pick_1">
+          <PickBranch DisplayName="Branch1" sap2010:WorkflowViewState.IdRef="PickBranch_1">
             <PickBranch.Trigger>
               <oa:ReceiveRequest sap2010:WorkflowViewState.IdRef="ReceiveRequest_1" OperationName="IHelloWorkflowInterface.FarewellClient" />
             </PickBranch.Trigger>
             <oa:SendResponse x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="SendResponse`1_4" Idempotent="True" ResponseParameter="Bye, my friend!" ThrowIfReloaded="False" />
-            <sap2010:WorkflowViewState.IdRef>PickBranch_1</sap2010:WorkflowViewState.IdRef>
           </PickBranch>
-          <PickBranch DisplayName="Branch2">
+          <PickBranch DisplayName="Branch2" sap2010:WorkflowViewState.IdRef="PickBranch_2">
             <PickBranch.Trigger>
               <Delay sap2010:WorkflowViewState.IdRef="Delay_1">
                 <InArgument x:TypeArguments="x:TimeSpan">
-                  <mca:CSharpValue x:TypeArguments="x:TimeSpan">TimeSpan.FromSeconds(1)</mca:CSharpValue>
+                  <mca:CSharpValue x:TypeArguments="x:TimeSpan">TimeSpan.FromSeconds(5)</mca:CSharpValue>
                 </InArgument>
               </Delay>
             </PickBranch.Trigger>
-            <sap2010:WorkflowViewState.IdRef>PickBranch_2</sap2010:WorkflowViewState.IdRef>
           </PickBranch>
-          <sap2010:WorkflowViewState.IdRef>Pick_1</sap2010:WorkflowViewState.IdRef>
         </Pick>
       </oa:ReceiveRequestSendResponseScope>
     </Sequence>
-    <sads:DebugSymbol.Symbol>d29aOlxQcml2YXRlXEdpdEh1YlxsbWFneWFyXE9ybGVhbnMuQWN0aXZpdGllc1xzcmNcT3JsZWFucy5BY3Rpdml0aWVzLlNhbXBsZS5IZWxsb1dvcmxkLkdyYWluc1xIZWxsb0FjdGl2aXR5LnhhbWwXMwN1GQIBATQFcxACAQI1B1wsAgEQXQdyLAIBAzYJWxQCARVeCXEQAgEIOwtBHwIBKUILUzACARpUC1odAgEWXwtlGAIBDGYLbxgCAQk+ET5hAgEqVxFXewIBF2EPYY4BAgEPYw1jvAECAQ1oD2wXAgEKQw1SGAIBIGOQAWOhAQIBDmoTamoCAQtED0ogAgElSw9RJAIBIUcVR10CASZOFU5fAgEi</sads:DebugSymbol.Symbol>
+    <sads:DebugSymbol.Symbol>d4UBWjpcTG9jYWxcR2l0SHViXGxtYWd5YXJcT3JsZWFucy5BY3Rpdml0aWVzX3NhbXBsZXMtbWFzdGVyXFNhbXBsZXNcc3JjXE9ybGVhbnMuQWN0aXZpdGllcy5TYW1wbGVzLkhlbGxvV29ybGQuR3JhaW5zXEhlbGxvQWN0aXZpdHkueGFtbBdBA4ABGQIBAUIFfhACAQJDB2osAgEQawd9LAIBA0QJaRQCARVsCXwQAgEISQtPHwIBKVALYTACARpiC2gdAgEWbQtyGAIBDHMLexgCAQlMEUxhAgEqZRFlewIBF28Pb44BAgEPcQ1xvAECAQ11D3kXAgEKUQ1gGAIBIHGQAXGhAQIBDncTd2oCAQtSD1ggAgElWQ9fJAIBIVUVVV0CASZcFVxfAgEi</sads:DebugSymbol.Symbol>
   </oa:WorkflowActivity>
   <sap2010:WorkflowViewState.ViewStateManager>
     <sap2010:ViewStateManager>
