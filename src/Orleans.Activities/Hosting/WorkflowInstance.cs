@@ -368,10 +368,7 @@ namespace Orleans.Activities.Hosting
                 if (Parameters.PersistWriteOnlyValues)
                     instanceValues[WorkflowNamespace.Workflow] = new InstanceValue(Controller.PrepareForSerialization(), InstanceValueOptions.Optional);
 
-                ActivityInstanceState completionState;
-                IDictionary<string, object> outputs;
-                Exception terminationException;
-                completionState = Controller.GetCompletionState(out outputs, out terminationException);
+                ActivityInstanceState completionState = Controller.GetCompletionState(out IDictionary<string, object> outputs, out Exception terminationException);
 
                 if (completionState == ActivityInstanceState.Closed)
                 {
@@ -395,8 +392,7 @@ namespace Orleans.Activities.Hosting
 
         private object LoadWorkflow(IDictionary<XName, InstanceValue> instanceValues)
         {
-            InstanceValue value;
-            IsStarting = instanceValues.TryGetValue(WorkflowNamespace.IsStarting, out value) && (bool)value.Value;
+            IsStarting = instanceValues.TryGetValue(WorkflowNamespace.IsStarting, out InstanceValue value) && (bool)value.Value;
             return instanceValues[WorkflowNamespace.Workflow].Value;
         }
 
@@ -602,10 +598,7 @@ namespace Orleans.Activities.Hosting
                         && !hasRaisedCompleted)
                     {
                         await IfHasPendingThenFlushTrackingRecordsAsync();
-                        ActivityInstanceState completionState;
-                        IDictionary<string, object> outputs;
-                        Exception terminationException;
-                        completionState = Controller.GetCompletionState(out outputs, out terminationException);
+                        ActivityInstanceState completionState = Controller.GetCompletionState(out IDictionary<string, object> outputs, out Exception terminationException);
                         await host.OnCompletedAsync(completionState, outputs, terminationException);
                         hasRaisedCompleted = true;
                     }

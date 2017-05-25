@@ -4,7 +4,7 @@ Workflow Foundation (.Net 4.x System.Activities workflows) over [Microsoft Orlea
 
 __Stable:__
 [![GitHub version](https://img.shields.io/github/tag/OrleansContrib/Orleans.Activities.svg)](https://github.com/OrleansContrib/Orleans.Activities/releases)
-[![NuGet version](https://badge.fury.io/nu/Orleans.Activities.svg)](https://www.nuget.org/packages/Orleans.Activities)
+[![NuGet version](https://img.shields.io/nuget/v/Orleans.Activities.svg)](https://www.nuget.org/packages/Orleans.Activities)
 
 __Master:__
 [![Build status](https://ci.appveyor.com/api/projects/status/dy600wk9qn1fppqw/branch/master?svg=true)](https://ci.appveyor.com/project/OrleansContrib/orleans-activities/history)
@@ -36,10 +36,10 @@ This project is licensed under the [Apache License](https://github.com/OrleansCo
 
 This is a very high level view:
 
-* Each WorkflowGrain is indistinguishable from a normal grain and backed by a WorkflowHost.
-* The WorkflowHost is responsible to handle the lifecycle of the WorkflowInstance, mainly recreate it from a previous persisted state when it aborts.
-* The communication between the WorkflowGrain and the WorkflowHost is based on 2 developer defined interfaces for the incoming and outgoing requests (TWorkflowInterface and TWorkflowCallbackInterface). These interfaces' methods can be referenced from the workflow activities to accept incoming or to initiate outgoing requests.
-* The methods of the TWorkflowInterface and TWorkflowCallbackInterface are independent from the grain's external public interface, you can merge different public requests into one method or vice versa. Or a reentrant grain even can execute (read-only) public interface methods independently from the current running workflow operations.
+* Each `WorkflowGrain` is indistinguishable from a normal grain and backed by a `WorkflowHost`.
+* The `WorkflowHost` is responsible to handle the lifecycle of the `WorkflowInstance`, mainly recreate it from a previous persisted state when it aborts.
+* The communication between the `WorkflowGrain` and the `WorkflowHost` is based on 2 developer defined interfaces for the incoming and outgoing requests (`TWorkflowInterface` and `TWorkflowCallbackInterface`). These interfaces' methods can be referenced from the workflow activities to accept incoming or to initiate outgoing requests.
+* The methods of the `TWorkflowInterface` and `TWorkflowCallbackInterface` are independent from the grain's external public interface, you can merge different public requests into one method or vice versa. Or a reentrant grain even can execute (read-only) public interface methods independently from the current running workflow operations.
 * The method's signatures are restricted, their parameters and return values are lazy, async delegates with 1 optional parameter/return value. The delegates executed by the workflow activities if/when they accept them (command pattern).
 * There are design-, build- and static-run-time checks to keep the interfaces and the workflows in sync.
 * Though you can execute complete workflows as methods also.
