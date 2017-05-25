@@ -121,7 +121,11 @@ namespace Orleans.Activities
 
         #region Grain & IRemindable infrastructure members
 
-        public override Task OnDeactivateAsync() => workflowHost.DeactivateAsync();
+        public override async Task OnDeactivateAsync()
+        {
+            await workflowHost.DeactivateAsync();
+            await base.OnDeactivateAsync();
+        }
 
         public virtual Task ReceiveReminder(string reminderName, TickStatus tickStatus) => workflowHost.ReminderAsync(reminderName);
 
