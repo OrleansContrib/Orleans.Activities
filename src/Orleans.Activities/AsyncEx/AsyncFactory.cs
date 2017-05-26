@@ -179,8 +179,8 @@ namespace Orleans.Activities.AsyncEx
                         tcs.TrySetResult(null);
 
                     callback?.Invoke(tcs.Task);
-                    // MODIFIED
-                    //}, TaskScheduler.Default);
+                // MODIFIED
+                //}, TaskScheduler.Default);
                 }, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Current);
                 return tcs.Task;
             }
@@ -368,8 +368,8 @@ namespace Orleans.Activities.AsyncEx
                         tcs.TrySetResult(task.Result);
 
                     callback?.Invoke(tcs.Task);
-                    // MODIFIED
-                    //}, TaskScheduler.Default);
+                // MODIFIED
+                //}, TaskScheduler.Default);
                 }, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Current);
                 return tcs.Task;
             }
