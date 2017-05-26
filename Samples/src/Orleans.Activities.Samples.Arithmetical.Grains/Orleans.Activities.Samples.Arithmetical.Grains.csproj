@@ -51,7 +51,7 @@
       <HintPath>..\packages\Microsoft.Orleans.Core.1.5.0-beta1\lib\net461\Orleans.dll</HintPath>
     </Reference>
     <Reference Include="Orleans.Activities, Version=0.3.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Orleans.Activities.0.3.0-master-10091\lib\net461\Orleans.Activities.dll</HintPath>
+      <HintPath>..\packages\Orleans.Activities.0.3.0-master-10099\lib\net461\Orleans.Activities.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="Microsoft.CSharp" />
