@@ -30,13 +30,9 @@ namespace Orleans.Activities.Hosting
         Task<BookmarkResumptionResult> ResumeBookmarkAsync(Bookmark bookmark, object value, TimeSpan timeout);
         Task AbortAsync(Exception reason);
 
-        Task<Func<Task<TResponseResult>>> OnOperationAsync<TRequestParameter, TResponseResult>(string operationName, TRequestParameter requestParameter)
-            where TRequestParameter : class
-            where TResponseResult : class;
-        Task<Func<Task>> OnOperationAsync<TRequestParameter>(string operationName, TRequestParameter requestParameter)
-            where TRequestParameter : class;
-        Task<Func<Task<TResponseResult>>> OnOperationAsync<TResponseResult>(string operationName)
-            where TResponseResult : class;
+        Task<Func<Task<TResponseResult>>> OnOperationAsync<TRequestParameter, TResponseResult>(string operationName, TRequestParameter requestParameter);
+        Task<Func<Task>> OnOperationAsync<TRequestParameter>(string operationName, TRequestParameter requestParameter);
+        Task<Func<Task<TResponseResult>>> OnOperationAsync<TResponseResult>(string operationName);
         Task<Func<Task>> OnOperationAsync(string operationName);
 
         Task RegisterOrUpdateReminderAsync(string reminderName, TimeSpan dueTime);

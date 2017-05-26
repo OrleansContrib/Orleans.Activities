@@ -25,13 +25,9 @@ namespace Orleans.Activities.Hosting
         Task AbortThroughHostAsync(Exception reason);
         Task<bool> NotifyHostOnUnhandledExceptionAsync(Exception exception, Activity source);
 
-        Task<Func<Task<TResponseResult>>> OnOperationAsync<TRequestParameter, TResponseResult>(string operationName, TRequestParameter requestParameter)
-            where TRequestParameter : class
-            where TResponseResult : class;
-        Task<Func<Task>> OnOperationAsync<TRequestParameter>(string operationName, TRequestParameter requestParameter)
-            where TRequestParameter : class;
-        Task<Func<Task<TResponseResult>>> OnOperationAsync<TResponseResult>(string operationName)
-            where TResponseResult : class;
+        Task<Func<Task<TResponseResult>>> OnOperationAsync<TRequestParameter, TResponseResult>(string operationName, TRequestParameter requestParameter);
+        Task<Func<Task>> OnOperationAsync<TRequestParameter>(string operationName, TRequestParameter requestParameter);
+        Task<Func<Task<TResponseResult>>> OnOperationAsync<TResponseResult>(string operationName);
         Task<Func<Task>> OnOperationAsync(string operationName);
 
         Task RegisterOrUpdateReminderAsync(string reminderName, TimeSpan dueTime);

@@ -46,22 +46,18 @@ namespace Orleans.Activities.Test
     public class WorkflowInterface : IWorkflowHostOperations
     {
         public Task<TResponseParameter> OperationAsync<TRequestResult, TResponseParameter>(string operationName, Func<Task<TRequestResult>> requestResult)
-            where TRequestResult : class
-            where TResponseParameter : class
         {
             Console.WriteLine("1: " + operationName);
             return TaskConstants<TResponseParameter>.Default;
         }
 
         public Task OperationAsync<TRequestResult>(string operationName, Func<Task<TRequestResult>> requestResult)
-            where TRequestResult : class
         {
             Console.WriteLine("2: " + operationName);
             return TaskConstants.Completed;
         }
 
         public Task<TResponseParameter> OperationAsync<TResponseParameter>(string operationName, Func<Task> requestResult)
-            where TResponseParameter : class
         {
             Console.WriteLine("3: " + operationName);
             return TaskConstants<TResponseParameter>.Default;

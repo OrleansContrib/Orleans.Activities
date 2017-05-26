@@ -116,8 +116,7 @@ namespace Orleans.Activities.Extensions
 
         public Bookmark GetBookmark(string reminderName)
         {
-            ReminderInfo reminderInfo;
-            if (reminders.TryGetValue(reminderName, out reminderInfo))
+            if (reminders.TryGetValue(reminderName, out ReminderInfo reminderInfo))
                 return reminderInfo.Bookmark;
             return null;
         }
@@ -128,9 +127,8 @@ namespace Orleans.Activities.Extensions
         public void RegisterOrUpdateReminder(Bookmark bookmark, TimeSpan dueTime)
         {
             string reminderName = CreateReminderName(bookmark);
-            ReminderInfo reminderInfo;
             ReminderState reminderState;
-            if (reminders.TryGetValue(reminderName, out reminderInfo))
+            if (reminders.TryGetValue(reminderName, out ReminderInfo reminderInfo))
                 reminderState = reminderInfo.ReminderState;
             else
                 reminderState = ReminderState.NonExistent;
@@ -160,9 +158,8 @@ namespace Orleans.Activities.Extensions
 
         public void UnregisterReminder(string reminderName)
         {
-            ReminderInfo reminderInfo;
             ReminderState reminderState;
-            if (reminders.TryGetValue(reminderName, out reminderInfo))
+            if (reminders.TryGetValue(reminderName, out ReminderInfo reminderInfo))
                 reminderState = reminderInfo.ReminderState;
             else
                 reminderState = ReminderState.NonExistent;
@@ -233,11 +230,10 @@ namespace Orleans.Activities.Extensions
 
             if (reminders.Count > 0)
             {
-                readWriteValues = new Dictionary<XName, object>(1);
-                readWriteValues.Add(WorkflowNamespace.Bookmarks, reminders
+                readWriteValues = new Dictionary<XName, object>(1) {{ WorkflowNamespace.Bookmarks, reminders
                     .Where((kvp) => ParticipateInCollectValues(kvp.Value.ReminderState))
                     .Select((kvp) => kvp.Value.Bookmark)
-                    .ToList());
+                    .ToList()}};
             }
         }
 
@@ -328,8 +324,7 @@ namespace Orleans.Activities.Extensions
             reminders.Clear();
             hasReactivationReminder = false;
 
-            object reminderBookmarks;
-            if (readWriteValues != null && readWriteValues.TryGetValue(WorkflowNamespace.Bookmarks, out reminderBookmarks))
+            if (readWriteValues != null && readWriteValues.TryGetValue(WorkflowNamespace.Bookmarks, out object reminderBookmarks))
                 foreach (Bookmark reminderBookmark in (reminderBookmarks as List<Bookmark>))
                     reminders[CreateReminderName(reminderBookmark)] = new ReminderInfo(reminderBookmark, ReminderState.RegisteredAndSaved);
             foreach (string reminderName in await instance.GetRemindersAsync())

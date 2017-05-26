@@ -25,9 +25,10 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRuleSet>Orleans.Activities.ruleset</CodeAnalysisRuleSet>
     <DocumentationFile>bin\Debug\Orleans.Activities.xml</DocumentationFile>
     <NoWarn>CS1591</NoWarn>
+    <RunCodeAnalysis>false</RunCodeAnalysis>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -38,6 +39,7 @@
     <WarningLevel>4</WarningLevel>
     <DocumentationFile>bin\Release\Orleans.Activities.xml</DocumentationFile>
     <NoWarn>CS1591</NoWarn>
+    <CodeAnalysisRuleSet>Orleans.Activities.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>..\Orleans.Activities.ico</ApplicationIcon>
@@ -370,6 +372,7 @@
     <None Include="Orleans.Activities.nuspec">
       <SubType>Designer</SubType>
     </None>
+    <None Include="Orleans.Activities.ruleset" />
     <None Include="packages.config" />
     <None Include="_README.txt" />
   </ItemGroup>
@@ -378,6 +381,10 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <Analyzer Include="..\packages\Microsoft.CodeAnalysis.Analyzers.1.1.0\analyzers\dotnet\cs\Microsoft.CodeAnalysis.Analyzers.dll" />
+    <Analyzer Include="..\packages\Microsoft.CodeAnalysis.Analyzers.1.1.0\analyzers\dotnet\cs\Microsoft.CodeAnalysis.CSharp.Analyzers.dll" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

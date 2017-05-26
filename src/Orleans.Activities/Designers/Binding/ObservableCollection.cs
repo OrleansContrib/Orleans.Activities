@@ -42,9 +42,8 @@ namespace Orleans.Activities.Designers.Binding
                 // Walk thru invocation list
                 foreach (System.Collections.Specialized.NotifyCollectionChangedEventHandler handler in delegates)
                 {
-                    DispatcherObject dispatcherObject = handler.Target as DispatcherObject;
                     // If the subscriber is a DispatcherObject and different thread
-                    if (dispatcherObject != null && dispatcherObject.CheckAccess() == false)
+                    if (handler.Target is DispatcherObject dispatcherObject && dispatcherObject.CheckAccess() == false)
                     {
                         // Invoke handler in the target dispatcher's thread
                         dispatcherObject.Dispatcher.BeginInvoke(DispatcherPriority.DataBind, handler, this, e);

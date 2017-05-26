@@ -52,8 +52,7 @@ namespace Orleans.Activities.Persistence
                 IDictionary<XName, object> readWriteValues = null;
                 IDictionary<XName, object> writeOnlyValues = null;
 
-                System.Activities.Persistence.PersistenceParticipant legacyPersistenceParticipant = persistenceParticipant as System.Activities.Persistence.PersistenceParticipant;
-                if (legacyPersistenceParticipant != null)
+                if (persistenceParticipant is System.Activities.Persistence.PersistenceParticipant legacyPersistenceParticipant)
                     legacyPersistenceParticipant.CollectValues(out readWriteValues, out writeOnlyValues);
                 else
                     (persistenceParticipant as IPersistenceParticipant)?.CollectValues(out readWriteValues, out writeOnlyValues);
@@ -89,8 +88,7 @@ namespace Orleans.Activities.Persistence
             {
                 IDictionary<XName, object> mappedValues = null;
 
-                System.Activities.Persistence.PersistenceParticipant legacyPersistenceParticipant = persistenceParticipant as System.Activities.Persistence.PersistenceParticipant;
-                if (legacyPersistenceParticipant != null)
+                if (persistenceParticipant is System.Activities.Persistence.PersistenceParticipant legacyPersistenceParticipant)
                     mappedValues = legacyPersistenceParticipant.MapValues(readWriteView, writeOnlyView);
                 else
                     mappedValues = (persistenceParticipant as IPersistenceParticipant)?.MapValues(readWriteView, writeOnlyView);
@@ -127,8 +125,7 @@ namespace Orleans.Activities.Persistence
             {
                 foreach (object persistenceParticipant in persistenceParticipants)
                 {
-                    System.Activities.Persistence.PersistenceParticipant legacyPersistenceParticipant = persistenceParticipant as System.Activities.Persistence.PersistenceParticipant;
-                    if (legacyPersistenceParticipant != null && legacyPersistenceParticipant.IsIOParticipant())
+                    if (persistenceParticipant is System.Activities.Persistence.PersistenceParticipant legacyPersistenceParticipant && legacyPersistenceParticipant.IsIOParticipant())
                         await (legacyPersistenceParticipant as System.Activities.Persistence.PersistenceIOParticipant).OnSaveAsync(readWriteView, writeOnlyView, timeout);
                     else
                         await ((persistenceParticipant as IPersistenceIOParticipant)?.OnSaveAsync(readWriteView, writeOnlyView, timeout) ?? TaskConstants.Completed);
@@ -166,8 +163,7 @@ namespace Orleans.Activities.Persistence
             {
                 foreach (object persistenceParticipant in persistenceParticipants)
                 {
-                    System.Activities.Persistence.PersistenceParticipant legacyPersistenceParticipant = persistenceParticipant as System.Activities.Persistence.PersistenceParticipant;
-                    if (legacyPersistenceParticipant != null && legacyPersistenceParticipant.IsIOParticipant())
+                    if (persistenceParticipant is System.Activities.Persistence.PersistenceParticipant legacyPersistenceParticipant && legacyPersistenceParticipant.IsIOParticipant())
                         await (legacyPersistenceParticipant as System.Activities.Persistence.PersistenceIOParticipant).OnLoadAsync(readWriteView, timeout);
                     else
                         await ((persistenceParticipant as IPersistenceIOParticipant)?.OnLoadAsync(readWriteView, timeout) ?? TaskConstants.Completed);
@@ -185,8 +181,7 @@ namespace Orleans.Activities.Persistence
         {
             foreach (object persistenceParticipant in persistenceParticipants)
             {
-                System.Activities.Persistence.PersistenceParticipant legacyPersistenceParticipant = persistenceParticipant as System.Activities.Persistence.PersistenceParticipant;
-                if (legacyPersistenceParticipant != null)
+                if (persistenceParticipant is System.Activities.Persistence.PersistenceParticipant legacyPersistenceParticipant)
                     legacyPersistenceParticipant.PublishValues(readWriteView);
                 else
                     (persistenceParticipant as IPersistenceParticipant)?.PublishValues(readWriteView);
@@ -198,8 +193,7 @@ namespace Orleans.Activities.Persistence
         {
             foreach (object persistenceParticipant in persistenceParticipants)
             {
-                System.Activities.Persistence.PersistenceParticipant legacyPersistenceParticipant = persistenceParticipant as System.Activities.Persistence.PersistenceParticipant;
-                if (legacyPersistenceParticipant != null && legacyPersistenceParticipant.IsIOParticipant())
+                if (persistenceParticipant is System.Activities.Persistence.PersistenceParticipant legacyPersistenceParticipant && legacyPersistenceParticipant.IsIOParticipant())
                     (legacyPersistenceParticipant as System.Activities.Persistence.PersistenceIOParticipant).Abort();
                 else
                     (persistenceParticipant as IPersistenceIOParticipant)?.Abort();
