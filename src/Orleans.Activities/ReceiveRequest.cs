@@ -89,9 +89,7 @@ namespace Orleans.Activities
         
         private void BookmarkResumptionCallback(NativeActivityContext context, Bookmark bookmark, object value)
         {
-            object taskCompletionSource;
-            Func<Task> requestResultTaskFunc;
-            ReceiveRequestExtensions.GetOperationParameters(value, out taskCompletionSource, out requestResultTaskFunc);
+            ReceiveRequestExtensions.GetOperationParameters(value, out object taskCompletionSource, out Func<Task> requestResultTaskFunc);
 
             // Initializes the execution property held by the scope. SendResponse or the scope will use it (the scope for propagating any exception).
             context.GetReceiveRequestSendResponseScopeExecutionProperty().Initialize(taskCompletionSource);
@@ -164,9 +162,7 @@ namespace Orleans.Activities
 
         private void BookmarkResumptionCallback(NativeActivityContext context, Bookmark bookmark, object value)
         {
-            object taskCompletionSource;
-            Func<Task<TRequestResult>> requestResultTaskFunc;
-            ReceiveRequestExtensions.GetOperationParameters(value, out taskCompletionSource, out requestResultTaskFunc);
+            ReceiveRequestExtensions.GetOperationParameters(value, out object taskCompletionSource, out Func<Task<TRequestResult>> requestResultTaskFunc);
 
             // Initializes the execution property held by the scope. SendResponse or the scope will use it (the scope for propagating any exception).
             context.GetReceiveRequestSendResponseScopeExecutionProperty().Initialize(taskCompletionSource);

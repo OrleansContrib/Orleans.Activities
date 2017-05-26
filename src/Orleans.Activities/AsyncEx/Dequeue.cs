@@ -278,15 +278,8 @@ namespace Orleans.Activities.AsyncEx
 
         object System.Collections.IList.this[int index]
         {
-            get
-            {
-                return this[index];
-            }
-
-            set
-            {
-                this[index] = (T)value;
-            }
+            get => this[index];
+            set => this[index] = (T)value;
         }
 
         void System.Collections.ICollection.CopyTo(Array array, int index)
@@ -396,10 +389,7 @@ namespace Orleans.Activities.AsyncEx
         /// <exception cref="InvalidOperationException"><c>Capacity</c> cannot be set to a value less than <see cref="Count"/>.</exception>
         public int Capacity
         {
-            get
-            {
-                return buffer.Length;
-            }
+            get => buffer.Length;
 
             set
             {

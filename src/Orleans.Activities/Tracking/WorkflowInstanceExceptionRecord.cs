@@ -32,9 +32,7 @@ namespace Orleans.Activities.Tracking
         {
             if (string.IsNullOrEmpty(activityDefinitionId))
                 throw new ArgumentNullException(nameof(activityDefinitionId));
-            if (exception == null)
-                throw new ArgumentNullException(nameof(exception));
-            Exception = exception;
+            Exception = exception ?? throw new ArgumentNullException(nameof(exception));
             Level = TraceLevel.Error;
         }
 

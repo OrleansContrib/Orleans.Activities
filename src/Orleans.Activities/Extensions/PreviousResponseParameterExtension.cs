@@ -91,8 +91,7 @@ namespace Orleans.Activities.Extensions
         // Called by WorkflowHost.
         public Exception CreatePreviousResponseParameterException<TResponseParameter>(string operationName, Type responseParameterType)
         {
-            ResponseParameter previousResponseParameter;
-            if (!previousResponseParameters.TryGetValue(operationName, out previousResponseParameter))
+            if (!previousResponseParameters.TryGetValue(operationName, out ResponseParameter previousResponseParameter))
                 return new InvalidOperationException($"Operation '{operationName}' is unexpected.");
             if (previousResponseParameter.IsCanceled)
                 return new OperationCanceledException($"Operation '{operationName}' is already canceled.");
@@ -114,8 +113,7 @@ namespace Orleans.Activities.Extensions
 
             if (previousResponseParameters.Count > 0)
             {
-                readWriteValues = new Dictionary<XName, object>(1);
-                readWriteValues.Add(WorkflowNamespace.PreviousResponseParameters, previousResponseParameters);
+                readWriteValues = new Dictionary<XName, object>(1) {{ WorkflowNamespace.PreviousResponseParameters, previousResponseParameters }};
             }
         }
 
@@ -123,9 +121,8 @@ namespace Orleans.Activities.Extensions
         {
             this.previousResponseParameters.Clear();
 
-            object previousResponseParameters;
             if (readWriteValues != null
-                && readWriteValues.TryGetValue(WorkflowNamespace.PreviousResponseParameters, out previousResponseParameters)
+                && readWriteValues.TryGetValue(WorkflowNamespace.PreviousResponseParameters, out object previousResponseParameters)
                 && previousResponseParameters is Dictionary<string, ResponseParameter>)
                 this.previousResponseParameters = previousResponseParameters as Dictionary<string, ResponseParameter>;
         }

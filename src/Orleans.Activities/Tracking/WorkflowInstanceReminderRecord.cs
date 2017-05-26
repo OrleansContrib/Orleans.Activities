@@ -31,9 +31,7 @@ namespace Orleans.Activities.Tracking
         {
             if (string.IsNullOrEmpty(activityDefinitionId))
                 throw new ArgumentNullException(nameof(activityDefinitionId));
-            if (reminderName == null)
-                throw new ArgumentNullException(nameof(reminderName));
-            ReminderName = reminderName;
+            ReminderName = reminderName ?? throw new ArgumentNullException(nameof(reminderName));
             Level = TraceLevel.Info;
         }
 
