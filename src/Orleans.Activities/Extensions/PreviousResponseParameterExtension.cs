@@ -90,7 +90,6 @@ namespace Orleans.Activities.Extensions
 
         // Called by WorkflowHost.
         public Exception CreatePreviousResponseParameterException<TResponseParameter>(string operationName, Type responseParameterType)
-            where TResponseParameter : class
         {
             ResponseParameter previousResponseParameter;
             if (!previousResponseParameters.TryGetValue(operationName, out previousResponseParameter))
@@ -103,7 +102,7 @@ namespace Orleans.Activities.Extensions
             if (responseParameterType == typeof(void))
                 return new OperationRepeatedException(message);
             else
-                return new OperationRepeatedException<TResponseParameter>(previousResponseParameter.Value as TResponseParameter, message);
+                return new OperationRepeatedException<TResponseParameter>((TResponseParameter)previousResponseParameter.Value, message);
         }
 
         #region PersistenceParticipant members

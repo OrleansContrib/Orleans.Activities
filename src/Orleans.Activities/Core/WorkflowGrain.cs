@@ -179,17 +179,13 @@ namespace Orleans.Activities
             public Task OnUnhandledExceptionAsync(Exception exception, Activity source) =>
                 grain.OnUnhandledExceptionAsync(exception, source);
 
-            public Task<Func<Task<TResponseResult>>> OnOperationAsync<TRequestParameter, TResponseResult>(string operationName, TRequestParameter requestParameter)
-                    where TRequestParameter : class
-                    where TResponseResult : class =>
+            public Task<Func<Task<TResponseResult>>> OnOperationAsync<TRequestParameter, TResponseResult>(string operationName, TRequestParameter requestParameter) =>
                 workflowCallbackInterfaceProxy.OnOperationAsync<TRequestParameter, TResponseResult>(operationName, requestParameter);
 
-            public Task<Func<Task>> OnOperationAsync<TRequestParameter>(string operationName, TRequestParameter requestParameter)
-                    where TRequestParameter : class  =>
+            public Task<Func<Task>> OnOperationAsync<TRequestParameter>(string operationName, TRequestParameter requestParameter) =>
                 workflowCallbackInterfaceProxy.OnOperationAsync<TRequestParameter>(operationName, requestParameter);
 
-            public Task<Func<Task<TResponseResult>>> OnOperationAsync<TResponseResult>(string operationName)
-                    where TResponseResult : class =>
+            public Task<Func<Task<TResponseResult>>> OnOperationAsync<TResponseResult>(string operationName) =>
                 workflowCallbackInterfaceProxy.OnOperationAsync<TResponseResult>(operationName);
 
             public Task<Func<Task>> OnOperationAsync(string operationName) =>

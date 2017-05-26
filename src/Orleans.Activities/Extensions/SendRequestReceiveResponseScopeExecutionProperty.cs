@@ -33,7 +33,6 @@ namespace Orleans.Activities.Extensions
 
         public static SendRequestReceiveResponseScopeExecutionPropertyWithResult<TResponseResult> GetSendRequestReceiveResponseScopeExecutionPropertyWithResult<TResponseResult>(
             this NativeActivityContext context)
-            where TResponseResult : class
         {
             SendRequestReceiveResponseScopeExecutionPropertyWithResult<TResponseResult> executionProperty =
                 context.Properties.Find(SendRequestReceiveResponseScope.ExecutionPropertyName) as SendRequestReceiveResponseScopeExecutionPropertyWithResult<TResponseResult>;
@@ -52,8 +51,7 @@ namespace Orleans.Activities.Extensions
         public abstract void StartOnOperationAsync(IActivityContext activityContext, string operationName);
 
         // Called by SendRequest.
-        public abstract void StartOnOperationAsync<TRequestParameter>(IActivityContext activityContext, string operationName, TRequestParameter parameter)
-            where TRequestParameter : class;
+        public abstract void StartOnOperationAsync<TRequestParameter>(IActivityContext activityContext, string operationName, TRequestParameter parameter);
 
         // Called by SendRequestReceiveResponseScope.
         public abstract Task UntypedOnOperationTask { get; }
@@ -116,7 +114,6 @@ namespace Orleans.Activities.Extensions
     /// </summary>
     /// <typeparam name="TResponseResult"></typeparam>
     public sealed class SendRequestReceiveResponseScopeExecutionPropertyWithResult<TResponseResult> : SendRequestReceiveResponseScopeExecutionProperty
-        where TResponseResult : class
     {
         // SendRequestReceiveResponseScope has a NoPersistHandle, so we can hold references to responseResultTaskFuncTask
         private Task<Func<Task<TResponseResult>>> responseResultTaskFuncTask;

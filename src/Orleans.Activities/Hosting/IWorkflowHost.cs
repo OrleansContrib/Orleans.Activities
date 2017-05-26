@@ -98,13 +98,9 @@ namespace Orleans.Activities.Hosting
     /// </summary>
     public interface IWorkflowHostOperations
     {
-        Task<TResponseParameter> OperationAsync<TRequestResult, TResponseParameter>(string operationName, Func<Task<TRequestResult>> requestResult)
-            where TRequestResult : class
-            where TResponseParameter : class;
-        Task OperationAsync<TRequestResult>(string operationName, Func<Task<TRequestResult>> requestResult)
-            where TRequestResult : class;
-        Task<TResponseParameter> OperationAsync<TResponseParameter>(string operationName, Func<Task> requestResult)
-            where TResponseParameter : class;
+        Task<TResponseParameter> OperationAsync<TRequestResult, TResponseParameter>(string operationName, Func<Task<TRequestResult>> requestResult);
+        Task OperationAsync<TRequestResult>(string operationName, Func<Task<TRequestResult>> requestResult);
+        Task<TResponseParameter> OperationAsync<TResponseParameter>(string operationName, Func<Task> requestResult);
         Task OperationAsync(string operationName, Func<Task> requestResult);
     }
 

@@ -118,7 +118,6 @@ namespace Orleans.Activities
     [Description("Receives an incoming request by executing the request result delegate created by the appropriate TWorkflowInterface operation, and sets the RequestResult of the execution. " +
         "The receiving delegate is only executed if this activity is able to accept the incoming request.")]
     public sealed class ReceiveRequest<TRequestResult> : NativeActivity, IOperationActivity, IReceiveRequest
-        where TRequestResult : class
     {
         // TODO add combobox to the properties window also
         [Category(Constants.RequiredCategoryName)]

@@ -247,17 +247,13 @@ namespace Orleans.Activities.Hosting
 
         #region IWorkflowHost/IWorkflowHostOperations members
 
-        public Task<TResponseParameter> OperationAsync<TRequestResult, TResponseParameter>(string operationName, Func<Task<TRequestResult>> requestResult)
-                where TRequestResult : class
-                where TResponseParameter : class =>
+        public Task<TResponseParameter> OperationAsync<TRequestResult, TResponseParameter>(string operationName, Func<Task<TRequestResult>> requestResult) =>
             ResumeOperationBookmarkAsync<TResponseParameter>(operationName, requestResult, typeof(TResponseParameter));
 
-        public Task OperationAsync<TRequestResult>(string operationName, Func<Task<TRequestResult>> requestResult)
-                where TRequestResult : class =>
+        public Task OperationAsync<TRequestResult>(string operationName, Func<Task<TRequestResult>> requestResult) =>
             ResumeOperationBookmarkAsync<object>(operationName, requestResult, typeof(void));
 
-        public Task<TResponseParameter> OperationAsync<TResponseParameter>(string operationName, Func<Task> requestResult)
-                where TResponseParameter : class =>
+        public Task<TResponseParameter> OperationAsync<TResponseParameter>(string operationName, Func<Task> requestResult) =>
             ResumeOperationBookmarkAsync<TResponseParameter>(operationName, requestResult, typeof(TResponseParameter));
 
         public Task OperationAsync(string operationName, Func<Task> requestResult) =>
@@ -270,7 +266,6 @@ namespace Orleans.Activities.Hosting
         // If the resumption didn't timed out nor aborted, but not found, it tries to return the previous response parameter if the operation was idempotent,
         // ie. throws OperationRepeatedException, or throws InvalidOperationException if the previous response is not known (didn't happen or not idempotent).
         private async Task<TResponseParameter> ResumeOperationBookmarkAsync<TResponseParameter>(string operationName, object requestResult, Type responseParameterType)
-            where TResponseParameter : class
         {
             await WaitIdleAsync(Parameters.ResumeOperationTimeout);
             try
@@ -535,17 +530,13 @@ namespace Orleans.Activities.Hosting
         // It is common with IWorkflowHostControl.
         //public Task AbortAsync(Exception reason);
 
-        public Task<Func<Task<TResponseResult>>> OnOperationAsync<TRequestParameter, TResponseResult>(string operationName, TRequestParameter requestParameter)
-                where TRequestParameter : class
-                where TResponseResult : class =>
+        public Task<Func<Task<TResponseResult>>> OnOperationAsync<TRequestParameter, TResponseResult>(string operationName, TRequestParameter requestParameter) =>
             grain.OnOperationAsync<TRequestParameter, TResponseResult>(operationName, requestParameter);
 
-        public Task<Func<Task>> OnOperationAsync<TRequestParameter>(string operationName, TRequestParameter requestParameter)
-                where TRequestParameter : class =>
+        public Task<Func<Task>> OnOperationAsync<TRequestParameter>(string operationName, TRequestParameter requestParameter) =>
             grain.OnOperationAsync<TRequestParameter>(operationName, requestParameter);
 
-        public Task<Func<Task<TResponseResult>>> OnOperationAsync<TResponseResult>(string operationName)
-                where TResponseResult : class =>
+        public Task<Func<Task<TResponseResult>>> OnOperationAsync<TResponseResult>(string operationName) =>
             grain.OnOperationAsync<TResponseResult>(operationName);
 
         public Task<Func<Task>> OnOperationAsync(string operationName) =>

@@ -261,18 +261,14 @@ namespace Orleans.Activities.Test
             return TaskConstants.Completed;
         }
 
-        public Task<Func<Task<TResponseResult>>> OnOperationAsync<TRequestParameter, TResponseResult>(string operationName, TRequestParameter requestParameter)
-                where TRequestParameter : class
-                where TResponseResult : class =>
-            Task.FromResult<Func<Task<TResponseResult>>>(() => Task.FromResult("responseResult" as TResponseResult));
+        public Task<Func<Task<TResponseResult>>> OnOperationAsync<TRequestParameter, TResponseResult>(string operationName, TRequestParameter requestParameter) =>
+            Task.FromResult<Func<Task<TResponseResult>>>(() => Task.FromResult((TResponseResult) (typeof(TResponseResult).IsClass ? (object)"responseResult" : (object)43)));
 
-        public Task<Func<Task>> OnOperationAsync<TRequestParameter>(string operationName, TRequestParameter requestParameter)
-                where TRequestParameter : class =>
+        public Task<Func<Task>> OnOperationAsync<TRequestParameter>(string operationName, TRequestParameter requestParameter) =>
             Task.FromResult<Func<Task>>(() => TaskConstants.Completed);
 
-        public Task<Func<Task<TResponseResult>>> OnOperationAsync<TResponseResult>(string operationName)
-                where TResponseResult : class =>
-            Task.FromResult<Func<Task<TResponseResult>>>(() => Task.FromResult("responseResult" as TResponseResult));
+        public Task<Func<Task<TResponseResult>>> OnOperationAsync<TResponseResult>(string operationName) =>
+            Task.FromResult<Func<Task<TResponseResult>>>(() => Task.FromResult((TResponseResult) (typeof(TResponseResult).IsClass? (object)"responseResult" : (object)43)));
 
         public async Task<Func<Task>> OnOperationAsync(string operationName)
         {
@@ -2204,6 +2200,74 @@ namespace Orleans.Activities.Test
                     Console.WriteLine("...Exception thrown " + e.GetType());
                     Assert.IsInstanceOfType(e, typeof(InvalidOperationException));
                 }
+            });
+        }
+
+        [TestMethod]
+        public async Task WorkflowCallbackInterfaceOperationValueType()
+        {
+            await RunAsyncWithReentrantSingleThreadedScheduler(async () =>
+            {
+                Grain grain = new Grain(typeof(WorkflowCallbackInterfaceOperationValueType));
+                grain.Initialize();
+
+                Console.WriteLine("RunAsync...");
+                await grain.WorkflowHost.RunAsync();
+
+                Console.WriteLine("Completed.WaitAsync...");
+                await grain.Completed.WaitAsync(1);
+                Console.WriteLine("Written.WaitAsync...");
+                await grain.Written.WaitAsync(1);
+                Console.WriteLine("---DONE---");
+
+                Assert.AreEqual(ActivityInstanceState.Closed, grain.CompletionState);
+                Assert.AreEqual(1, grain.WorkflowStatesCount);
+                Assert.AreEqual(false, grain.UnhandledException.IsSet);
+            });
+        }
+
+        [TestMethod]
+        public async Task WorkflowInterfaceOperationWithCancellationValueType()
+        {
+            await RunAsyncWithReentrantSingleThreadedScheduler(async () =>
+            {
+                Grain grain = new Grain(typeof(WorkflowInterfaceOperationValueType));
+                grain.Initialize();
+
+                try
+                {
+                    await Task.WhenAll(
+                        Task.Factory.StartNew(async () =>
+                        {
+                            Console.WriteLine("OperationWithoutParamsAsync...");
+                            await grain.WorkflowHost.OperationAsync("IWorkflowInterfaceValueType.OperationWithoutParamsAsync",
+                                () => TaskConstants.Completed);
+                            Assert.Fail("OperationWithoutParamsAsync completed");
+                        }).Unwrap(),
+                        Task.Factory.StartNew(async () =>
+                        {
+                            Console.WriteLine("OperationWithParamsAsync...");
+                            int response = await grain.WorkflowHost.OperationAsync<int, int>("IWorkflowInterfaceValueType.OperationWithParamsAsync",
+                                () => Task.FromResult(42));
+                            Console.WriteLine("OperationWithParamsAsync completed, response: " + response);
+                        }).Unwrap()
+                        );
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("...Exception thrown " + e.GetType());
+                    Assert.AreEqual(typeof(TaskCanceledException), e.GetType());
+                }
+                Console.WriteLine("Completed.WaitAsync...");
+                grain.Written.Reset();
+                await grain.Completed.WaitAsync(1);
+                Console.WriteLine("Written.WaitAsync...");
+                await grain.Written.WaitAsync(1);
+                Console.WriteLine("---DONE---");
+
+                Assert.AreEqual(ActivityInstanceState.Closed, grain.CompletionState);
+                Assert.AreEqual(4, grain.WorkflowStatesCount);
+                Assert.AreEqual(false, grain.UnhandledException.IsSet);
             });
         }
     }

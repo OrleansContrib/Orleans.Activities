@@ -72,7 +72,6 @@ namespace Orleans.Activities
     [ToolboxBitmap(typeof(SendRequest<>), nameof(SendRequest) + ".png")]
     [Description("Sends an outgoing request by calling the appropriate TWorkflowCallbackInterface operation with RequestParameter.")]
     public sealed class SendRequest<TRequestParameter> : NativeActivity, IOperationActivity, ISendRequest
-        where TRequestParameter : class
     {
         // TODO add combobox to the properties window also
         [Category(Constants.RequiredCategoryName)]

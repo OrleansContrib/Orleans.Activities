@@ -47,6 +47,8 @@
     <Reference Include="System.Xml.Linq" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="IWorkflowCallbackInterfaceValueType.cs" />
+    <Compile Include="IWorkflowInterfaceValueType.cs" />
     <Compile Include="IWorkflowInterface.cs" />
     <Compile Include="IWorkflowCallbackInterface.cs" />
     <Compile Include="NativeDelay.cs" />
@@ -196,6 +198,18 @@
   </ItemGroup>
   <ItemGroup>
     <XamlAppDef Include="NOOP.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </XamlAppDef>
+  </ItemGroup>
+  <ItemGroup>
+    <XamlAppDef Include="WorkflowCallbackInterfaceOperationValueType.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </XamlAppDef>
+  </ItemGroup>
+  <ItemGroup>
+    <XamlAppDef Include="WorkflowInterfaceOperationValueType.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </XamlAppDef>

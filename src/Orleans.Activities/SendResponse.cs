@@ -101,7 +101,6 @@ namespace Orleans.Activities
     [ToolboxBitmap(typeof(SendResponse<>), nameof(SendResponse) + ".png")]
     [Description("Completes an incoming request and sends back a result of the operation.")]
     public sealed class SendResponse<TResponseParameter> : NativeActivity, ISendResponse
-        where TResponseParameter : class
     {
         // Called by ReceiveRequestSendResponseScope, to select the appropriate OperationNames for the ReceiveRequest activity.
         Type ISendResponse.ResponseParameterType => typeof(TResponseParameter);

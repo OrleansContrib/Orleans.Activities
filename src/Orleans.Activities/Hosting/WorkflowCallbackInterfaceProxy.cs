@@ -30,8 +30,6 @@ namespace Orleans.Activities.Hosting
             }
 
             public Task<Func<Task<TResponseResult>>> OnOperationAsync<TRequestParameter, TResponseResult>(string operationName, TRequestParameter requestParameter)
-                where TRequestParameter : class
-                where TResponseResult : class
             {
                 Delegate operationDelegate;
                 Func<TWorkflowCallbackInterface, TRequestParameter, Task<Func<Task<TResponseResult>>>> operation = null;
@@ -43,7 +41,6 @@ namespace Orleans.Activities.Hosting
             }
 
             public Task<Func<Task>> OnOperationAsync<TRequestParameter>(string operationName, TRequestParameter requestParameter)
-                where TRequestParameter : class
             {
                 Delegate operationDelegate;
                 Func<TWorkflowCallbackInterface, TRequestParameter, Task<Func<Task>>> operation = null;
@@ -55,7 +52,6 @@ namespace Orleans.Activities.Hosting
             }
 
             public Task<Func<Task<TResponseResult>>> OnOperationAsync<TResponseResult>(string operationName)
-                where TResponseResult : class
             {
                 Delegate operationDelegate;
                 Func<TWorkflowCallbackInterface, Task<Func<Task<TResponseResult>>>> operation = null;
