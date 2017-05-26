@@ -55,7 +55,7 @@ If it's needed, a mainly computational workflow can be executed also, even witho
 Implemented:
 
 * Persistence (compatible with legacy workflow extensions)
-* Reminders (compatible with legacy Delay activities, though 1 min. is the minimum)
+* Reminders (compatible with legacy Delay activities)
 * Tracking
 * Designer support
 * Nearly all legacy activities are supported (except TransactionScope and messaging activities)
@@ -80,7 +80,6 @@ Under construction:
 Not implemented, help wanted (for design and for implementation):
 
 * DynamicUpdateMap support (updating loaded workflows to a newer definition version), though the separation of the application logic (the plain C# delegates) and the process (the diagram) results in a very simple workflow diagram, that has a big chance you won't need to update when it runs
-* TransactionScope activity support (see https://github.com/dotnet/orleans/issues/1090)
 * See all [Help Wanted issues](http://waffle.io/OrleansContrib/Orleans.Activities?label=Status-Help%20Wanted) (filtered view)
 
 And there are nearly unlimited [Open issues](http://waffle.io/OrleansContrib/Orleans.Activities)...
