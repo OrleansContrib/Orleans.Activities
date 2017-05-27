@@ -235,9 +235,12 @@ _Pvt_Extensions
 # Visual Paradigm
 .vpprefdata/
 *.vpp.bak
+*.vpp.bak_*
+*.vpp.vbak
 *.vpp~*
 *.vpp.working
 *.vpp.working-journal
 *.lock
+*.vpp.lck
 *.vux
 tmp/*
