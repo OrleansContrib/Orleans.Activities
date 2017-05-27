@@ -34,9 +34,9 @@ namespace Orleans.Activities.Samples.Arithmetical.Grains
             // Don't use callbacks on Completed event when there is no implicit or explicit persistence before, because the incoming request that started the workflow will run
             // the workflow to the first idle moment, if the first idle is the completion, the callback will happen during the incoming request (usually also a problem),
             // and the exception during the callback will be propagated back to the caller and the caller has to repeat the incoming request to restart the workflow.
-            WorkflowControl.CompletedAsync = (ActivityInstanceState activityInstanceState, IDictionary<string, object> outputArguments, Exception terminationException) =>
+            WorkflowControl.CompletedAsync = (ActivityInstanceState _activityInstanceState, IDictionary<string, object> _outputArguments, Exception _terminationException) =>
             {
-                _subsManager.Notify(s => s.ReceiveResult((int)outputArguments["result"]));
+                subsManager.Notify(_subscriber => _subscriber.ReceiveResult((int)_outputArguments["result"]));
                 return Task.CompletedTask;
             };
         }
@@ -63,23 +63,23 @@ namespace Orleans.Activities.Samples.Arithmetical.Grains
 
         #region Subscription
 
-        private ObserverSubscriptionManager<IMultiplierResultReceiver> _subsManager;
+        private ObserverSubscriptionManager<IMultiplierResultReceiver> subsManager;
 
         public override async Task OnActivateAsync()
         {
             await base.OnActivateAsync();
-            _subsManager = new ObserverSubscriptionManager<IMultiplierResultReceiver>();
+            subsManager = new ObserverSubscriptionManager<IMultiplierResultReceiver>();
         }
 
         public Task SubscribeAsync(IMultiplierResultReceiver observer)
         {
-            _subsManager.Subscribe(observer);
+            subsManager.Subscribe(observer);
             return Task.CompletedTask;
         }
 
         public Task UnsubscribeAsync(IMultiplierResultReceiver observer)
         {
-            _subsManager.Unsubscribe(observer);
+            subsManager.Unsubscribe(observer);
             return Task.CompletedTask;
         }
 
