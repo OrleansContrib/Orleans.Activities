@@ -81,9 +81,9 @@ public MultiplierGrain()
   Parameters = new Parameters(idlePersistenceMode: IdlePersistenceMode.Always);
   WorkflowControl.ExtensionsFactory = () => new GrainTrackingParticipant(GetLogger()).Yield();
 
-  WorkflowControl.CompletedAsync = (ActivityInstanceState activityInstanceState, IDictionary<string, object> outputArguments, Exception terminationException) =>
+  WorkflowControl.CompletedAsync = (ActivityInstanceState _activityInstanceState, IDictionary<string, object> _outputArguments, Exception _terminationException) =>
   {
-    _subsManager.Notify(s => s.ReceiveResult((int)outputArguments["result"]));
+    subsManager.Notify(_subscriber => _subscriber.ReceiveResult((int)_outputArguments["result"]));
     return Task.CompletedTask;
   };
 }
