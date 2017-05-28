@@ -28,7 +28,7 @@
   install:
     - ps: Update-AppveyorBuild -Version "$([regex]::match([IO.File]::ReadAllText("$env:APPVEYOR_BUILD_FOLDER\Samples\src\GlobalAssemblyInfo.cs"), 'AssemblyInformationalVersion\(\"(\d+\.\d+\.\d+)\"\)').Groups[1].Value)$env:APPVEYOR_BUILD_VERSION"
     - ps: Set-AppveyorBuildVariable -Name productversion -Value "$([regex]::match([IO.File]::ReadAllText("$env:APPVEYOR_BUILD_FOLDER\Samples\src\GlobalAssemblyInfo.cs"), 'AssemblyInformationalVersion\(\"(\d+\.\d+\.\d+)\"\)').Groups[1].Value)"
-  os: Visual Studio 2015
+  os: Visual Studio 2017
   configuration: Release
   assembly_info:
     patch: true
