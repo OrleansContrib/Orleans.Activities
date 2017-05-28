@@ -20,8 +20,7 @@ namespace Orleans.Activities.Helpers
         {
             get
             {
-                TValue value;
-                if (!values.TryGetValue(key, out value))
+                if (!values.TryGetValue(key, out TValue value))
                 {
                     value = new TValue();
                     values.Add(key, value);

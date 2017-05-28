@@ -29,7 +29,7 @@ namespace Orleans.Activities
     /// <typeparam name="TGrainState"></typeparam>
     public abstract class WorkflowGrain<TGrain, TGrainState> : WorkflowGrain<TGrain, TGrainState, IEmptyWorkflowInterface, IEmptyWorkflowInterface>, IEmptyWorkflowInterface
         where TGrain : WorkflowGrain<TGrain, TGrainState>
-        where TGrainState : GrainState, IWorkflowState
+        where TGrainState : IWorkflowState, new()
     {
         protected WorkflowGrain(Func<TGrainState, WorkflowIdentity, Activity> workflowDefinitionFactory, Func<TGrainState, WorkflowIdentity> workflowDefinitionIdentityFactory)
             : base(workflowDefinitionFactory, workflowDefinitionIdentityFactory)
@@ -65,7 +65,7 @@ namespace Orleans.Activities
     /// </typeparam>
     public abstract class WorkflowGrain<TGrain, TGrainState, TWorkflowInterface, TWorkflowCallbackInterface> : Grain<TGrainState>, IRemindable
         where TGrain : WorkflowGrain<TGrain, TGrainState, TWorkflowInterface, TWorkflowCallbackInterface>, TWorkflowCallbackInterface
-        where TGrainState : GrainState, IWorkflowState
+        where TGrainState : IWorkflowState, new()
         where TWorkflowInterface : class
         where TWorkflowCallbackInterface : class
     {
@@ -111,11 +111,9 @@ namespace Orleans.Activities
             }
             set
             {
-                if (value == null)
-                    throw new ArgumentNullException(nameof(value));
                 if (parameters != null)
                     throw new InvalidOperationException(nameof(Parameters) + " property is already set!");
-                parameters = value;
+                parameters = value ?? throw new ArgumentNullException(nameof(value));
             }
         }
 
@@ -123,7 +121,11 @@ namespace Orleans.Activities
 
         #region Grain & IRemindable infrastructure members
 
-        public override Task OnDeactivateAsync() => workflowHost.DeactivateAsync();
+        public override async Task OnDeactivateAsync()
+        {
+            await workflowHost.DeactivateAsync();
+            await base.OnDeactivateAsync();
+        }
 
         public virtual Task ReceiveReminder(string reminderName, TickStatus tickStatus) => workflowHost.ReminderAsync(reminderName);
 
@@ -154,9 +156,7 @@ namespace Orleans.Activities
             private static TimeSpan oneMinuteTimeSpan = TimeSpan.FromMinutes(1);
 
             public Task RegisterOrUpdateReminderAsync(string reminderName, TimeSpan dueTime, TimeSpan period) =>
-                grain.RegisterOrUpdateReminder(reminderName,
-                    dueTime < oneMinuteTimeSpan ? oneMinuteTimeSpan : dueTime,
-                    period < oneMinuteTimeSpan ? oneMinuteTimeSpan : period);
+                grain.RegisterOrUpdateReminder(reminderName, dueTime, period < oneMinuteTimeSpan ? oneMinuteTimeSpan : period);
 
             public async Task UnregisterReminderAsync(string reminderName)
             {
@@ -179,17 +179,13 @@ namespace Orleans.Activities
             public Task OnUnhandledExceptionAsync(Exception exception, Activity source) =>
                 grain.OnUnhandledExceptionAsync(exception, source);
 
-            public Task<Func<Task<TResponseResult>>> OnOperationAsync<TRequestParameter, TResponseResult>(string operationName, TRequestParameter requestParameter)
-                    where TRequestParameter : class
-                    where TResponseResult : class =>
+            public Task<Func<Task<TResponseResult>>> OnOperationAsync<TRequestParameter, TResponseResult>(string operationName, TRequestParameter requestParameter) =>
                 workflowCallbackInterfaceProxy.OnOperationAsync<TRequestParameter, TResponseResult>(operationName, requestParameter);
 
-            public Task<Func<Task>> OnOperationAsync<TRequestParameter>(string operationName, TRequestParameter requestParameter)
-                    where TRequestParameter : class  =>
+            public Task<Func<Task>> OnOperationAsync<TRequestParameter>(string operationName, TRequestParameter requestParameter) =>
                 workflowCallbackInterfaceProxy.OnOperationAsync<TRequestParameter>(operationName, requestParameter);
 
-            public Task<Func<Task<TResponseResult>>> OnOperationAsync<TResponseResult>(string operationName)
-                    where TResponseResult : class =>
+            public Task<Func<Task<TResponseResult>>> OnOperationAsync<TResponseResult>(string operationName) =>
                 workflowCallbackInterfaceProxy.OnOperationAsync<TResponseResult>(operationName);
 
             public Task<Func<Task>> OnOperationAsync(string operationName) =>

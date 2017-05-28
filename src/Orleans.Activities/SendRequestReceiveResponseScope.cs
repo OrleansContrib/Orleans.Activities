@@ -75,7 +75,7 @@ namespace Orleans.Activities
 
         [DefaultValue(null)]
         [Browsable(false)]
-        public Activity Body { get { return tryCatch.Try; } set { tryCatch.Try = value; } }
+        public Activity Body { get => tryCatch.Try; set => tryCatch.Try = value; }
 
         private TryCatch tryCatch;
 

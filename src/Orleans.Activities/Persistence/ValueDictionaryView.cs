@@ -49,43 +49,23 @@ namespace Orleans.Activities.Persistence
  
         public object this[XName key]
         {
-            get
-            {
-                object value;
-                if (!TryGetValue(key, out value))
-                    throw new KeyNotFoundException();
-                return value;
-            }
-            set
-            {
-                throw CreateReadOnlyException();
-            }
+            get => !TryGetValue(key, out object value) ? throw new KeyNotFoundException() : value;
+            set => throw CreateReadOnlyException();
         }
 
         public int Count => Keys.Count;
 
         public bool IsReadOnly => true;
 
-        public void Add(XName key, object value)
-        {
-            throw CreateReadOnlyException();
-        }
+        public void Add(XName key, object value) => throw CreateReadOnlyException();
  
-        public bool ContainsKey(XName key)
-        {
-            object dummy;
-            return TryGetValue(key, out dummy);
-        }
+        public bool ContainsKey(XName key) => TryGetValue(key, out object _);
  
-        public bool Remove(XName key)
-        {
-            throw CreateReadOnlyException();
-        }
+        public bool Remove(XName key) => throw CreateReadOnlyException();
  
         public bool TryGetValue(XName key, out object value)
         {
-            InstanceValue realValue;
-            if (!instanceValues.TryGetValue(key, out realValue) || realValue.IsWriteOnly() != writeOnly)
+            if (!instanceValues.TryGetValue(key, out InstanceValue realValue) || realValue.IsWriteOnly() != writeOnly)
             {
                 value = null;
                 return false;
@@ -94,23 +74,12 @@ namespace Orleans.Activities.Persistence
             return true;
         }
  
-        public void Add(KeyValuePair<XName, object> item)
-        {
-            throw CreateReadOnlyException();
-        }
+        public void Add(KeyValuePair<XName, object> item) => throw CreateReadOnlyException();
  
-        public void Clear()
-        {
-            throw CreateReadOnlyException();
-        }
+        public void Clear() => throw CreateReadOnlyException();
  
-        public bool Contains(KeyValuePair<XName, object> item)
-        {
-            object value;
-            if (!TryGetValue(item.Key, out value))
-                return false;
-            return EqualityComparer<object>.Default.Equals(value, item.Value);
-        }
+        public bool Contains(KeyValuePair<XName, object> item) =>
+            !TryGetValue(item.Key, out object value) ? false : EqualityComparer<object>.Default.Equals(value, item.Value);
  
         public void CopyTo(KeyValuePair<XName, object>[] array, int arrayIndex)
         {
@@ -118,16 +87,12 @@ namespace Orleans.Activities.Persistence
                 array[arrayIndex++] = entry;
         }
  
-        public bool Remove(KeyValuePair<XName, object> item)
-        {
-            throw CreateReadOnlyException();
-        }
+        public bool Remove(KeyValuePair<XName, object> item) => throw CreateReadOnlyException();
 
         public IEnumerator<KeyValuePair<XName, object>> GetEnumerator() =>
             instanceValues.Where(value => value.Value.IsWriteOnly() == writeOnly).Select(value => new KeyValuePair<XName, object>(value.Key, value.Value.Value)).GetEnumerator();
 
-        IEnumerator IEnumerable.GetEnumerator() =>
-            GetEnumerator();
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
         public void ResetCaches()
         {

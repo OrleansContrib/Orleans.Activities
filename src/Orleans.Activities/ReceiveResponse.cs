@@ -96,7 +96,6 @@ namespace Orleans.Activities
     [Description("Completes an outgoing request, and sets the ResponseResult of the execution. " +
         "The request's result delegate is only executed if this activity is able to complete the outgoing request.")]
     public sealed class ReceiveResponse<TResponseResult> : NativeActivity, IReceiveResponse
-        where TResponseResult : class
     {
         // Called by SendRequestReceiveResponseScope, to select the appropriate OperationNames for the SendRequest activity.
         Type IReceiveResponse.ResponseResultType => typeof(TResponseResult);

@@ -75,10 +75,8 @@ namespace Orleans.Activities.Helpers
 
         public static IEnumerable<string> GetOperationNames(Type requestResultType, Type responseParameterType)
         {
-            VirtualArray<Type, List<string>> responseParameterTypeArray;
-            List<string> operationNameList;
-            if (!operationNames.TryGetValue(requestResultType, out responseParameterTypeArray)
-                || !responseParameterTypeArray.TryGetValue(responseParameterType, out operationNameList))
+            if (!operationNames.TryGetValue(requestResultType, out VirtualArray<Type, List<string>> responseParameterTypeArray)
+                || !responseParameterTypeArray.TryGetValue(responseParameterType, out List<string> operationNameList))
                 return Enumerable.Empty<string>();
             else
                 return operationNameList;

@@ -37,7 +37,6 @@ namespace Orleans.Activities
     /// <typeparam name="TPreviousResponseParameter"></typeparam>
     [Serializable]
     public class OperationRepeatedException<TPreviousResponseParameter> : OperationRepeatedException
-        where TPreviousResponseParameter : class
     {
         private TPreviousResponseParameter previousResponseParameter;
 

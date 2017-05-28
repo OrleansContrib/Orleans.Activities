@@ -21,8 +21,7 @@ namespace Orleans.Activities.Helpers
         static OperationInfo()
         {
             Type[] interfaces = typeof(T).GetInterfaces();
-            ISet<string> interfaceNames = new HashSet<string>();
-            interfaceNames.Add(nameof(T));
+            ISet<string> interfaceNames = new HashSet<string> { nameof(T) };
             isNamespaceRequiredForOperationNames = interfaces.Any((i) => !interfaceNames.Add(i.GetNongenericName()));
 
             MethodInfo[] operationMethods =

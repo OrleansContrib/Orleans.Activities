@@ -178,8 +178,7 @@ namespace Orleans.Activities.AsyncEx
                     else
                         tcs.TrySetResult(null);
 
-                    if (callback != null)
-                        callback(tcs.Task);
+                    callback?.Invoke(tcs.Task);
                 // MODIFIED
                 //}, TaskScheduler.Default);
                 }, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Current);
@@ -195,8 +194,7 @@ namespace Orleans.Activities.AsyncEx
         public static void ToEnd(IAsyncResult asyncResult)
         {
             // MODIFIED
-            AsyncResultCompletedSynchronously asyncResultCompletedSynchronously = asyncResult as AsyncResultCompletedSynchronously;
-            if (asyncResultCompletedSynchronously != null)
+            if (asyncResult is AsyncResultCompletedSynchronously asyncResultCompletedSynchronously)
                 ((Task)asyncResultCompletedSynchronously).GetAwaiter().GetResult();
             else
             {
@@ -369,8 +367,7 @@ namespace Orleans.Activities.AsyncEx
                     else
                         tcs.TrySetResult(task.Result);
 
-                    if (callback != null)
-                        callback(tcs.Task);
+                    callback?.Invoke(tcs.Task);
                 // MODIFIED
                 //}, TaskScheduler.Default);
                 }, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Current);
@@ -386,8 +383,7 @@ namespace Orleans.Activities.AsyncEx
         public static TResult ToEnd(IAsyncResult asyncResult)
         {
             // MODIFIED
-            AsyncResultCompletedSynchronously<TResult> asyncResultCompletedSynchronously = asyncResult as AsyncResultCompletedSynchronously<TResult>;
-            if (asyncResultCompletedSynchronously != null)
+            if (asyncResult is AsyncResultCompletedSynchronously<TResult> asyncResultCompletedSynchronously)
                 return ((Task<TResult>)asyncResultCompletedSynchronously).GetAwaiter().GetResult();
             else
             {

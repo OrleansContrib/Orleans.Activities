@@ -120,17 +120,13 @@ namespace Orleans.Activities.Hosting
                 await host.OnUnhandledExceptionAsync(exception, source);
             }) == null;
 
-        public Task<Func<Task<TResponseResult>>> OnOperationAsync<TRequestParameter, TResponseResult>(string operationName, TRequestParameter requestParameter)
-                where TRequestParameter : class
-                where TResponseResult : class =>
+        public Task<Func<Task<TResponseResult>>> OnOperationAsync<TRequestParameter, TResponseResult>(string operationName, TRequestParameter requestParameter) =>
             host.OnOperationAsync<TRequestParameter, TResponseResult>(operationName, requestParameter);
 
-        public Task<Func<Task>> OnOperationAsync<TRequestParameter>(string operationName, TRequestParameter requestParameter)
-                where TRequestParameter : class =>
+        public Task<Func<Task>> OnOperationAsync<TRequestParameter>(string operationName, TRequestParameter requestParameter) =>
             host.OnOperationAsync<TRequestParameter>(operationName, requestParameter);
 
-        public Task<Func<Task<TResponseResult>>> OnOperationAsync<TResponseResult>(string operationName)
-                where TResponseResult : class =>
+        public Task<Func<Task<TResponseResult>>> OnOperationAsync<TResponseResult>(string operationName) =>
             host.OnOperationAsync<TResponseResult>(operationName);
 
         public Task<Func<Task>> OnOperationAsync(string operationName) =>
@@ -368,10 +364,7 @@ namespace Orleans.Activities.Hosting
                 if (Parameters.PersistWriteOnlyValues)
                     instanceValues[WorkflowNamespace.Workflow] = new InstanceValue(Controller.PrepareForSerialization(), InstanceValueOptions.Optional);
 
-                ActivityInstanceState completionState;
-                IDictionary<string, object> outputs;
-                Exception terminationException;
-                completionState = Controller.GetCompletionState(out outputs, out terminationException);
+                ActivityInstanceState completionState = Controller.GetCompletionState(out IDictionary<string, object> outputs, out Exception terminationException);
 
                 if (completionState == ActivityInstanceState.Closed)
                 {
@@ -395,8 +388,7 @@ namespace Orleans.Activities.Hosting
 
         private object LoadWorkflow(IDictionary<XName, InstanceValue> instanceValues)
         {
-            InstanceValue value;
-            IsStarting = instanceValues.TryGetValue(WorkflowNamespace.IsStarting, out value) && (bool)value.Value;
+            IsStarting = instanceValues.TryGetValue(WorkflowNamespace.IsStarting, out InstanceValue value) && (bool)value.Value;
             return instanceValues[WorkflowNamespace.Workflow].Value;
         }
 
@@ -602,10 +594,7 @@ namespace Orleans.Activities.Hosting
                         && !hasRaisedCompleted)
                     {
                         await IfHasPendingThenFlushTrackingRecordsAsync();
-                        ActivityInstanceState completionState;
-                        IDictionary<string, object> outputs;
-                        Exception terminationException;
-                        completionState = Controller.GetCompletionState(out outputs, out terminationException);
+                        ActivityInstanceState completionState = Controller.GetCompletionState(out IDictionary<string, object> outputs, out Exception terminationException);
                         await host.OnCompletedAsync(completionState, outputs, terminationException);
                         hasRaisedCompleted = true;
                     }

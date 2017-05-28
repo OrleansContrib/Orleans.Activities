@@ -1,15 +1,13 @@
-# Orleans.Activities
+# ![Orleans logo](https://github.com/OrleansContrib/Orleans.Activities/raw/master/src/Orleans.Activities.png) Orleans.Activities
 
-![Orleans logo](https://raw.githubusercontent.com/OrleansContrib/Orleans.Activities/master/src/Orleans.Activities.png)
-
-Workflow Foundation (.Net 4.x System.Activities workflows) over Microsoft.Orleans framework to provide stable, long-running, extremely scalable processes with XAML designer support.
+Workflow Foundation (.Net 4.x System.Activities workflows) over [Microsoft Orleans](https://github.com/dotnet/orleans) framework to provide stable, long-running, extremely scalable processes with XAML designer support.
 
 __Stable:__
-[![GitHub version](https://badge.fury.io/gh/OrleansContrib%2FOrleans.Activities.svg)](https://badge.fury.io/gh/OrleansContrib%2FOrleans.Activities)
-[![NuGet version](https://badge.fury.io/nu/Orleans.Activities.svg)](https://badge.fury.io/nu/Orleans.Activities)
+[![GitHub version](https://img.shields.io/github/tag/OrleansContrib/Orleans.Activities.svg)](https://github.com/OrleansContrib/Orleans.Activities/releases)
+[![NuGet version](https://img.shields.io/nuget/v/Orleans.Activities.svg)](https://www.nuget.org/packages/Orleans.Activities)
 
 __Master:__
-[![Build status](https://ci.appveyor.com/api/projects/status/dy600wk9qn1fppqw/branch/master?svg=true)](https://ci.appveyor.com/project/OrleansContrib/orleans-activities)
+[![Build status](https://ci.appveyor.com/api/projects/status/dy600wk9qn1fppqw/branch/master?svg=true)](https://ci.appveyor.com/project/OrleansContrib/orleans-activities/history)
 [AppVeyor project feed (NuGet source)](https://ci.appveyor.com/nuget/orleans-activities-xqh82aku7sb3)
 
 __Stats:__
@@ -24,24 +22,24 @@ __Issues:__
 
 ~~Documentation~~ (see [Samples](https://github.com/OrleansContrib/Orleans.Activities#samples) below)
 
-[Branching Guidelines](https://github.com/OrleansContrib/Orleans.Activities/blob/docs-master/docs/Branching-Guidelines.md)
-
-[Coding Guidelines](https://github.com/dotnet/corefx/blob/master/Documentation/coding-guidelines/coding-style.md)
-
-[Design Guidelines](https://github.com/dotnet/corefx/blob/master/Documentation/coding-guidelines/framework-design-guidelines-digest.md)
+Guidelines
+* [Branching Guidelines](https://github.com/OrleansContrib/Orleans.Activities/blob/docs-master/docs/Branching-Guidelines.md)
+* [CI Guidelines](https://github.com/OrleansContrib/Orleans.Activities/blob/docs-master/docs/CI-Guidelines.md)
+* [Coding Guidelines](https://github.com/dotnet/corefx/blob/master/Documentation/coding-guidelines/coding-style.md)
+* [Design Guidelines](https://github.com/dotnet/corefx/blob/master/Documentation/coding-guidelines/framework-design-guidelines-digest.md)
 
 This project is licensed under the [Apache License](https://github.com/OrleansContrib/Orleans.Activities/blob/master/LICENSE).
 
 ## Concept
 
-![Overview](https://raw.githubusercontent.com/OrleansContrib/Orleans.Activities/docs-master/docs/Orleans.Activities-Overview.png)
+![Overview](https://github.com/OrleansContrib/Orleans.Activities/raw/docs-master/docs/Orleans.Activities-Overview.png)
 
 This is a very high level view:
 
-* Each WorkflowGrain is indistinguishable from a normal grain and backed by a WorkflowHost.
-* The WorkflowHost is responsible to handle the lifecycle of the WorkflowInstance, mainly recreate it from a previous persisted state when it aborts.
-* The communication between the WorkflowGrain and the WorkflowHost is based on 2 developer defined interfaces for the incoming and outgoing requests (TWorkflowInterface and TWorkflowCallbackInterface). These interfaces' methods can be referenced from the workflow activities to accept incoming or to initiate outgoing requests.
-* The methods of the TWorkflowInterface and TWorkflowCallbackInterface are independent from the grain's external public interface, you can merge different public requests into one method or vice versa. Or a reentrant grain even can execute (read-only) public interface methods independently from the current running workflow operations.
+* Each `WorkflowGrain` is indistinguishable from a normal grain and backed by a `WorkflowHost`.
+* The `WorkflowHost` is responsible to handle the lifecycle of the `WorkflowInstance`, mainly recreate it from a previous persisted state when it aborts.
+* The communication between the `WorkflowGrain` and the `WorkflowHost` is based on 2 developer defined interfaces for the incoming and outgoing requests (`TWorkflowInterface` and `TWorkflowCallbackInterface`). These interfaces' methods can be referenced from the workflow activities to accept incoming or to initiate outgoing requests.
+* The methods of the `TWorkflowInterface` and `TWorkflowCallbackInterface` are independent from the grain's external public interface, you can merge different public requests into one method or vice versa. Or a reentrant grain even can execute (read-only) public interface methods independently from the current running workflow operations.
 * The method's signatures are restricted, their parameters and return values are lazy, async delegates with 1 optional parameter/return value. The delegates executed by the workflow activities if/when they accept them (command pattern).
 * There are design-, build- and static-run-time checks to keep the interfaces and the workflows in sync.
 * Though you can execute complete workflows as methods also.
@@ -57,7 +55,7 @@ If it's needed, a mainly computational workflow can be executed also, even witho
 Implemented:
 
 * Persistence (compatible with legacy workflow extensions)
-* Reminders (compatible with legacy Delay activities, though 1 min. is the minimum)
+* Reminders (compatible with legacy Delay activities)
 * Tracking
 * Designer support
 * Nearly all legacy activities are supported (except TransactionScope and messaging activities)
@@ -82,7 +80,6 @@ Under construction:
 Not implemented, help wanted (for design and for implementation):
 
 * DynamicUpdateMap support (updating loaded workflows to a newer definition version), though the separation of the application logic (the plain C# delegates) and the process (the diagram) results in a very simple workflow diagram, that has a big chance you won't need to update when it runs
-* TransactionScope activity support (see https://github.com/dotnet/orleans/issues/1090)
 * See all [Help Wanted issues](http://waffle.io/OrleansContrib/Orleans.Activities?label=Status-Help%20Wanted) (filtered view)
 
 And there are nearly unlimited [Open issues](http://waffle.io/OrleansContrib/Orleans.Activities)...
@@ -97,4 +94,4 @@ And there are nearly unlimited [Open issues](http://waffle.io/OrleansContrib/Orl
 
 This is still an overview, all the details of the classes are hidden. The goal is to give a map to understand the relations between the classes. See the comments in the source!
 
-![Overview](https://raw.githubusercontent.com/OrleansContrib/Orleans.Activities/docs-master/docs/Orleans.Activities-Details.png)
+![Overview](https://github.com/OrleansContrib/Orleans.Activities/raw/docs-master/docs/Orleans.Activities-Details.png)
