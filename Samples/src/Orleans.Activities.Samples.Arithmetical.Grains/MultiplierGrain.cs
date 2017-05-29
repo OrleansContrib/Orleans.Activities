@@ -48,7 +48,7 @@ namespace Orleans.Activities.Samples.Arithmetical.Grains
         }
 
         // MultiplierGrain only executes the workflow until it gets idle, from that moment the workflow executes in the "background" and calls the Completed event when it completes.
-        public async Task MultiplyAsync(int arg1, int arg2)
+        async Task IMultiplier.MultiplyAsync(int arg1, int arg2)
         {
             // IMPORTANT: Do not copy values from the grain's state into the input arguments, because input arguments will be persisted by the workflow also.
             // Closure directly the necessary values from the incoming public grain method call's parameters into the delegate.
@@ -71,13 +71,13 @@ namespace Orleans.Activities.Samples.Arithmetical.Grains
             subsManager = new ObserverSubscriptionManager<IMultiplierResultReceiver>();
         }
 
-        public Task SubscribeAsync(IMultiplierResultReceiver observer)
+        Task IMultiplier.SubscribeAsync(IMultiplierResultReceiver observer)
         {
             subsManager.Subscribe(observer);
             return Task.CompletedTask;
         }
 
-        public Task UnsubscribeAsync(IMultiplierResultReceiver observer)
+        Task IMultiplier.UnsubscribeAsync(IMultiplierResultReceiver observer)
         {
             subsManager.Unsubscribe(observer);
             return Task.CompletedTask;

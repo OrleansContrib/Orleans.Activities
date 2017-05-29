@@ -55,7 +55,7 @@ namespace Orleans.Activities.Samples.HelloWorld.Grains
 
         // The parameter delegate executed when the workflow accepts the incoming call,
         // it can modify the grain's State or do nearly anything a normal grain method can (command pattern).
-        public async Task<string> SayHelloAsync(string greeting)
+        async Task<string> IHello.SayHelloAsync(string greeting)
         {
             Task<string> ProcessRequestAsync(string _request) => Task.FromResult(_request);
             Task<string> CreateResponseAsync(string _responseParameter) => Task.FromResult(_responseParameter);
@@ -74,7 +74,7 @@ namespace Orleans.Activities.Samples.HelloWorld.Grains
 
         // The parameter delegate executed when the workflow accepts the incoming call,
         // it can modify the grain's State or do nearly anything a normal grain method can (command pattern).
-        public async Task<string> SayByeAsync()
+        async Task<string> IHello.SayByeAsync()
         {
             Task ProcessRequestAsync() => Task.CompletedTask;
             Task<string> CreateResponseAsync(string _responseParameter) => Task.FromResult(_responseParameter);
@@ -103,8 +103,9 @@ namespace Orleans.Activities.Samples.HelloWorld.Grains
             Task<string> SomeExternalStuffAsync(string _request) => Task.FromResult(string.IsNullOrEmpty(_request) ? "Who are you?" : "Hello!");
             Task<string> ProcessResponseAsync(string _response) => Task.FromResult(_response);
 
-            Task<string> someExternalStuffTask = SomeExternalStuffAsync(await CreateRequestAsync(clientSaid));
-            return async () => await ProcessResponseAsync(await someExternalStuffTask);
+            string request = await CreateRequestAsync(clientSaid);
+            string response = await SomeExternalStuffAsync(request);
+            return async () => await ProcessResponseAsync(response);
         }
     }
 }
