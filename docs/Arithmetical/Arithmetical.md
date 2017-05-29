@@ -108,7 +108,7 @@ protected override Task OnUnhandledExceptionAsync(Exception exception, Activity 
 __IMPORTANT:__ Do not copy values from the grain's `State` into the input arguments, because input arguments will be persisted by the workflow also. Closure directly the necessary values from the incoming public grain method call's parameters into the delegate.
 
 ```c#
-public async Task<int> AddAsync(int arg1, int arg2)
+async Task<int> IAdder.AddAsync(int arg1, int arg2)
 {
   WorkflowControl.StartingAsync = () => Task.FromResult<IDictionary<string, object>>(new Dictionary<string, object>()
   {
@@ -125,7 +125,7 @@ public async Task<int> AddAsync(int arg1, int arg2)
 `MultiplierGrain` only executes the workflow until it gets idle, from that moment the workflow executes in the "background" and calls the `CompletedAsync` event when it completes.
 
 ```c#
-public async Task MultiplyAsync(int arg1, int arg2)
+async Task IMultiplier.MultiplyAsync(int arg1, int arg2)
 {
   WorkflowControl.StartingAsync = () => Task.FromResult<IDictionary<string, object>>(new Dictionary<string, object>()
   {
