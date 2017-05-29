@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.24720.0
+# Visual Studio 15
+VisualStudioVersion = 15.0.26430.6
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Orleans.Activities.Samples.Arithmetical.GrainInterfaces", "Orleans.Activities.Samples.Arithmetical.GrainInterfaces\Orleans.Activities.Samples.Arithmetical.GrainInterfaces.csproj", "{AD719AED-9327-4F64-A6AC-0C11E613A394}"
 EndProject
@@ -17,6 +17,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Orleans.Activities.Samples.
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{91A449C0-1075-48E6-8A5E-F86A61916F70}"
 	ProjectSection(SolutionItems) = preProject
+		_README.txt = _README.txt
 		GlobalAssemblyInfo.cs = GlobalAssemblyInfo.cs
 	EndProjectSection
 EndProject

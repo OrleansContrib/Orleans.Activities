@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Orleans;
+using Orleans.Providers;
 
 using System.Activities;
 using Orleans.Activities;
@@ -15,6 +16,7 @@ namespace Orleans.Activities.Samples.Arithmetical.Grains
     // In this sample we don't use custom TGrainState, TWorkflowInterface and TWorkflowCallbackInterface type parameters, we use the less generic
     // WorkflowGrain<TGrain, TGrainState> base type with the default WorkflowState as TGrainState. But this is optional, the full blown
     // WorkflowGrain<TGrain, TGrainState, TWorkflowInterface, TWorkflowCallbackInterface> base type can be used also if there are outgoing calls or incoming callbacks.
+    [StorageProvider(ProviderName = "MemoryStore")]
     public sealed class AdderGrain : WorkflowGrain<AdderGrain, WorkflowState>, IAdder
     {
         private static Activity workflowDefinition = new AdderActivity();
@@ -30,7 +32,7 @@ namespace Orleans.Activities.Samples.Arithmetical.Grains
 
         protected override Task OnUnhandledExceptionAsync(Exception exception, Activity source)
         {
-            GetLogger().Error(0, $"OnUnhandledExceptionAsync: the workflow is going to {Parameters.UnhandledExceptionAction}", exception);
+            GetLogger().TrackTrace($"OnUnhandledExceptionAsync: the workflow is going to {Parameters.UnhandledExceptionAction}\n\n{exception}", Runtime.Severity.Error);
             return Task.CompletedTask;
         }
 
@@ -38,7 +40,7 @@ namespace Orleans.Activities.Samples.Arithmetical.Grains
         // it is propagated back to the caller. If the workflow persist itself but due to a failure it aborts later and propagates the exception back to the caller,
         // it will be reloaded when the caller repeats the request or by a reactivation reminder. If the caller repeats the call only after the workflow is reloaded and completed,
         // this not a problem, it will get the same output arguments or OperationCanceledException or the exception that caused the workflow to terminate.
-        public async Task<int> AddAsync(int arg1, int arg2)
+        async Task<int> IAdder.AddAsync(int arg1, int arg2)
         {
             // IMPORTANT: Do not copy values from the grain's state into the input arguments, because input arguments will be persisted by the workflow also.
             // Closure directly the necessary values from the incoming public grain method call's parameters into the delegate.
