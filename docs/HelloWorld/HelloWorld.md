@@ -107,14 +107,14 @@ protected override Task OnUnhandledExceptionAsync(Exception exception, Activity 
 
 ### Incoming operations
 
-The public `SayHelloAsync()` grain interface method, that does nothing just calls the workflow's `GreetClientAsync()` `WorkflowInterface` operation. A normal grain can store data from the incoming message in the state, call other grains, closure the necessary data into the parameter delegate. After the `await`, it can build a complex response message based on the value the workflow returned and the grain's `State`, or any other information.
+The `SayHelloAsync()` grain interface method, that does nothing just calls the workflow's `GreetClientAsync()` `WorkflowInterface` operation. A normal grain can store data from the incoming message in the state, call other grains, closure the necessary data into the parameter delegate. After the `await`, it can build a complex response message based on the value the workflow returned and the grain's `State`, or any other information.
 
 The parameter delegate is executed when the workflow accepts the incoming call.
 
 It also shows how to implement idempotent responses for the incoming calls. In the repeated case, the parameter delegate won't be executed!
 
 ```c#
-public async Task<string> SayHelloAsync(string greeting)
+async Task<string> IHello.SayHelloAsync(string greeting)
 {
   Task<string> ProcessRequestAsync(string _request) => Task.FromResult(_request);
   Task<string> CreateResponseAsync(string _responseParameter) => Task.FromResult(_responseParameter);
@@ -132,13 +132,13 @@ public async Task<string> SayHelloAsync(string greeting)
 }
 ```
 
-The public `SayByeAsync()` grain interface method, that also does nothing just calls the workflow's `FarewellClientAsync()` optional `WorkflowInterface` operation.
+The `SayByeAsync()` grain interface method, that also does nothing just calls the workflow's `FarewellClientAsync()` optional `WorkflowInterface` operation.
 The parameter delegate executed when the workflow accepts the incoming call.
 
 It also shows how to implement optional operation's idempotent canceled responses for the incoming calls. Optional in this case means, that after a timeout the workflow cancels the waiting for the operation. In the canceled case, after the timeout, the parameter delegate won't be executed!
 
 ```c#
-public async Task<string> SayByeAsync()
+async Task<string> IHello.SayByeAsync()
 {
   Task ProcessRequestAsync() => Task.CompletedTask;
   Task<string> CreateResponseAsync(string _responseParameter) => Task.FromResult(_responseParameter);
@@ -173,8 +173,9 @@ async Task<Func<Task<string>>> IHelloWorkflowCallbackInterface.WhatShouldISayAsy
   Task<string> SomeExternalStuffAsync(string _request) => Task.FromResult(string.IsNullOrEmpty(_request) ? "Who are you?" : "Hello!");
   Task<string> ProcessResponseAsync(string _response) => Task.FromResult(_response);
 
-  Task<string> someExternalStuffTask = SomeExternalStuffAsync(await CreateRequestAsync(clientSaid));
-  return async () => await ProcessResponseAsync(await someExternalStuffTask);
+  string request = await CreateRequestAsync(clientSaid);
+  string response = await SomeExternalStuffAsync(request);
+  return async () => await ProcessResponseAsync(response);
 }
 ```
 
