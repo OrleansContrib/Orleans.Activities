@@ -2,7 +2,7 @@
 
 Shows how to execute the complete workflow like a method.
 
-These are workflows that don't send and receive requests. They are executed like a method from start to completion. Though, they can initiate outgoing requests and can accept incoming callback requests. The main difference compared to the HelloWorld like workflows, is that these workflows don't start with accepting a request, they start by a direct `RunToCompletionAsync()` or `RunAsync()` call.
+These are workflows that don't send and receive requests. They are executed like a method from start to completion. Though, they can initiate outgoing requests and can accept incoming callback requests (see [HelloWorld](https://github.com/OrleansContrib/Orleans.Activities/blob/docs-master/docs/HelloWorld/HelloWorld.md) for this). The main difference compared to the HelloWorld like workflows, is that these workflows don't start with accepting a request, they start by a direct `RunToCompletionAsync()` or `RunAsync()` call.
 
 Typically all the necessary persistable state is in the workflows variables, based on input arguments. You can add several custom activities to manipulate the workflows variables.
 
@@ -13,15 +13,15 @@ Typically all the necessary persistable state is in the workflows variables, bas
 
 ## Interfaces
 
-The `IMultiplier` will use a callback call to deliver the result. This is a demonstration for a long running workflow. A real grain can use streams or callback other grains to deliver the result.
+The `IMultiplierGrain` will use a callback call to deliver the result. This is a demonstration for a long running workflow. A real grain can use streams or callback other grains to deliver the result.
 
 ```c#
-public interface IAdder : IGrainWithGuidKey
+public interface IAdderGrain : IGrainWithGuidKey
 {
   Task<int> AddAsync(int arg1, int arg2);
 }
 
-public interface IMultiplier : IGrainWithGuidKey
+public interface IMultiplierGrain : IGrainWithGuidKey
 {
   Task MultiplyAsync(int arg1, int arg2);
 
@@ -40,9 +40,9 @@ public interface IMultiplierResultReceiver : IGrainObserver
 In this sample we don't use custom `TGrainState`, `TWorkflowInterface` and `TWorkflowCallbackInterface` type parameters, we use the less generic `WorkflowGrain<TGrain, TGrainState>` base type with the default `WorkflowState` as `TGrainState`. But this is optional, the full blown `WorkflowGrain<TGrain, TGrainState, TWorkflowInterface, TWorkflowCallbackInterface>` base type can be used also if there are outgoing calls or incoming callbacks.
 
 ```c#
-public sealed class AdderGrain : WorkflowGrain<AdderGrain, WorkflowState>, IAdder { ... }
+public sealed class AdderGrain : WorkflowGrain<AdderGrain, WorkflowState>, IAdderGrain { ... }
 
-public sealed class MultiplierGrain : WorkflowGrain<MultiplierGrain, WorkflowState>, IMultiplier { ... }
+public sealed class MultiplierGrain : WorkflowGrain<MultiplierGrain, WorkflowState>, IMultiplierGrain { ... }
 ```
 
 Typically the parameters of the grain methods become the input arguments of the workflow and the output arguments of the Completed workflow event get back to the caller. There are 2 versions:
@@ -81,9 +81,9 @@ public MultiplierGrain()
   Parameters = new Parameters(idlePersistenceMode: IdlePersistenceMode.Always);
   WorkflowControl.ExtensionsFactory = () => new GrainTrackingParticipant(GetLogger()).Yield();
 
-  WorkflowControl.CompletedAsync = (ActivityInstanceState _activityInstanceState, IDictionary<string, object> _outputArguments, Exception _terminationException) =>
+  WorkflowControl.CompletedAsync = (activityInstanceState, outputArguments, terminationException) =>
   {
-    subsManager.Notify(_subscriber => _subscriber.ReceiveResult((int)_outputArguments["result"]));
+    subsManager.Notify(subscriber => subscriber.ReceiveResult((int)outputArguments["result"]));
     return Task.CompletedTask;
   };
 }
@@ -108,7 +108,7 @@ protected override Task OnUnhandledExceptionAsync(Exception exception, Activity 
 __IMPORTANT:__ Do not copy values from the grain's `State` into the input arguments, because input arguments will be persisted by the workflow also. Closure directly the necessary values from the incoming public grain method call's parameters into the delegate.
 
 ```c#
-async Task<int> IAdder.AddAsync(int arg1, int arg2)
+async Task<int> IAdderGrain.AddAsync(int arg1, int arg2)
 {
   WorkflowControl.StartingAsync = () => Task.FromResult<IDictionary<string, object>>(new Dictionary<string, object>()
   {
@@ -125,7 +125,7 @@ async Task<int> IAdder.AddAsync(int arg1, int arg2)
 `MultiplierGrain` only executes the workflow until it gets idle, from that moment the workflow executes in the "background" and calls the `CompletedAsync` event when it completes.
 
 ```c#
-async Task IMultiplier.MultiplyAsync(int arg1, int arg2)
+async Task IMultiplierGrain.MultiplyAsync(int arg1, int arg2)
 {
   WorkflowControl.StartingAsync = () => Task.FromResult<IDictionary<string, object>>(new Dictionary<string, object>()
   {
