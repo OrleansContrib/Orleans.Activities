@@ -17,7 +17,7 @@ namespace Orleans.Activities.Samples.Arithmetical.Grains
     // WorkflowGrain<TGrain, TGrainState> base type with the default WorkflowState as TGrainState. But this is optional, the full blown
     // WorkflowGrain<TGrain, TGrainState, TWorkflowInterface, TWorkflowCallbackInterface> base type can be used also if there are outgoing calls or incoming callbacks.
     [StorageProvider(ProviderName = "MemoryStore")]
-    public sealed class AdderGrain : WorkflowGrain<AdderGrain, WorkflowState>, IAdder
+    public sealed class AdderGrain : WorkflowGrain<AdderGrain, WorkflowState>, IAdderGrain
     {
         private static Activity workflowDefinition = new AdderActivity();
 
@@ -40,7 +40,7 @@ namespace Orleans.Activities.Samples.Arithmetical.Grains
         // it is propagated back to the caller. If the workflow persist itself but due to a failure it aborts later and propagates the exception back to the caller,
         // it will be reloaded when the caller repeats the request or by a reactivation reminder. If the caller repeats the call only after the workflow is reloaded and completed,
         // this not a problem, it will get the same output arguments or OperationCanceledException or the exception that caused the workflow to terminate.
-        async Task<int> IAdder.AddAsync(int arg1, int arg2)
+        async Task<int> IAdderGrain.AddAsync(int arg1, int arg2)
         {
             // IMPORTANT: Do not copy values from the grain's state into the input arguments, because input arguments will be persisted by the workflow also.
             // Closure directly the necessary values from the incoming public grain method call's parameters into the delegate.

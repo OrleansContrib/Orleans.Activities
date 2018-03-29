@@ -17,7 +17,7 @@ namespace Orleans.Activities.Samples.Arithmetical.Grains
     // WorkflowGrain<TGrain, TGrainState> base type with the default WorkflowState as TGrainState. But this is optional, the full blown
     // WorkflowGrain<TGrain, TGrainState, TWorkflowInterface, TWorkflowCallbackInterface> base type can be used also if there are outgoing calls or incoming callbacks.
     [StorageProvider(ProviderName = "MemoryStore")]
-    public sealed class MultiplierGrain : WorkflowGrain<MultiplierGrain, WorkflowState>, IMultiplier
+    public sealed class MultiplierGrain : WorkflowGrain<MultiplierGrain, WorkflowState>, IMultiplierGrain
     {
         private static Activity workflowDefinition = new MultiplierActivity();
 
@@ -34,9 +34,9 @@ namespace Orleans.Activities.Samples.Arithmetical.Grains
             // Don't use callbacks on Completed event when there is no implicit or explicit persistence before, because the incoming request that started the workflow will run
             // the workflow to the first idle moment, if the first idle is the completion, the callback will happen during the incoming request (usually also a problem),
             // and the exception during the callback will be propagated back to the caller and the caller has to repeat the incoming request to restart the workflow.
-            WorkflowControl.CompletedAsync = (ActivityInstanceState _activityInstanceState, IDictionary<string, object> _outputArguments, Exception _terminationException) =>
+            WorkflowControl.CompletedAsync = (activityInstanceState, outputArguments, terminationException) =>
             {
-                subsManager.Notify(_subscriber => _subscriber.ReceiveResult((int)_outputArguments["result"]));
+                subsManager.Notify(subscriber => subscriber.ReceiveResult((int)outputArguments["result"]));
                 return Task.CompletedTask;
             };
         }
@@ -48,7 +48,7 @@ namespace Orleans.Activities.Samples.Arithmetical.Grains
         }
 
         // MultiplierGrain only executes the workflow until it gets idle, from that moment the workflow executes in the "background" and calls the Completed event when it completes.
-        async Task IMultiplier.MultiplyAsync(int arg1, int arg2)
+        async Task IMultiplierGrain.MultiplyAsync(int arg1, int arg2)
         {
             // IMPORTANT: Do not copy values from the grain's state into the input arguments, because input arguments will be persisted by the workflow also.
             // Closure directly the necessary values from the incoming public grain method call's parameters into the delegate.
@@ -71,13 +71,13 @@ namespace Orleans.Activities.Samples.Arithmetical.Grains
             subsManager = new ObserverSubscriptionManager<IMultiplierResultReceiver>();
         }
 
-        Task IMultiplier.SubscribeAsync(IMultiplierResultReceiver observer)
+        Task IMultiplierGrain.SubscribeAsync(IMultiplierResultReceiver observer)
         {
             subsManager.Subscribe(observer);
             return Task.CompletedTask;
         }
 
-        Task IMultiplier.UnsubscribeAsync(IMultiplierResultReceiver observer)
+        Task IMultiplierGrain.UnsubscribeAsync(IMultiplierResultReceiver observer)
         {
             subsManager.Unsubscribe(observer);
             return Task.CompletedTask;

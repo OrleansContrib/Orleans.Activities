@@ -15,7 +15,7 @@ namespace Orleans.Activities.Samples.HelloWorld.Grains
     public class HelloGrainState : WorkflowState
     { }
 
-    public interface IHelloWorkflowInterface
+    public interface IHelloWorkflow
     {
         // These are the operations that the grain calls on the workflow, these shouldn't be the same as the IHello grain interface method!
         // There are 2 restrictions on the methods:
@@ -25,7 +25,7 @@ namespace Orleans.Activities.Samples.HelloWorld.Grains
         Task<string> FarewellClientAsync(Func<Task> request);
     }
 
-    public interface IHelloWorkflowCallbackInterface
+    public interface IHelloWorkflowCallback
     {
         // This is the operation that the workflow calls back on the grain.
         // There are 2 restrictions on the methods:
@@ -35,7 +35,7 @@ namespace Orleans.Activities.Samples.HelloWorld.Grains
     }
 
     [StorageProvider(ProviderName = "MemoryStore")]
-    public sealed class HelloGrain : WorkflowGrain<HelloGrain, HelloGrainState, IHelloWorkflowInterface, IHelloWorkflowCallbackInterface>, IHello, IHelloWorkflowCallbackInterface
+    public sealed class HelloGrain : WorkflowGrain<HelloGrain, HelloGrainState, IHelloWorkflow, IHelloWorkflowCallback>, IHelloGrain, IHelloWorkflowCallback
     {
         // Without DI and versioning, just directly create the singleton workflow definition.
         private static Activity workflowDefinition = new HelloActivity();
@@ -55,7 +55,7 @@ namespace Orleans.Activities.Samples.HelloWorld.Grains
 
         // The parameter delegate executed when the workflow accepts the incoming call,
         // it can modify the grain's State or do nearly anything a normal grain method can (command pattern).
-        async Task<string> IHello.SayHelloAsync(string greeting)
+        async Task<string> IHelloGrain.SayHelloAsync(string greeting)
         {
             Task<string> ProcessRequestAsync(string _request) => Task.FromResult(_request);
             Task<string> CreateResponseAsync(string _responseParameter) => Task.FromResult(_responseParameter);
@@ -74,7 +74,7 @@ namespace Orleans.Activities.Samples.HelloWorld.Grains
 
         // The parameter delegate executed when the workflow accepts the incoming call,
         // it can modify the grain's State or do nearly anything a normal grain method can (command pattern).
-        async Task<string> IHello.SayByeAsync()
+        async Task<string> IHelloGrain.SayByeAsync()
         {
             Task ProcessRequestAsync() => Task.CompletedTask;
             Task<string> CreateResponseAsync(string _responseParameter) => Task.FromResult(_responseParameter);
@@ -89,6 +89,10 @@ namespace Orleans.Activities.Samples.HelloWorld.Grains
             {
                 return await CreateResponseAsync(e.PreviousResponseParameter);
             }
+            catch (InvalidOperationException)
+            {
+                return "Sorry, you must say hello first, before farewell!";
+            }
             catch (OperationCanceledException)
             {
                 return "Sorry, we have waited for your farewell, but gave up!";
@@ -97,7 +101,7 @@ namespace Orleans.Activities.Samples.HelloWorld.Grains
 
         // The return value delegate executed when the workflow accepts the outgoing call's response,
         // it can modify the grain's State or do nearly anything a normal grain method can (command pattern).
-        async Task<Func<Task<string>>> IHelloWorkflowCallbackInterface.WhatShouldISayAsync(string clientSaid)
+        async Task<Func<Task<string>>> IHelloWorkflowCallback.WhatShouldISayAsync(string clientSaid)
         {
             Task<string> CreateRequestAsync(string _requestParameter) => Task.FromResult(_requestParameter);
             Task<string> SomeExternalStuffAsync(string _request) => Task.FromResult(string.IsNullOrEmpty(_request) ? "Who are you?" : "Hello!");

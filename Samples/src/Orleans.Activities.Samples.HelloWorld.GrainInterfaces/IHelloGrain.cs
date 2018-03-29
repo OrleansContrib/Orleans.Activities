@@ -3,7 +3,7 @@ using Orleans;
 
 namespace Orleans.Activities.Samples.HelloWorld.GrainInterfaces
 {
-    public interface IHello : IGrainWithGuidKey
+    public interface IHelloGrain : IGrainWithGuidKey
     {
         Task<string> SayHelloAsync(string greeting);
         Task<string> SayByeAsync();

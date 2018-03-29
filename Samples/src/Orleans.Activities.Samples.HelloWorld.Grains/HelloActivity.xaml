@@ -62,7 +62,7 @@
       <AssemblyReference>Orleans.Activities.Samples.HelloWorld.Grains</AssemblyReference>
     </sco:Collection>
   </TextExpression.ReferencesForImplementation>
-  <oa:WorkflowActivity x:TypeArguments="local:IHelloWorkflowInterface, local:IHelloWorkflowCallbackInterface" sap2010:WorkflowViewState.IdRef="WorkflowActivity`2_1">
+  <oa:WorkflowActivity x:TypeArguments="local:IHelloWorkflow, local:IHelloWorkflowCallback" sap2010:WorkflowViewState.IdRef="WorkflowActivity`2_1">
     <Sequence sap2010:WorkflowViewState.IdRef="Sequence_6">
       <oa:ReceiveRequestSendResponseScope sap2010:WorkflowViewState.IdRef="ReceiveRequestSendResponseScope_3">
         <Sequence sap2010:WorkflowViewState.IdRef="Sequence_5">
@@ -70,7 +70,7 @@
             <Variable x:TypeArguments="x:String" Name="clientSaid" />
             <Variable x:TypeArguments="x:String" Name="iSay" />
           </Sequence.Variables>
-          <oa:ReceiveRequest x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="ReceiveRequest`1_3" OperationName="IHelloWorkflowInterface.GreetClientAsync">
+          <oa:ReceiveRequest x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="ReceiveRequest`1_3" OperationName="IHelloWorkflow.GreetClientAsync">
             <oa:ReceiveRequest.RequestResult>
               <OutArgument x:TypeArguments="x:String">
                 <mca:CSharpReference x:TypeArguments="x:String">clientSaid</mca:CSharpReference>
@@ -79,7 +79,7 @@
           </oa:ReceiveRequest>
           <oa:SendRequestReceiveResponseScope sap2010:WorkflowViewState.IdRef="SendRequestReceiveResponseScope_2">
             <Sequence sap2010:WorkflowViewState.IdRef="Sequence_4">
-              <oa:SendRequest x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="SendRequest`1_2" OperationName="IHelloWorkflowCallbackInterface.WhatShouldISayAsync">
+              <oa:SendRequest x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="SendRequest`1_2" OperationName="IHelloWorkflowCallback.WhatShouldISayAsync">
                 <oa:SendRequest.RequestParameter>
                   <InArgument x:TypeArguments="x:String">
                     <mca:CSharpValue x:TypeArguments="x:String">clientSaid</mca:CSharpValue>
@@ -108,7 +108,7 @@
         <Pick sap2010:WorkflowViewState.IdRef="Pick_1">
           <PickBranch DisplayName="Branch1" sap2010:WorkflowViewState.IdRef="PickBranch_1">
             <PickBranch.Trigger>
-              <oa:ReceiveRequest sap2010:WorkflowViewState.IdRef="ReceiveRequest_1" OperationName="IHelloWorkflowInterface.FarewellClientAsync" />
+              <oa:ReceiveRequest sap2010:WorkflowViewState.IdRef="ReceiveRequest_1" OperationName="IHelloWorkflow.FarewellClientAsync" />
             </PickBranch.Trigger>
             <oa:SendResponse x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="SendResponse`1_4" Idempotent="True" ResponseParameter="Bye, my friend!" ThrowIfReloaded="False" />
           </PickBranch>
