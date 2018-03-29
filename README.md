@@ -63,7 +63,15 @@ Integrated:
 * Designer & Debugger support
 * Nearly all legacy activities are supported (except TransactionScope and WCF messaging activities)
 
-### Internals
+### Result?
+
+A typical workflow grain ("domain service" grain) manages operations in other normal grains ("aggregate root" grains) and handles only the process specific data in it's own state.
+* Normal grains typically have long life, they can have event sourced states or can use short-lived Orleans transactions on their interfaces.
+* Workflow grains have a one-shot lifetime, the long-lived transaction they implement.
+
+![Concept-Result](https://github.com/OrleansContrib/Orleans.Activities/raw/docs-master/docs/Orleans.Activities-Concept.Result.png)
+
+## Implementation
 
 ![Overview](https://github.com/OrleansContrib/Orleans.Activities/raw/docs-master/docs/Orleans.Activities-Overview.png)
 
@@ -79,17 +87,17 @@ This is a very high level view:
 * There are design-, build- and static-run-time checks to keep the interfaces and the workflows in sync.
 * Though you can execute complete workflows as methods also.
 
-### Result
-
-A typical a workflow grain ("domain service") manages operations in other "normal" grain(s) ("aggregate root") and handles only the process specific data in it's own state.
-* "Normal" grains have long life, and even can have transactioned API or event sourced state.
-* Workflow grains have a one-shot lifetime, the long lived transaction they implement.
-
-![Concept-Result](https://github.com/OrleansContrib/Orleans.Activities/raw/docs-master/docs/Orleans.Activities-Concept.Result.png)
-
 The goal, is to keep the C# code in the grain, and use the workflow only to decide what to do next. This way we can avoid a steep learning curve to use workflows: the developer doesn't need to write or to understand anything about activities, he/she can build workflows with the provided activities in a designer.
 
 ## Functionality
+
+Integrated:
+
+* Persistence (compatible with legacy workflow extensions)
+* Reminders (compatible with legacy Delay activities)
+* Tracking
+* Designer & Debugger support
+* Nearly all legacy activities are supported (except TransactionScope and WCF messaging activities)
 
 Extra implemented features:
 
@@ -116,6 +124,8 @@ Not implemented, help wanted (for design and for implementation):
 
 ## Samples
 
+With tutorial level, detailed descriptions!
+
 [HelloWorld](https://github.com/OrleansContrib/Orleans.Activities/blob/docs-master/docs/HelloWorld/HelloWorld.md) - How to communicate with the workflow through custom interfaces.
 
 [Arithmetical](https://github.com/OrleansContrib/Orleans.Activities/blob/docs-master/docs/Arithmetical/Arithmetical.md) - How to execute the complete workflow like a method.
@@ -126,7 +136,7 @@ Not implemented, help wanted (for design and for implementation):
 
 This is still an overview, all the details of the classes are hidden. The goal is to give a map to understand the relations between the classes.
 
-The two most important classes on the below diagram are the 2 generated proxies, that translate the calls between the `TWorkflowInterface` and `TWorkflowCallbackInterface` interfaces and the workflow's API, where the methods are identified by their names.
+The 2 generated proxies translate the calls between the `TWorkflowInterface` and `TWorkflowCallbackInterface` interfaces and the workflow's API, where the methods are identified by their names.
 
 For more details see the detailed comments in the source!
 
