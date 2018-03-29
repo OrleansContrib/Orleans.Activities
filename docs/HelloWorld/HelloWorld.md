@@ -4,16 +4,18 @@ Based on Orleans [Hello World](https://dotnet.github.io/orleans/Documentation/Sa
 
 Shows how to communicate with the workflow through custom interfaces.
 
+Yes it's overcomplicated to write "Hello World" to the screen, but this shows the basic steps to implement a workflow that communicates with the external world meanwhile reliably executes the process described by the workflow activities.
+
 ## Overview
 
 ![HelloWorld-Overview](https://github.com/OrleansContrib/Orleans.Activities/raw/docs-master/docs/HelloWorld/HelloWorld-Overview.png)
 
 ## Interface
 
-IHello is nearly the same, an optional `SayBye()` method is added.
+IHelloGrain is nearly the same, an optional `SayBye()` method is added.
 
 ```c#
-public interface IHello : IGrainWithGuidKey
+public interface IHelloGrain : IGrainWithGuidKey
 {
   Task<string> SayHelloAsync(string greeting);
   Task<string> SayByeAsync();
@@ -35,7 +37,7 @@ public class HelloGrainState : WorkflowState
 
 ### Workflow Interface
 
-These are the operations that the grain calls on the workflow, these operations should __NOT__ be the same as the public grain interface methods (see `IHello`)!
+These are the operations that the grain calls on the workflow, these operations should __NOT__ be the same as the public grain interface methods (see `IHelloGrain`)!
 
 There are 2 restrictions on the methods:
 
@@ -43,7 +45,7 @@ There are 2 restrictions on the methods:
 * the return type must be `Task` or `Task<anything>`
 
 ```c#
-public interface IHelloWorkflowInterface
+public interface IHelloWorkflow
 {
   Task<string> GreetClientAsync(Func<Task<string>> clientSaid);
   Task<string> FarewellClientAsync(Func<Task> request);
@@ -60,7 +62,7 @@ There are 2 restrictions on the methods:
 * the return type must be `Task<Func<Task<anything>>>` or `Task<Func<Task>>` (executed when the workflow accepts the response)
 
 ```c#
-public interface IHelloWorkflowCallbackInterface
+public interface IHelloWorkflowCallback
 {
   Task<Func<Task<string>>> WhatShouldISayAsync(string clientSaid);
 }
@@ -70,11 +72,11 @@ public interface IHelloWorkflowCallbackInterface
 
 The class definition, where we define the `TGrain`, `TGrainState`, `TWorkflowInterface` and `TWorkflowCallbackInterface` type parameters.
 
-__NOTE:__ The grain must implement (if possible explicitly) the `TWorkflowCallbackInterface` interface (see `IHelloWorkflowCallbackInterface`) and `TGrain` should be the grain itself.
+__NOTE:__ The grain must implement (if possible explicitly) the `TWorkflowCallbackInterface` interface (see `IHelloWorkflowCallback`) and `TGrain` should be the grain itself.
 
 ```c#
-public sealed class HelloGrain : WorkflowGrain<HelloGrain, HelloGrainState, IHelloWorkflowInterface, IHelloWorkflowCallbackInterface>,
-  IHello, IHelloWorkflowCallbackInterface { ... }
+public sealed class HelloGrain : WorkflowGrain<HelloGrain, HelloGrainState, IHelloWorkflow, IHelloWorkflowCallback>,
+  IHelloGrain, IHelloWorkflowCallback { ... }
 ```
 
 ### Constructor
@@ -107,14 +109,14 @@ protected override Task OnUnhandledExceptionAsync(Exception exception, Activity 
 
 ### Incoming operations
 
-The `SayHelloAsync()` grain interface method, that does nothing just calls the workflow's `GreetClientAsync()` `WorkflowInterface` operation. A normal grain can store data from the incoming message in the state, call other grains, closure the necessary data into the parameter delegate. After the `await`, it can build a complex response message based on the value the workflow returned and the grain's `State`, or any other information.
+The `SayHelloAsync()` grain interface method, that does nothing just calls the workflow's `GreetClientAsync()` `WorkflowInterface` operation. A normal grain can store data from the incoming message in the `State`, call other grains, closure the necessary data into the parameter delegate. After the `await`, it can build a complex response message based on the value the workflow returned and the grain's `State`, or any other information.
 
 The parameter delegate is executed when the workflow accepts the incoming call.
 
 It also shows how to implement idempotent responses for the incoming calls. In the repeated case, the parameter delegate won't be executed!
 
 ```c#
-async Task<string> IHello.SayHelloAsync(string greeting)
+async Task<string> IHelloGrain.SayHelloAsync(string greeting)
 {
   Task<string> ProcessRequestAsync(string _request) => Task.FromResult(_request);
   Task<string> CreateResponseAsync(string _responseParameter) => Task.FromResult(_responseParameter);
@@ -135,10 +137,12 @@ async Task<string> IHello.SayHelloAsync(string greeting)
 The `SayByeAsync()` grain interface method, that also does nothing just calls the workflow's `FarewellClientAsync()` optional `WorkflowInterface` operation.
 The parameter delegate executed when the workflow accepts the incoming call.
 
-It also shows how to implement optional operation's idempotent canceled responses for the incoming calls. Optional in this case means, that after a timeout the workflow cancels the waiting for the operation. In the canceled case, after the timeout, the parameter delegate won't be executed!
+It also shows how to handle out-of-order request, when the `SayByeAsync()` method is called before the `SayHelloAsync()` method and the workflow is not ready to process the request (`InvalidOperationException`). In the out-of-order case, the parameter delegate won't be executed!
+
+It also shows how to implement optional operation's idempotent canceled responses for the incoming calls (`OperationCanceledException`). Optional in this case means, that after a timeout the workflow cancels the waiting for the operation. In the canceled case, after the timeout, the parameter delegate won't be executed!
 
 ```c#
-async Task<string> IHello.SayByeAsync()
+async Task<string> IHelloGrain.SayByeAsync()
 {
   Task ProcessRequestAsync() => Task.CompletedTask;
   Task<string> CreateResponseAsync(string _responseParameter) => Task.FromResult(_responseParameter);
@@ -153,6 +157,10 @@ async Task<string> IHello.SayByeAsync()
   {
     return await CreateResponseAsync(e.PreviousResponseParameter);
   }
+  catch (InvalidOperationException)
+  {
+      return "Sorry, you must say hello first, before farewell!";
+  }  
   catch (OperationCanceledException)
   {
     return "Sorry, we have waited for your farewell, but gave up!";
@@ -162,12 +170,12 @@ async Task<string> IHello.SayByeAsync()
 
 ### Outgoing operations
 
-This is the explicit implementation of the workflow's `WhatShouldISay()` `WorkflowCallbackInterface` operation, that does nearly nothing. A normal grain can modify the grain's `State`, call other grain's operations or do nearly anything a normal grain method can.  
+This is the explicit implementation of the workflow's `WhatShouldISay()` `IWorkflowCallback` interface operation, that does nearly nothing. A normal grain can modify the grain's `State`, call other grain's operations or do nearly anything a normal grain method can.  
 
 The return value delegate is executed when the workflow accepts the outgoing call's response.
 
 ```c#
-async Task<Func<Task<string>>> IHelloWorkflowCallbackInterface.WhatShouldISayAsync(string clientSaid)
+async Task<Func<Task<string>>> IHelloWorkflowCallback.WhatShouldISayAsync(string clientSaid)
 {
   Task<string> CreateRequestAsync(string _requestParameter) => Task.FromResult(_requestParameter);
   Task<string> SomeExternalStuffAsync(string _request) => Task.FromResult(string.IsNullOrEmpty(_request) ? "Who are you?" : "Hello!");
