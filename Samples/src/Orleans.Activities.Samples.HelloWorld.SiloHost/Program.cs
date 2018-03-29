@@ -49,7 +49,7 @@ namespace Orleans.Activities.Samples.HelloWorld.SiloHost
             //       This is the place your custom logic, for example calling client logic
             //       or initializing an HTTP front end for accepting incoming requests.
 
-            var helloGrain = GrainClient.GrainFactory.GetGrain<IHello>(Guid.NewGuid());
+            var helloGrain = GrainClient.GrainFactory.GetGrain<IHelloGrain>(Guid.NewGuid());
             try
             {
                 WriteLine("\n\nCalling SayHello...\n\n");

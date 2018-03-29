@@ -78,8 +78,8 @@ namespace Orleans.Activities.Samples.Arithmetical.SiloHost
             //       This is the place your custom logic, for example calling client logic
             //       or initializing an HTTP front end for accepting incoming requests.
 
-            var adderGrain = GrainClient.GrainFactory.GetGrain<IAdder>(Guid.NewGuid());
-            var multiplierGrain = GrainClient.GrainFactory.GetGrain<IMultiplier>(Guid.NewGuid());
+            var adderGrain = GrainClient.GrainFactory.GetGrain<IAdderGrain>(Guid.NewGuid());
+            var multiplierGrain = GrainClient.GrainFactory.GetGrain<IMultiplierGrain>(Guid.NewGuid());
             try
             {
                 WriteLine("\n\nCalling Add...\n\n");

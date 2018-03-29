@@ -118,8 +118,8 @@
     <Compile Include="..\GlobalAssemblyInfo.cs">
       <Link>Properties\GlobalAssemblyInfo.cs</Link>
     </Compile>
-    <Compile Include="IMultiplier.cs" />
-    <Compile Include="IAdder.cs" />
+    <Compile Include="IMultiplierGrain.cs" />
+    <Compile Include="IAdderGrain.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
