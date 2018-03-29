@@ -17,7 +17,7 @@ namespace Orleans.Activities.Samples.HelloWorld.Grains
 
     public interface IHelloWorkflow
     {
-        // These are the operations that the grain calls on the workflow, these shouldn't be the same as the IHello grain interface method!
+        // These are the operations that the grain calls on the workflow, these shouldn't be the same as the IHelloGrain grain interface method!
         // There are 2 restrictions on the methods:
         // - it must have 1 parameter, with type Func<Task<anything>> or Func<Task> (executed when the workflow accepts the request)
         // - the return type can be Task or Task<anything>
@@ -66,6 +66,7 @@ namespace Orleans.Activities.Samples.HelloWorld.Grains
                     await WorkflowInterface.GreetClientAsync(
                         async () => await ProcessRequestAsync(greeting)));
             }
+            // Idempotent response
             catch (OperationRepeatedException<string> e)
             {
                 return await CreateResponseAsync(e.PreviousResponseParameter);
@@ -85,14 +86,17 @@ namespace Orleans.Activities.Samples.HelloWorld.Grains
                     await WorkflowInterface.FarewellClientAsync(
                         async () => await ProcessRequestAsync()));
             }
+            // Idempotent response
             catch (OperationRepeatedException<string> e)
             {
                 return await CreateResponseAsync(e.PreviousResponseParameter);
             }
+            // Out-of-order response
             catch (InvalidOperationException)
             {
                 return "Sorry, you must say hello first, before farewell!";
             }
+            // Idempotent cancellation
             catch (OperationCanceledException)
             {
                 return "Sorry, we have waited for your farewell, but gave up!";

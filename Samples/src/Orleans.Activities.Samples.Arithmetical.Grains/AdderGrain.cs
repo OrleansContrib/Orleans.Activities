@@ -36,10 +36,11 @@ namespace Orleans.Activities.Samples.Arithmetical.Grains
             return Task.CompletedTask;
         }
 
-        // AdderGrain executes the workflow during the incoming request like a method. If there is a failure before the workflow completes (yes completes, not before goes idle),
-        // it is propagated back to the caller. If the workflow persist itself but due to a failure it aborts later and propagates the exception back to the caller,
-        // it will be reloaded when the caller repeats the request or by a reactivation reminder. If the caller repeats the call only after the workflow is reloaded and completed,
-        // this not a problem, it will get the same output arguments or OperationCanceledException or the exception that caused the workflow to terminate.
+        // AdderGrain executes the workflow during the incoming request like a method. If there is a failure before the workflow completes (yes completes, not before goes idle,
+        // due to RunToCompletionAsync() is called), it is propagated back to the caller. If the workflow persist itself but due to a failure it aborts later and propagates
+        // the exception back to the caller, it will be reloaded when the caller repeats the request or by a reactivation reminder. If the caller repeats the call only after
+        // the workflow is reloaded and completed, this not a problem, it will get the same output arguments or OperationCanceledException or the exception that caused
+        // the workflow to terminate.
         async Task<int> IAdderGrain.AddAsync(int arg1, int arg2)
         {
             // IMPORTANT: Do not copy values from the grain's state into the input arguments, because input arguments will be persisted by the workflow also.

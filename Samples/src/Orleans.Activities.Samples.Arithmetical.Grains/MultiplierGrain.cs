@@ -31,9 +31,10 @@ namespace Orleans.Activities.Samples.Arithmetical.Grains
 
             // NOTE: This sample can't demonstrate a failure during the callback (the observation is a one-way call), but the workflow persistence happens after the Completed
             // event: if the callback fails, the workflow will abort and continue from the last persisted state by a reactivation reminder.
-            // Don't use callbacks on Completed event when there is no implicit or explicit persistence before, because the incoming request that started the workflow will run
-            // the workflow to the first idle moment, if the first idle is the completion, the callback will happen during the incoming request (usually also a problem),
-            // and the exception during the callback will be propagated back to the caller and the caller has to repeat the incoming request to restart the workflow.
+            // Don't use callbacks on Completed event when there is no implicit or explicit persistence before, because the incoming request that started the workflow
+            // and called RunAsync() will run the workflow to the first idle moment, if the first idle is the completion, the callback will happen during the incoming request
+            // (usually also a problem), and the exception during the callback will be propagated back to the caller and the caller has to repeat the incoming request
+            // to restart the workflow.
             WorkflowControl.CompletedAsync = (activityInstanceState, outputArguments, terminationException) =>
             {
                 subsManager.Notify(subscriber => subscriber.ReceiveResult((int)outputArguments["result"]));
