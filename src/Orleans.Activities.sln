@@ -8,7 +8,6 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{B40EC8F2-1175-40A9-A0D0-72B5F567618A}"
 	ProjectSection(SolutionItems) = preProject
 		GlobalAssemblyInfo.cs = GlobalAssemblyInfo.cs
-		Orleans.Activities.ico = Orleans.Activities.ico
 		Orleans.Activities.png = Orleans.Activities.png
 	EndProjectSection
 EndProject
@@ -37,5 +36,8 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {B90608AB-FEB9-4BEC-B298-13968F7AB659}
 	EndGlobalSection
 EndGlobal
