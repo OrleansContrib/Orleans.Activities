@@ -6,16 +6,24 @@
     <title>$title$</title>
     <authors>$author$</authors>
     <owners>OrleansContrib</owners>
-    <tags>Orleans WF WF4 Workflow</tags>
+    <tags>Orleans Microsoft-Orleans Actor-Model Actors Distributed-Systems Workflow-Foundation Workflow WF WF4 C# .NET</tags>
     <iconUrl>https://github.com/OrleansContrib/Orleans.Activities/raw/master/src/Orleans.Activities.png</iconUrl>
     <projectUrl>https://github.com/OrleansContrib/Orleans.Activities</projectUrl>
     <licenseUrl>https://github.com/OrleansContrib/Orleans.Activities/raw/master/LICENSE</licenseUrl>
     <copyright>$copyright$</copyright>
     <summary>$description$</summary>
-    <description>Workflow Foundation (.Net 4.x System.Activities workflows) over Microsoft Orleans framework to provide stable, long-running, extremely scalable processes with XAML designer support.</description>
+    <description>Workflow Foundation (.Net 4.x System.Activities workflows) over Microsoft Orleans framework, providing stable, long-running, extremely scalable processes with XAML designer support.</description>
     <frameworkAssemblies>
-      <frameworkAssembly assemblyName="System.Activities" />
-      <frameworkAssembly assemblyName="System.Drawing" />
+      <frameworkAssembly assemblyName="System.Activities" targetFramework="net461" />
+      <frameworkAssembly assemblyName="System.Data" targetFramework="net461" />
+      <frameworkAssembly assemblyName="System.Drawing" targetFramework="net461" />
+      <frameworkAssembly assemblyName="System.Xaml" targetFramework="net461" />
+      <frameworkAssembly assemblyName="System.Xml" targetFramework="net461" />
     </frameworkAssemblies>
+    <dependencies>
+      <group targetFramework="net461">
+        <dependency id="Microsoft.Orleans.Core" version="[1.5.3,2.0.0)" targetFramework="net461" />
+      </group>
+    </dependencies>
   </metadata>
 </package>
