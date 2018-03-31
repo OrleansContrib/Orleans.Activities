@@ -9,6 +9,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 	ProjectSection(SolutionItems) = preProject
 		GlobalAssemblyInfo.cs = GlobalAssemblyInfo.cs
 		Orleans.Activities.png = Orleans.Activities.png
+		Orleans.Activities_128.png = Orleans.Activities_128.png
+		Orleans.Activities_256.png = Orleans.Activities_256.png
+		Orleans.Activities_64.png = Orleans.Activities_64.png
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Orleans.Activities.Test", "Orleans.Activities.Test\Orleans.Activities.Test.csproj", "{C9B559B8-A6AD-46B3-A68B-D762FA6C06E5}"
