@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -42,14 +42,12 @@ namespace Orleans.Activities.Samples.HelloWorld.Grains
 
         public HelloGrain()
             : base((grainState, workflowIdentity) => workflowDefinition, null)
-        {
-            WorkflowControl.ExtensionsFactory = () => new GrainTrackingParticipant(GetLogger()).Yield();
-        }
+            => this.WorkflowControl.ExtensionsFactory = () => new GrainTrackingParticipant(GetLogger()).Yield();
 
         // Mandatory: at least log the unhandled exceptions (workflow will abort by default, see Parameters property).
         protected override Task OnUnhandledExceptionAsync(Exception exception, Activity source)
         {
-            GetLogger().TrackTrace($"OnUnhandledExceptionAsync: the workflow is going to {Parameters.UnhandledExceptionAction}\n\n{exception}", Runtime.Severity.Error);
+            GetLogger().TrackTrace($"OnUnhandledExceptionAsync: the workflow is going to {this.Parameters.UnhandledExceptionAction}\n\n{exception}", Runtime.Severity.Error);
             return Task.CompletedTask;
         }
 
@@ -63,7 +61,7 @@ namespace Orleans.Activities.Samples.HelloWorld.Grains
             try
             {
                 return await CreateResponseAsync(
-                    await WorkflowInterface.GreetClientAsync(
+                    await this.WorkflowInterface.GreetClientAsync(
                         async () => await ProcessRequestAsync(greeting)));
             }
             // Idempotent response
@@ -83,7 +81,7 @@ namespace Orleans.Activities.Samples.HelloWorld.Grains
             try
             {
                 return await CreateResponseAsync(
-                    await WorkflowInterface.FarewellClientAsync(
+                    await this.WorkflowInterface.FarewellClientAsync(
                         async () => await ProcessRequestAsync()));
             }
             // Idempotent response
@@ -94,7 +92,7 @@ namespace Orleans.Activities.Samples.HelloWorld.Grains
             // Out-of-order response
             catch (InvalidOperationException)
             {
-                return "Sorry,�you must say hello first, before farewell!";
+                return "Sorry, you must say hello first, before farewell!";
             }
             // Idempotent cancellation
             catch (OperationCanceledException)
@@ -111,8 +109,8 @@ namespace Orleans.Activities.Samples.HelloWorld.Grains
             Task<string> SomeExternalStuffAsync(string _request) => Task.FromResult(string.IsNullOrEmpty(_request) ? "Who are you?" : "Hello!");
             Task<string> ProcessResponseAsync(string _response) => Task.FromResult(_response);
 
-            string request = await CreateRequestAsync(clientSaid);
-            string response = await SomeExternalStuffAsync(request);
+            var request = await CreateRequestAsync(clientSaid);
+            var response = await SomeExternalStuffAsync(request);
             return async () => await ProcessResponseAsync(response);
         }
     }

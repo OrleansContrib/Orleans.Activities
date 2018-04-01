@@ -15,7 +15,7 @@ namespace Orleans.Activities.Samples.Arithmetical.SiloHost
     {
         private static void WriteLine(string message)
         {
-            ConsoleColor backgroundColor = Console.BackgroundColor;
+            var backgroundColor = Console.BackgroundColor;
             Console.BackgroundColor = ConsoleColor.DarkGray;
             Console.ForegroundColor = ConsoleColor.White;
             Console.WriteLine(message);
@@ -24,7 +24,7 @@ namespace Orleans.Activities.Samples.Arithmetical.SiloHost
 
         private static void Write(string message)
         {
-            ConsoleColor backgroundColor = Console.BackgroundColor;
+            var backgroundColor = Console.BackgroundColor;
             Console.BackgroundColor = ConsoleColor.DarkGray;
             Console.ForegroundColor = ConsoleColor.White;
             Console.Write(message);
@@ -34,30 +34,19 @@ namespace Orleans.Activities.Samples.Arithmetical.SiloHost
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1063:ImplementIDisposableCorrectly")]
         public class MultiplierResultReceiver : IMultiplierResultReceiver, IDisposable
         {
-            private AutoResetEvent completed;
+            private AutoResetEvent completed = new AutoResetEvent(false);
 
-            public MultiplierResultReceiver()
-            {
-                completed = new AutoResetEvent(false);
-            }
-
-            public void WaitForCompletion()
-            {
-                completed.WaitOne(TimeSpan.FromSeconds(10));
-            }
+            public void WaitForCompletion() => this.completed.WaitOne(TimeSpan.FromSeconds(10));
 
             public void ReceiveResult(int result)
             {
                 WriteLine("Multiplier result received\n\n");
                 WriteLine($"{result}\n\n");
-                completed.Set();
+                this.completed.Set();
             }
 
             [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1063:ImplementIDisposableCorrectly")]
-            public void Dispose()
-            {
-                completed.Dispose();
-            }
+            public void Dispose() => this.completed.Dispose();
         }
 
         static void Main(string[] args)
@@ -65,7 +54,7 @@ namespace Orleans.Activities.Samples.Arithmetical.SiloHost
             // The Orleans silo environment is initialized in its own app domain in order to more
             // closely emulate the distributed situation, when the client and the server cannot
             // pass data via shared memory.
-            AppDomain hostDomain = AppDomain.CreateDomain("OrleansHost", null, new AppDomainSetup
+            var hostDomain = AppDomain.CreateDomain("OrleansHost", null, new AppDomainSetup
             {
                 AppDomainInitializer = InitSilo,
                 AppDomainInitializerArguments = args,
@@ -101,7 +90,7 @@ namespace Orleans.Activities.Samples.Arithmetical.SiloHost
 
                 WriteLine("--- Idempotent forward recovery is not applicable for this situation, grain would repeat the callback in case of failure after reactivation from it's previously persisted state, the Multiply operation would simply do nothing when repeated. ---\n\n");
                 WriteLine("Wait the workflow to complete...\n\n");
-                for (int i = 5; i > 0; --i)
+                for (var i = 5; i > 0; --i)
                 {
                     if (i % 5 == 0)
                         Write(i.ToString());

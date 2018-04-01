@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -25,14 +25,14 @@ namespace Orleans.Activities.Samples.Arithmetical.Grains
             : base((grainState, workflowIdentity) => workflowDefinition, null)
         {
             // Set the persistence mode to Always, because the default setting is to not save the workflow on the first idle, to immediately accept the incoming operation.
-            Parameters = new Parameters(idlePersistenceMode: IdlePersistenceMode.Always);
+            this.Parameters = new Parameters(idlePersistenceMode: IdlePersistenceMode.Always);
 
-            WorkflowControl.ExtensionsFactory = () => new GrainTrackingParticipant(GetLogger()).Yield();
+            this.WorkflowControl.ExtensionsFactory = () => new GrainTrackingParticipant(GetLogger()).Yield();
         }
 
         protected override Task OnUnhandledExceptionAsync(Exception exception, Activity source)
         {
-            GetLogger().TrackTrace($"OnUnhandledExceptionAsync: the workflow is going to {Parameters.UnhandledExceptionAction}\n\n{exception}", Runtime.Severity.Error);
+            GetLogger().TrackTrace($"OnUnhandledExceptionAsync: the workflow is going to {this.Parameters.UnhandledExceptionAction}\n\n{exception}", Runtime.Severity.Error);
             return Task.CompletedTask;
         }
 
@@ -45,13 +45,13 @@ namespace Orleans.Activities.Samples.Arithmetical.Grains
         {
             // IMPORTANT: Do not copy values from the grain's state into the input arguments, because input arguments will be persisted by the workflow also.
             // Closure directly the necessary values from the incoming public grain method call's parameters into the delegate.
-            WorkflowControl.StartingAsync = () => Task.FromResult<IDictionary<string, object>>(new Dictionary<string, object>()
+            this.WorkflowControl.StartingAsync = () => Task.FromResult<IDictionary<string, object>>(new Dictionary<string, object>()
             {
                 { nameof(arg1), arg1 },
                 { nameof(arg2), arg2 },
             });
 
-            IDictionary<string, object> outputArguments = await WorkflowControl.RunToCompletionAsync();
+            var outputArguments = await this.WorkflowControl.RunToCompletionAsync();
 
             return (int)outputArguments["result"];
         }

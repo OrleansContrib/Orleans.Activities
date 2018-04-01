@@ -19,8 +19,8 @@ namespace Orleans.Activities.Samples.Arithmetical.Grains
         {
             this.logger = logger;
 
-            TrackingProfile = new TrackingProfile();
-            TrackingProfile.Queries.Add(new WorkflowInstanceQuery()
+            this.TrackingProfile = new TrackingProfile();
+            this.TrackingProfile.Queries.Add(new WorkflowInstanceQuery()
             {
                 States = { "*" },
             });
@@ -32,20 +32,20 @@ namespace Orleans.Activities.Samples.Arithmetical.Grains
             //{
             //    States = { "*" }
             //});
-            TrackingProfile.Queries.Add(new BookmarkResumptionQuery()
+            this.TrackingProfile.Queries.Add(new BookmarkResumptionQuery()
             {
                 Name = "*",
             });
-            TrackingProfile.Queries.Add(new CancelRequestedQuery()
+            this.TrackingProfile.Queries.Add(new CancelRequestedQuery()
             {
                 ActivityName = "*",
             });
-            TrackingProfile.Queries.Add(new CustomTrackingQuery()
+            this.TrackingProfile.Queries.Add(new CustomTrackingQuery()
             {
                 ActivityName = "*",
                 Name = "*"
             });
-            TrackingProfile.Queries.Add(new FaultPropagationQuery()
+            this.TrackingProfile.Queries.Add(new FaultPropagationQuery()
             {
                 FaultSourceActivityName = "*",
             });
@@ -53,7 +53,7 @@ namespace Orleans.Activities.Samples.Arithmetical.Grains
 
         protected override Task TrackAsync(TrackingRecord record, TimeSpan timeout)
         {
-            logger.Info(record.ToString());
+            this.logger.Info(record.ToString());
             return Task.CompletedTask;
         }
     }

@@ -15,7 +15,7 @@ namespace Orleans.Activities.Samples.HelloWorld.SiloHost
     {
         private static void WriteLine(string message)
         {
-            ConsoleColor backgroundColor = Console.BackgroundColor;
+            var backgroundColor = Console.BackgroundColor;
             Console.BackgroundColor = ConsoleColor.DarkGray;
             Console.ForegroundColor = ConsoleColor.White;
             Console.WriteLine(message);
@@ -24,7 +24,7 @@ namespace Orleans.Activities.Samples.HelloWorld.SiloHost
 
         private static void Write(string message)
         {
-            ConsoleColor backgroundColor = Console.BackgroundColor;
+            var backgroundColor = Console.BackgroundColor;
             Console.BackgroundColor = ConsoleColor.DarkGray;
             Console.ForegroundColor = ConsoleColor.White;
             Console.Write(message);
@@ -36,7 +36,7 @@ namespace Orleans.Activities.Samples.HelloWorld.SiloHost
             // The Orleans silo environment is initialized in its own app domain in order to more
             // closely emulate the distributed situation, when the client and the server cannot
             // pass data via shared memory.
-            AppDomain hostDomain = AppDomain.CreateDomain("OrleansHost", null, new AppDomainSetup
+            var hostDomain = AppDomain.CreateDomain("OrleansHost", null, new AppDomainSetup
             {
                 AppDomainInitializer = InitSilo,
                 AppDomainInitializerArguments = args,
@@ -59,7 +59,7 @@ namespace Orleans.Activities.Samples.HelloWorld.SiloHost
                 WriteLine($"\n\n{helloGrain.SayHelloAsync("Ooops").Result}\n\n");
 
                 WriteLine("Wait to timeout the waiting for our farewell...\n\n");
-                for (int i = 10; i > 0; --i)
+                for (var i = 10; i > 0; --i)
                 {
                     if (i % 5 == 0)
                         Write(i.ToString());
