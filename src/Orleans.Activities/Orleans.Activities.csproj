@@ -17,6 +17,8 @@
     <NuGetPackageImportStamp>8217a0bf</NuGetPackageImportStamp>
     <TargetFrameworkProfile />
     <LangVersion>latest</LangVersion>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <GenerateBindingRedirectsOutputType>true</GenerateBindingRedirectsOutputType>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -26,7 +28,8 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <CodeAnalysisRuleSet>Orleans.Activities.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRuleSet>
+    </CodeAnalysisRuleSet>
     <DocumentationFile>bin\Debug\Orleans.Activities.xml</DocumentationFile>
     <NoWarn>CS1591</NoWarn>
     <RunCodeAnalysis>false</RunCodeAnalysis>
@@ -40,7 +43,8 @@
     <WarningLevel>4</WarningLevel>
     <DocumentationFile>bin\Release\Orleans.Activities.xml</DocumentationFile>
     <NoWarn>CS1591</NoWarn>
-    <CodeAnalysisRuleSet>Orleans.Activities.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRuleSet>
+    </CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Microsoft.CSharp" />
@@ -362,15 +366,11 @@
     <EmbeddedResource Include="WorkflowActivity.png" />
     <EmbeddedResource Include="GetIsReloaded.png" />
     <Resource Include="Designers\GetIsReloaded.png" />
-    <None Include="app.config">
-      <SubType>Designer</SubType>
-    </None>
     <None Include="AsyncEx\_README.txt" />
     <Resource Include="Designers\ReceiveRequestSendResponseScope.png" />
     <None Include="Orleans.Activities.nuspec">
       <SubType>Designer</SubType>
     </None>
-    <None Include="Orleans.Activities.ruleset" />
     <None Include="packages.config" />
     <None Include="_README.txt" />
   </ItemGroup>
