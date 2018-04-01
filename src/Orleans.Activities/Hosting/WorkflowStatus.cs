@@ -14,7 +14,7 @@ namespace Orleans.Activities.Hosting
         public const string Canceled = "Canceled";
         public const string Faulted = "Faulted";
 
-        public static bool IsCompleted(string status) =>
-            status != WorkflowStatus.Idle && status != WorkflowStatus.Executing;
+        public static bool IsCompleted(string status)
+            => status != WorkflowStatus.Idle && status != WorkflowStatus.Executing;
     }
 }

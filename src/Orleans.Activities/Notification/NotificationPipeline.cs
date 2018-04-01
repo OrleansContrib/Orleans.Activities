@@ -19,16 +19,14 @@ namespace Orleans.Activities.Notification
         private readonly IEnumerable<INotificationParticipant> notificationParticipants;
 
         public NotificationPipeline(IEnumerable<INotificationParticipant> notificationParticipants)
-        {
-            this.notificationParticipants = notificationParticipants;
-        }
+            => this.notificationParticipants = notificationParticipants;
 
         // TODO Handle timeout correctly, ie. decrement remaining time in each for loop.
         public async Task OnPausedAsync(TimeSpan timeout)
         {
             try
             {
-                foreach (INotificationParticipant notificationParticipant in notificationParticipants)
+                foreach (var notificationParticipant in this.notificationParticipants)
                     await notificationParticipant.OnPausedAsync(timeout);
             }
             catch
@@ -41,7 +39,7 @@ namespace Orleans.Activities.Notification
 
         protected void Abort()
         {
-            foreach (INotificationParticipant notificationParticipant in notificationParticipants)
+            foreach (var notificationParticipant in this.notificationParticipants)
                 notificationParticipant.Abort();
         }
     }

@@ -14,7 +14,7 @@ namespace Orleans.Activities.Extensions
     {
         public static PreviousResponseParameterExtension GetPreviousResponseParameterExtension(this ActivityContext context)
         {
-            PreviousResponseParameterExtension previousResponseParameterExtension = context.GetExtension<PreviousResponseParameterExtension>();
+            var previousResponseParameterExtension = context.GetExtension<PreviousResponseParameterExtension>();
             if (previousResponseParameterExtension == null)
                 throw new ValidationException(nameof(PreviousResponseParameterExtension) + " is not found.");
             return previousResponseParameterExtension;
@@ -30,9 +30,8 @@ namespace Orleans.Activities.Extensions
     {
         public static class WorkflowNamespace
         {
-            private static readonly XNamespace responsesPath = XNamespace.Get(Persistence.WorkflowNamespace.BaseNamespace + "/responses");
-            private static readonly XName previousResponseParameters = responsesPath.GetName(nameof(PreviousResponseParameters));
-            public static XName PreviousResponseParameters => previousResponseParameters;
+            private static readonly XNamespace ResponsesPath = XNamespace.Get(Persistence.WorkflowNamespace.BaseNamespace + "/responses");
+            public static readonly XName PreviousResponseParameters = ResponsesPath.GetName(nameof(PreviousResponseParameters));
         }
 
         [Serializable]
@@ -44,9 +43,9 @@ namespace Orleans.Activities.Extensions
 
             protected ResponseParameter(bool isCanceled, Type type, object value)
             {
-                IsCanceled = isCanceled;
-                Type = type;
-                Value = value;
+                this.IsCanceled = isCanceled;
+                this.Type = type;
+                this.Value = value;
             }
         }
 
@@ -66,38 +65,31 @@ namespace Orleans.Activities.Extensions
             { }
         }
 
-        protected Dictionary<string, ResponseParameter> previousResponseParameters;
-
-        public PreviousResponseParameterExtension()
-        {
-            previousResponseParameters = new Dictionary<string, ResponseParameter>();
-        }
+        protected Dictionary<string, ResponseParameter> previousResponseParameters = new Dictionary<string, ResponseParameter>();
 
         // Called by ReceiveRequestSendResponseScope activity.
         public bool TrySetResponseCanceled(string operationName)
         {
-            bool containsKey = previousResponseParameters.ContainsKey(operationName);
+            var containsKey = this.previousResponseParameters.ContainsKey(operationName);
             if (!containsKey)
-                previousResponseParameters[operationName] = new CanceledResponseParameter();
+                this.previousResponseParameters[operationName] = new CanceledResponseParameter();
             return !containsKey;
         }
 
         // Called by SendResponse activity.
         public void SetResponseParameter(string operationName, Type type, object value)
-        {
-            previousResponseParameters[operationName] = new SentResponseParameter(type, value);
-        }
+            => this.previousResponseParameters[operationName] = new SentResponseParameter(type, value);
 
         // Called by WorkflowHost.
         public Exception CreatePreviousResponseParameterException<TResponseParameter>(string operationName, Type responseParameterType)
         {
-            if (!previousResponseParameters.TryGetValue(operationName, out ResponseParameter previousResponseParameter))
+            if (!this.previousResponseParameters.TryGetValue(operationName, out var previousResponseParameter))
                 return new InvalidOperationException($"Operation '{operationName}' is unexpected.");
             if (previousResponseParameter.IsCanceled)
                 return new OperationCanceledException($"Operation '{operationName}' is already canceled.");
             if (previousResponseParameter.Type != responseParameterType)
                 return new ArgumentException($"Operation '{operationName}' has different ResponseParameter type '{responseParameterType}' then the previous operation '{previousResponseParameter.Type}' had.");
-            string message = $"Operation '{operationName}' is already executed.";
+            var message = $"Operation '{operationName}' is already executed.";
             if (responseParameterType == typeof(void))
                 return new OperationRepeatedException(message);
             else
@@ -111,9 +103,9 @@ namespace Orleans.Activities.Extensions
             readWriteValues = null;
             writeOnlyValues = null;
 
-            if (previousResponseParameters.Count > 0)
+            if (this.previousResponseParameters.Count > 0)
             {
-                readWriteValues = new Dictionary<XName, object>(1) {{ WorkflowNamespace.PreviousResponseParameters, previousResponseParameters }};
+                readWriteValues = new Dictionary<XName, object>(1) {{ WorkflowNamespace.PreviousResponseParameters, this.previousResponseParameters }};
             }
         }
 
@@ -122,7 +114,7 @@ namespace Orleans.Activities.Extensions
             this.previousResponseParameters.Clear();
 
             if (readWriteValues != null
-                && readWriteValues.TryGetValue(WorkflowNamespace.PreviousResponseParameters, out object previousResponseParameters)
+                && readWriteValues.TryGetValue(WorkflowNamespace.PreviousResponseParameters, out var previousResponseParameters)
                 && previousResponseParameters is Dictionary<string, ResponseParameter>)
                 this.previousResponseParameters = previousResponseParameters as Dictionary<string, ResponseParameter>;
         }

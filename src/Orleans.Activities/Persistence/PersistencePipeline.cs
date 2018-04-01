@@ -31,8 +31,8 @@ namespace Orleans.Activities.Persistence
             this.persistenceParticipants = persistenceParticipants;
             this.instanceValues = instanceValues;
             this.persistWriteOnlyValues = persistWriteOnlyValues;
-            readWriteView = new ValueDictionaryView(this.instanceValues, false);
-            writeOnlyView = new ValueDictionaryView(this.instanceValues, true);
+            this.readWriteView = new ValueDictionaryView(this.instanceValues, false);
+            this.writeOnlyView = new ValueDictionaryView(this.instanceValues, true);
         }
 
         // Used for the load pipeline.
@@ -41,13 +41,13 @@ namespace Orleans.Activities.Persistence
             this.persistenceParticipants = persistenceParticipants;
             this.instanceValues = instanceValues;
             //this.persistWriteOnlyValues = false;
-            readWriteView = new ValueDictionaryView(this.instanceValues, false);
+            this.readWriteView = new ValueDictionaryView(this.instanceValues, false);
             //writeOnlyView = null;
         }
 
         public void Collect()
         {
-            foreach (object persistenceParticipant in persistenceParticipants)
+            foreach (var persistenceParticipant in this.persistenceParticipants)
             {
                 IDictionary<XName, object> readWriteValues = null;
                 IDictionary<XName, object> writeOnlyValues = null;
@@ -58,20 +58,20 @@ namespace Orleans.Activities.Persistence
                     (persistenceParticipant as IPersistenceParticipant)?.CollectValues(out readWriteValues, out writeOnlyValues);
 
                 if (readWriteValues != null)
-                    foreach (KeyValuePair<XName, object> value in readWriteValues)
+                    foreach (var value in readWriteValues)
                         try
                         {
-                            instanceValues.Add(value.Key, new InstanceValue(value.Value));
+                            this.instanceValues.Add(value.Key, new InstanceValue(value.Value));
                         }
                         catch (ArgumentException exception)
                         {
                             throw new InvalidOperationException($"Name collision on key '{value.Key}' during collect in extension '{persistenceParticipant.GetType().GetFriendlyName()}'.", exception);
                         }
-                if (persistWriteOnlyValues && writeOnlyValues != null)
-                    foreach (KeyValuePair<XName, object> value in writeOnlyValues)
+                if (this.persistWriteOnlyValues && writeOnlyValues != null)
+                    foreach (var value in writeOnlyValues)
                         try
                         {
-                            instanceValues.Add(value.Key, new InstanceValue(value.Value, InstanceValueOptions.WriteOnly | InstanceValueOptions.Optional));
+                            this.instanceValues.Add(value.Key, new InstanceValue(value.Value, InstanceValueOptions.WriteOnly | InstanceValueOptions.Optional));
                         }
                         catch (ArgumentException exception)
                         {
@@ -84,14 +84,14 @@ namespace Orleans.Activities.Persistence
         {
             List<Tuple<object, IDictionary<XName, object>>> pendingValues = null;
 
-            foreach (object persistenceParticipant in persistenceParticipants)
+            foreach (var persistenceParticipant in this.persistenceParticipants)
             {
                 IDictionary<XName, object> mappedValues = null;
 
                 if (persistenceParticipant is System.Activities.Persistence.PersistenceParticipant legacyPersistenceParticipant)
-                    mappedValues = legacyPersistenceParticipant.MapValues(readWriteView, writeOnlyView);
+                    mappedValues = legacyPersistenceParticipant.MapValues(this.readWriteView, this.writeOnlyView);
                 else
-                    mappedValues = (persistenceParticipant as IPersistenceParticipant)?.MapValues(readWriteView, writeOnlyView);
+                    mappedValues = (persistenceParticipant as IPersistenceParticipant)?.MapValues(this.readWriteView, this.writeOnlyView);
 
                 if (mappedValues != null)
                 {
@@ -103,18 +103,18 @@ namespace Orleans.Activities.Persistence
 
             if (pendingValues != null)
             {
-                foreach (Tuple<object, IDictionary<XName, object>> writeOnlyValues in pendingValues)
-                    foreach (KeyValuePair<XName, object> value in writeOnlyValues.Item2)
+                foreach (var writeOnlyValues in pendingValues)
+                    foreach (var value in writeOnlyValues.Item2)
                         try
                         {
-                            instanceValues.Add(value.Key, new InstanceValue(value.Value, InstanceValueOptions.WriteOnly | InstanceValueOptions.Optional));
+                            this.instanceValues.Add(value.Key, new InstanceValue(value.Value, InstanceValueOptions.WriteOnly | InstanceValueOptions.Optional));
                         }
                         catch (ArgumentException exception)
                         {
                             throw new InvalidOperationException($"Name collision on key '{value.Key}' during map in extension '{writeOnlyValues.Item1.GetType().GetFriendlyName()}'.", exception);
                         }
 
-                writeOnlyView.ResetCaches();
+                this.writeOnlyView.ResetCaches();
             }
         }
 
@@ -123,12 +123,12 @@ namespace Orleans.Activities.Persistence
         {
             try
             {
-                foreach (object persistenceParticipant in persistenceParticipants)
+                foreach (var persistenceParticipant in this.persistenceParticipants)
                 {
                     if (persistenceParticipant is System.Activities.Persistence.PersistenceParticipant legacyPersistenceParticipant && legacyPersistenceParticipant.IsIOParticipant())
-                        await (legacyPersistenceParticipant as System.Activities.Persistence.PersistenceIOParticipant).OnSaveAsync(readWriteView, writeOnlyView, timeout);
+                        await (legacyPersistenceParticipant as System.Activities.Persistence.PersistenceIOParticipant).OnSaveAsync(this.readWriteView, this.writeOnlyView, timeout);
                     else
-                        await ((persistenceParticipant as IPersistenceIOParticipant)?.OnSaveAsync(readWriteView, writeOnlyView, timeout) ?? TaskConstants.Completed);
+                        await ((persistenceParticipant as IPersistenceIOParticipant)?.OnSaveAsync(this.readWriteView, this.writeOnlyView, timeout) ?? TaskConstants.Completed);
                 }
             }
             catch
@@ -145,7 +145,7 @@ namespace Orleans.Activities.Persistence
             try
             {
                 // It has no legacy equivalent.
-                foreach (object persistenceParticipant in persistenceParticipants)
+                foreach (var persistenceParticipant in this.persistenceParticipants)
                     await ((persistenceParticipant as IPersistenceIOParticipant)?.OnSavedAsync(timeout) ?? TaskConstants.Completed);
             }
             catch
@@ -161,12 +161,12 @@ namespace Orleans.Activities.Persistence
         {
             try
             {
-                foreach (object persistenceParticipant in persistenceParticipants)
+                foreach (var persistenceParticipant in this.persistenceParticipants)
                 {
                     if (persistenceParticipant is System.Activities.Persistence.PersistenceParticipant legacyPersistenceParticipant && legacyPersistenceParticipant.IsIOParticipant())
-                        await (legacyPersistenceParticipant as System.Activities.Persistence.PersistenceIOParticipant).OnLoadAsync(readWriteView, timeout);
+                        await (legacyPersistenceParticipant as System.Activities.Persistence.PersistenceIOParticipant).OnLoadAsync(this.readWriteView, timeout);
                     else
-                        await ((persistenceParticipant as IPersistenceIOParticipant)?.OnLoadAsync(readWriteView, timeout) ?? TaskConstants.Completed);
+                        await ((persistenceParticipant as IPersistenceIOParticipant)?.OnLoadAsync(this.readWriteView, timeout) ?? TaskConstants.Completed);
                 }
             }
             catch
@@ -179,19 +179,19 @@ namespace Orleans.Activities.Persistence
 
         public void Publish()
         {
-            foreach (object persistenceParticipant in persistenceParticipants)
+            foreach (var persistenceParticipant in this.persistenceParticipants)
             {
                 if (persistenceParticipant is System.Activities.Persistence.PersistenceParticipant legacyPersistenceParticipant)
-                    legacyPersistenceParticipant.PublishValues(readWriteView);
+                    legacyPersistenceParticipant.PublishValues(this.readWriteView);
                 else
-                    (persistenceParticipant as IPersistenceParticipant)?.PublishValues(readWriteView);
+                    (persistenceParticipant as IPersistenceParticipant)?.PublishValues(this.readWriteView);
 
             }
         }
 
         protected void Abort()
         {
-            foreach (object persistenceParticipant in persistenceParticipants)
+            foreach (var persistenceParticipant in this.persistenceParticipants)
             {
                 if (persistenceParticipant is System.Activities.Persistence.PersistenceParticipant legacyPersistenceParticipant && legacyPersistenceParticipant.IsIOParticipant())
                     (legacyPersistenceParticipant as System.Activities.Persistence.PersistenceIOParticipant).Abort();

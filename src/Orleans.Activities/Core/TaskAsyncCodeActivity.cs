@@ -16,8 +16,8 @@ namespace Orleans.Activities
     /// </summary>
     public abstract class TaskAsyncCodeActivity : AsyncCodeActivity
     {
-        protected sealed override IAsyncResult BeginExecute(AsyncCodeActivityContext context, AsyncCallback callback, object state) =>
-            AsyncFactory.ToBegin(ExecuteAsync(context), callback, state);
+        protected sealed override IAsyncResult BeginExecute(AsyncCodeActivityContext context, AsyncCallback callback, object state)
+            => AsyncFactory.ToBegin(ExecuteAsync(context), callback, state);
 
         protected sealed override void EndExecute(AsyncCodeActivityContext context, IAsyncResult asyncResult)
         {
@@ -49,13 +49,11 @@ namespace Orleans.Activities
     /// <typeparam name="TTaskResult"></typeparam>
     public abstract class TaskAsyncCodeActivity<TTaskResult> : AsyncCodeActivity
     {
-        protected sealed override IAsyncResult BeginExecute(AsyncCodeActivityContext context, AsyncCallback callback, object state) =>
-            AsyncFactory<TTaskResult>.ToBegin(ExecuteAsync(context), callback, state);
+        protected sealed override IAsyncResult BeginExecute(AsyncCodeActivityContext context, AsyncCallback callback, object state)
+            => AsyncFactory<TTaskResult>.ToBegin(ExecuteAsync(context), callback, state);
 
         protected sealed override void EndExecute(AsyncCodeActivityContext context, IAsyncResult asyncResult)
-        {
-            PostExecute(context, AsyncFactory<TTaskResult>.ToEnd(asyncResult));
-        }
+            => PostExecute(context, AsyncFactory<TTaskResult>.ToEnd(asyncResult));
 
         /// <summary>
         /// Implement any Task based async operation.
@@ -102,11 +100,11 @@ namespace Orleans.Activities
     /// <typeparam name="TTaskResult"></typeparam>
     public abstract class TaskAsyncCodeActivityWithResult<TActivityResult, TTaskResult> : AsyncCodeActivity<TActivityResult>
     {
-        protected sealed override IAsyncResult BeginExecute(AsyncCodeActivityContext context, AsyncCallback callback, object state) =>
-            AsyncFactory<TTaskResult>.ToBegin(ExecuteAsync(context), callback, state);
+        protected sealed override IAsyncResult BeginExecute(AsyncCodeActivityContext context, AsyncCallback callback, object state)
+            => AsyncFactory<TTaskResult>.ToBegin(ExecuteAsync(context), callback, state);
 
-        protected sealed override TActivityResult EndExecute(AsyncCodeActivityContext context, IAsyncResult asyncResult) =>
-            PostExecute(context, AsyncFactory<TTaskResult>.ToEnd(asyncResult));
+        protected sealed override TActivityResult EndExecute(AsyncCodeActivityContext context, IAsyncResult asyncResult)
+            => PostExecute(context, AsyncFactory<TTaskResult>.ToEnd(asyncResult));
 
         /// <summary>
         /// Implement any Task based async operation.
@@ -137,7 +135,7 @@ namespace Orleans.Activities
     {
         protected sealed override IAsyncResult BeginExecute(AsyncCodeActivityContext context, AsyncCallback callback, object state)
         {
-            TState activityState = PreExecute(context);
+            var activityState = PreExecute(context);
             context.UserState = activityState;
             return AsyncFactory.ToBegin(ExecuteAsync(activityState), callback, state);
         }
@@ -185,15 +183,13 @@ namespace Orleans.Activities
     {
         protected sealed override IAsyncResult BeginExecute(AsyncCodeActivityContext context, AsyncCallback callback, object state)
         {
-            TState activityState = PreExecute(context);
+            var activityState = PreExecute(context);
             context.UserState = activityState;
             return AsyncFactory<TTaskResult>.ToBegin(ExecuteAsync(activityState), callback, state);
         }
 
         protected sealed override void EndExecute(AsyncCodeActivityContext context, IAsyncResult asyncResult)
-        {
-            PostExecute(context, (TState)context.UserState, AsyncFactory<TTaskResult>.ToEnd(asyncResult));
-        }
+            => PostExecute(context, (TState)context.UserState, AsyncFactory<TTaskResult>.ToEnd(asyncResult));
 
         /// <summary>
         /// Executed before the Task of <see cref="ExecuteAsync"/> executed.
@@ -259,13 +255,13 @@ namespace Orleans.Activities
     {
         protected sealed override IAsyncResult BeginExecute(AsyncCodeActivityContext context, AsyncCallback callback, object state)
         {
-            TState activityState = PreExecute(context);
+            var activityState = PreExecute(context);
             context.UserState = activityState;
             return AsyncFactory<TTaskResult>.ToBegin(ExecuteAsync(activityState), callback, state);
         }
 
-        protected sealed override TActivityResult EndExecute(AsyncCodeActivityContext context, IAsyncResult asyncResult) =>
-            PostExecute(context, (TState)context.UserState, AsyncFactory<TTaskResult>.ToEnd(asyncResult));
+        protected sealed override TActivityResult EndExecute(AsyncCodeActivityContext context, IAsyncResult asyncResult)
+            => PostExecute(context, (TState)context.UserState, AsyncFactory<TTaskResult>.ToEnd(asyncResult));
 
         /// <summary>
         /// Executed before the Task of <see cref="ExecuteAsync"/> executed.

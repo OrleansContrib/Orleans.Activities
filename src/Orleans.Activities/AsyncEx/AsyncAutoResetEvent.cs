@@ -18,24 +18,24 @@ namespace Orleans.Activities.AsyncEx
     /// An async-compatible auto-reset event.
     /// <para>Can be used only inside reentrant grains, not thread safe, no race conditions are handled!</para>
     /// </summary>
-    [DebuggerDisplay("Id = {Id}, IsSet = {_set}")]
+    [DebuggerDisplay("Id = {Id}, IsSet = {set}")]
     [DebuggerTypeProxy(typeof(DebugView))]
     public sealed class AsyncAutoResetEvent
     {
         /// <summary>
         /// The queue of TCSs that other tasks are awaiting.
         /// </summary>
-        private readonly IAsyncWaitQueue<object> _queue;
+        private readonly IAsyncWaitQueue<object> queue;
 
         /// <summary>
         /// The current state of the event.
         /// </summary>
-        private bool _set;
+        private bool set;
 
         /// <summary>
         /// The semi-unique identifier for this instance. This is 0 if the id has not yet been created.
         /// </summary>
-        private int _id;
+        private int id;
 
         // MODIFIED
         ///// <summary>
@@ -50,8 +50,8 @@ namespace Orleans.Activities.AsyncEx
         /// <param name="queue">The wait queue used to manage waiters.</param>
         public AsyncAutoResetEvent(bool set, IAsyncWaitQueue<object> queue)
         {
-            _queue = queue;
-            _set = set;
+            this.queue = queue;
+            this.set = set;
             // MODIFIED
             //_mutex = new object();
             //if (set)
@@ -77,15 +77,14 @@ namespace Orleans.Activities.AsyncEx
         /// Gets a semi-unique identifier for this asynchronous auto-reset event.
         /// </summary>
         public int Id =>
-            IdManager<AsyncAutoResetEvent>.GetId(ref _id);
+            IdManager<AsyncAutoResetEvent>.GetId(ref this.id);
 
         /// <summary>
         /// Whether this event is currently set. This member is seldom used; code using this member has a high possibility of race conditions.
         /// </summary>
-        public bool IsSet =>
-            // MODIFIED
-            //get { lock (_mutex) return _set; }
-            _set;
+        public bool IsSet => this.set;
+        // MODIFIED
+        //get { lock (_mutex) return _set; }
 
         /// <summary>
         /// Asynchronously waits for this event to be set. If the event is set, this method will auto-reset it and return immediately, even if the cancellation token is already signalled. If the wait is canceled, then it will not auto-reset this event.
@@ -97,16 +96,16 @@ namespace Orleans.Activities.AsyncEx
             // MODIFIED
             //lock (_mutex)
             //{
-                if (_set)
+                if (this.set)
                 {
-                    _set = false;
+                    this.set = false;
                     ret = TaskConstants.Completed;
                 }
                 else
                 {
                     // MODIFIED
                     //ret = _queue.Enqueue(_mutex, cancellationToken);
-                    ret = _queue.Enqueue(cancellationToken);
+                    ret = this.queue.Enqueue(cancellationToken);
                 }
                 //Enlightenment.Trace.AsyncAutoResetEvent_TrackWait(this, ret);
             //}
@@ -144,8 +143,7 @@ namespace Orleans.Activities.AsyncEx
         /// <summary>
         /// Asynchronously waits for this event to be set. If the event is set, this method will auto-reset it and return immediately.
         /// </summary>
-        public Task WaitAsync() =>
-            WaitAsync(CancellationToken.None);
+        public Task WaitAsync() => WaitAsync(CancellationToken.None);
 
         // MODIFIED
         ///// <summary>
@@ -166,10 +164,10 @@ namespace Orleans.Activities.AsyncEx
             //lock (_mutex)
             //{
                 //Enlightenment.Trace.AsyncAutoResetEvent_Set(this);
-                if (_queue.IsEmpty)
-                    _set = true;
+                if (this.queue.IsEmpty)
+                    this.set = true;
                 else
-                    finish = _queue.Dequeue();
+                    finish = this.queue.Dequeue();
             //}
             if (finish != null)
                 finish.Dispose();
@@ -179,18 +177,15 @@ namespace Orleans.Activities.AsyncEx
         [DebuggerNonUserCode]
         private sealed class DebugView
         {
-            private readonly AsyncAutoResetEvent _are;
+            private readonly AsyncAutoResetEvent are;
 
-            public DebugView(AsyncAutoResetEvent are)
-            {
-                _are = are;
-            }
+            public DebugView(AsyncAutoResetEvent are) => this.are = are;
 
-            public int Id => _are.Id;
+            public int Id => this.are.Id;
 
-            public bool IsSet => _are._set;
+            public bool IsSet => this.are.set;
 
-            public IAsyncWaitQueue<object> WaitQueue => _are._queue;
+            public IAsyncWaitQueue<object> WaitQueue => this.are.queue;
         }
         // ReSharper restore UnusedMember.Local
     }

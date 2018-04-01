@@ -21,7 +21,7 @@ namespace Orleans.Activities.AsyncEx
         private static AsyncCallback Callback(Action<IAsyncResult> endMethod, TaskCompletionSource<object> tcs)
         {
             // MODIFIED
-            TaskScheduler originalTaskScheduler = TaskScheduler.Current;
+            var originalTaskScheduler = TaskScheduler.Current;
             return (asyncResult) =>
             {
                 // MODIFIED
@@ -77,7 +77,7 @@ namespace Orleans.Activities.AsyncEx
             var tcs = new TaskCompletionSource<object>();
             // MODIFIED
             //beginMethod(Callback(endMethod, tcs), null);
-            IAsyncResult asyncResult = beginMethod(Callback(endMethod, tcs), null);
+            var asyncResult = beginMethod(Callback(endMethod, tcs), null);
             if (asyncResult.CompletedSynchronously)
                 CallEndMethod(asyncResult, endMethod, tcs);
             return tcs.Task;
@@ -95,10 +95,10 @@ namespace Orleans.Activities.AsyncEx
         /// <returns></returns>
         public static Task FromApm<TArg0>(Func<TArg0, AsyncCallback, object, IAsyncResult> beginMethod, Action<IAsyncResult> endMethod, TArg0 arg0)
         {
-            TaskCompletionSource<object> tcs = new TaskCompletionSource<object>();
+            var tcs = new TaskCompletionSource<object>();
             // MODIFIED
             //beginMethod(arg0, Callback(endMethod, tcs), null);
-            IAsyncResult asyncResult = beginMethod(arg0, Callback(endMethod, tcs), null);
+            var asyncResult = beginMethod(arg0, Callback(endMethod, tcs), null);
             if (asyncResult.CompletedSynchronously)
                 CallEndMethod(asyncResult, endMethod, tcs);
             return tcs.Task;
@@ -116,10 +116,10 @@ namespace Orleans.Activities.AsyncEx
         /// <returns></returns>
         public static Task FromApm<TArg0, TArg1>(Func<TArg0, TArg1, AsyncCallback, object, IAsyncResult> beginMethod, Action<IAsyncResult> endMethod, TArg0 arg0, TArg1 arg1)
         {
-            TaskCompletionSource<object> tcs = new TaskCompletionSource<object>();
+            var tcs = new TaskCompletionSource<object>();
             // MODIFIED
             //beginMethod(arg0, arg1, Callback(endMethod, tcs), null);
-            IAsyncResult asyncResult = beginMethod(arg0, arg1, Callback(endMethod, tcs), null);
+            var asyncResult = beginMethod(arg0, arg1, Callback(endMethod, tcs), null);
             if (asyncResult.CompletedSynchronously)
                 CallEndMethod(asyncResult, endMethod, tcs);
             return tcs.Task;
@@ -139,10 +139,10 @@ namespace Orleans.Activities.AsyncEx
         /// <returns></returns>
         public static Task FromApm<TArg0, TArg1, TArg2>(Func<TArg0, TArg1, TArg2, AsyncCallback, object, IAsyncResult> beginMethod, Action<IAsyncResult> endMethod, TArg0 arg0, TArg1 arg1, TArg2 arg2)
         {
-            TaskCompletionSource<object> tcs = new TaskCompletionSource<object>();
+            var tcs = new TaskCompletionSource<object>();
             // MODIFIED
             //beginMethod(arg0, arg1, arg2, Callback(endMethod, tcs), null);
-            IAsyncResult asyncResult = beginMethod(arg0, arg1, arg2, Callback(endMethod, tcs), null);
+            var asyncResult = beginMethod(arg0, arg1, arg2, Callback(endMethod, tcs), null);
             if (asyncResult.CompletedSynchronously)
                 CallEndMethod(asyncResult, endMethod, tcs);
             return tcs.Task;
@@ -214,7 +214,7 @@ namespace Orleans.Activities.AsyncEx
         private static AsyncCallback Callback(Func<IAsyncResult, TResult> endMethod, TaskCompletionSource<TResult> tcs)
         {
             // MODIFIED
-            TaskScheduler originalTaskScheduler = TaskScheduler.Current;
+            var originalTaskScheduler = TaskScheduler.Current;
             return (asyncResult) =>
             {
                 // MODIFIED
@@ -268,7 +268,7 @@ namespace Orleans.Activities.AsyncEx
             var tcs = new TaskCompletionSource<TResult>();
             // MODIFIED
             //beginMethod(Callback(endMethod, tcs), null);
-            IAsyncResult asyncResult = beginMethod(Callback(endMethod, tcs), null);
+            var asyncResult = beginMethod(Callback(endMethod, tcs), null);
             if (asyncResult.CompletedSynchronously)
                 CallEndMethod(asyncResult, endMethod, tcs);
             return tcs.Task;
@@ -286,10 +286,10 @@ namespace Orleans.Activities.AsyncEx
         /// <returns>The result of the asynchronous operation.</returns>
         public static Task<TResult> FromApm<TArg0>(Func<TArg0, AsyncCallback, object, IAsyncResult> beginMethod, Func<IAsyncResult, TResult> endMethod, TArg0 arg0)
         {
-            TaskCompletionSource<TResult> tcs = new TaskCompletionSource<TResult>();
+            var tcs = new TaskCompletionSource<TResult>();
             // MODIFIED
             //beginMethod(arg0, Callback(endMethod, tcs), null);
-            IAsyncResult asyncResult = beginMethod(arg0, Callback(endMethod, tcs), null);
+            var asyncResult = beginMethod(arg0, Callback(endMethod, tcs), null);
             if (asyncResult.CompletedSynchronously)
                 CallEndMethod(asyncResult, endMethod, tcs);
             return tcs.Task;
@@ -307,10 +307,10 @@ namespace Orleans.Activities.AsyncEx
         /// <returns>The result of the asynchronous operation.</returns>
         public static Task<TResult> FromApm<TArg0, TArg1>(Func<TArg0, TArg1, AsyncCallback, object, IAsyncResult> beginMethod, Func<IAsyncResult, TResult> endMethod, TArg0 arg0, TArg1 arg1)
         {
-            TaskCompletionSource<TResult> tcs = new TaskCompletionSource<TResult>();
+            var tcs = new TaskCompletionSource<TResult>();
             // MODIFIED
             //beginMethod(arg0, arg1, Callback(endMethod, tcs), null);
-            IAsyncResult asyncResult = beginMethod(arg0, arg1, Callback(endMethod, tcs), null);
+            var asyncResult = beginMethod(arg0, arg1, Callback(endMethod, tcs), null);
             if (asyncResult.CompletedSynchronously)
                 CallEndMethod(asyncResult, endMethod, tcs);
             return tcs.Task;
@@ -330,10 +330,10 @@ namespace Orleans.Activities.AsyncEx
         /// <returns>The result of the asynchronous operation.</returns>
         public static Task<TResult> FromApm<TArg0, TArg1, TArg2>(Func<TArg0, TArg1, TArg2, AsyncCallback, object, IAsyncResult> beginMethod, Func<IAsyncResult, TResult> endMethod, TArg0 arg0, TArg1 arg1, TArg2 arg2)
         {
-            TaskCompletionSource<TResult> tcs = new TaskCompletionSource<TResult>();
+            var tcs = new TaskCompletionSource<TResult>();
             // MODIFIED
             //beginMethod(arg0, arg1, arg2, Callback(endMethod, tcs), null);
-            IAsyncResult asyncResult = beginMethod(arg0, arg1, arg2, Callback(endMethod, tcs), null);
+            var asyncResult = beginMethod(arg0, arg1, arg2, Callback(endMethod, tcs), null);
             if (asyncResult.CompletedSynchronously)
                 CallEndMethod(asyncResult, endMethod, tcs);
             return tcs.Task;

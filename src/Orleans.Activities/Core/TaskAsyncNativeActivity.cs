@@ -18,18 +18,13 @@ namespace Orleans.Activities
     /// </summary>
     public abstract class TaskAsyncNativeActivityBase : NativeActivity
     {
-        protected Variable<NoPersistHandle> taskCompletionNoPersistHandle;
-
-        protected TaskAsyncNativeActivityBase()
-        {
-            taskCompletionNoPersistHandle = new Variable<NoPersistHandle>();
-        }
+        protected Variable<NoPersistHandle> taskCompletionNoPersistHandle = new Variable<NoPersistHandle>();
 
         protected sealed override bool CanInduceIdle => true;
 
         protected override void CacheMetadata(NativeActivityMetadata metadata)
         {
-            metadata.AddImplementationVariable(taskCompletionNoPersistHandle);
+            metadata.AddImplementationVariable(this.taskCompletionNoPersistHandle);
             base.CacheMetadata(metadata);
         }
 
@@ -44,11 +39,11 @@ namespace Orleans.Activities
                 postExecute(context);
             else
             {
-                IActivityContext activityContext = context.GetActivityContext();
+                var activityContext = context.GetActivityContext();
 
-                taskCompletionNoPersistHandle.Get(context).Enter(context);
+                this.taskCompletionNoPersistHandle.Get(context).Enter(context);
 
-                Bookmark bookmark = context.CreateBookmark(BookmarkResumptionCallback);
+                var bookmark = context.CreateBookmark(this.BookmarkResumptionCallback);
                 resultTask
                     .ContinueWith((_resultTask) => activityContext.ResumeBookmarkThroughHostAsync(bookmark, postExecute, TimeSpan.MaxValue),
                         TaskContinuationOptions.ExecuteSynchronously).Unwrap()
@@ -64,9 +59,9 @@ namespace Orleans.Activities
 
         protected void BookmarkResumptionCallback(NativeActivityContext context, Bookmark bookmark, object value)
         {
-            Action<NativeActivityContext> postExecute = value as Action<NativeActivityContext>;
+            var postExecute = value as Action<NativeActivityContext>;
 
-            taskCompletionNoPersistHandle.Get(context).Exit(context);
+            this.taskCompletionNoPersistHandle.Get(context).Exit(context);
 
             postExecute(context);
         }
@@ -78,18 +73,13 @@ namespace Orleans.Activities
     /// <typeparam name="TActivityResult"></typeparam>
     public abstract class TaskAsyncNativeActivityBase<TActivityResult> : NativeActivity<TActivityResult>
     {
-        protected Variable<NoPersistHandle> taskCompletionNoPersistHandle;
-
-        protected TaskAsyncNativeActivityBase()
-        {
-            taskCompletionNoPersistHandle = new Variable<NoPersistHandle>();
-        }
+        protected Variable<NoPersistHandle> taskCompletionNoPersistHandle = new Variable<NoPersistHandle>();
 
         protected sealed override bool CanInduceIdle => true;
 
         protected override void CacheMetadata(NativeActivityMetadata metadata)
         {
-            metadata.AddImplementationVariable(taskCompletionNoPersistHandle);
+            metadata.AddImplementationVariable(this.taskCompletionNoPersistHandle);
             base.CacheMetadata(metadata);
         }
 
@@ -104,11 +94,11 @@ namespace Orleans.Activities
                 postExecute(context);
             else
             {
-                IActivityContext activityContext = context.GetActivityContext();
+                var activityContext = context.GetActivityContext();
 
-                taskCompletionNoPersistHandle.Get(context).Enter(context);
+                this.taskCompletionNoPersistHandle.Get(context).Enter(context);
 
-                Bookmark bookmark = context.CreateBookmark(BookmarkResumptionCallback);
+                var bookmark = context.CreateBookmark(this.BookmarkResumptionCallback);
                 resultTask
                     .ContinueWith((_resultTask) => activityContext.ResumeBookmarkThroughHostAsync(bookmark, postExecute, TimeSpan.MaxValue),
                         TaskContinuationOptions.ExecuteSynchronously).Unwrap()
@@ -124,9 +114,9 @@ namespace Orleans.Activities
 
         protected void BookmarkResumptionCallback(NativeActivityContext context, Bookmark bookmark, object value)
         {
-            Action<NativeActivityContext> postExecute = value as Action<NativeActivityContext>;
+            var postExecute = value as Action<NativeActivityContext>;
 
-            taskCompletionNoPersistHandle.Get(context).Exit(context);
+            this.taskCompletionNoPersistHandle.Get(context).Exit(context);
 
             postExecute(context);
         }
@@ -139,13 +129,12 @@ namespace Orleans.Activities
     {
         protected sealed override void Execute(NativeActivityContext context)
         {
-            Task resultTask = ExecuteAsync(context);
-            Action<NativeActivityContext> postExecute = (NativeActivityContext _context) =>
+            var resultTask = ExecuteAsync(context);
+            Execute(context, resultTask, _context =>
             {
                 resultTask.GetAwaiter().GetResult();
                 PostExecute(_context);
-            };
-            Execute(context, resultTask, postExecute);
+            });
         }
 
         /// <summary>
@@ -174,10 +163,9 @@ namespace Orleans.Activities
     {
         protected sealed override void Execute(NativeActivityContext context)
         {
-            Task<TTaskResult> resultTask = ExecuteAsync(context);
-            Action<NativeActivityContext> postExecute = (NativeActivityContext _context) =>
-                PostExecute(_context, resultTask.GetAwaiter().GetResult());
-            Execute(context, resultTask, postExecute);
+            var resultTask = ExecuteAsync(context);
+            Execute(context, resultTask, _context =>
+                PostExecute(_context, resultTask.GetAwaiter().GetResult()));
         }
 
         /// <summary>
@@ -227,10 +215,9 @@ namespace Orleans.Activities
     {
         protected sealed override void Execute(NativeActivityContext context)
         {
-            Task<TTaskResult> resultTask = ExecuteAsync(context);
-            Action<NativeActivityContext> postExecute = (NativeActivityContext _context) =>
-                Result.Set(_context, PostExecute(_context, resultTask.GetAwaiter().GetResult()));
-            Execute(context, resultTask, postExecute);
+            var resultTask = ExecuteAsync(context);
+            Execute(context, resultTask, _context =>
+                this.Result.Set(_context, this.PostExecute(_context, resultTask.GetAwaiter().GetResult())));
         }
 
         /// <summary>
@@ -262,14 +249,13 @@ namespace Orleans.Activities
     {
         protected sealed override void Execute(NativeActivityContext context)
         {
-            TState activityState = PreExecute(context);
-            Task resultTask = ExecuteAsync(activityState);
-            Action<NativeActivityContext> postExecute = (NativeActivityContext _context) =>
+            var activityState = PreExecute(context);
+            var resultTask = ExecuteAsync(activityState);
+            Execute(context, resultTask, _context =>
             {
                 resultTask.GetAwaiter().GetResult();
                 PostExecute(_context, activityState);
-            };
-            Execute(context, resultTask, postExecute);
+            });
         }
 
         /// <summary>
@@ -309,11 +295,10 @@ namespace Orleans.Activities
     {
         protected sealed override void Execute(NativeActivityContext context)
         {
-            TState activityState = PreExecute(context);
-            Task<TTaskResult> resultTask = ExecuteAsync(activityState);
-            Action<NativeActivityContext> postExecute = (NativeActivityContext _context) =>
-                PostExecute(_context, activityState, resultTask.GetAwaiter().GetResult());
-            Execute(context, resultTask, postExecute);
+            var activityState = PreExecute(context);
+            var resultTask = ExecuteAsync(activityState);
+            Execute(context, resultTask, _context =>
+                PostExecute(_context, activityState, resultTask.GetAwaiter().GetResult()));
         }
 
         /// <summary>
@@ -381,11 +366,10 @@ namespace Orleans.Activities
     {
         protected sealed override void Execute(NativeActivityContext context)
         {
-            TState activityState = PreExecute(context);
-            Task<TTaskResult> resultTask = ExecuteAsync(activityState);
-            Action<NativeActivityContext> postExecute = (NativeActivityContext _context) =>
-                Result.Set(_context, PostExecute(_context, activityState, resultTask.GetAwaiter().GetResult()));
-            Execute(context, resultTask, postExecute);
+            var activityState = PreExecute(context);
+            var resultTask = ExecuteAsync(activityState);
+            Execute(context, resultTask, _context =>
+                this.Result.Set(_context, this.PostExecute(_context, activityState, resultTask.GetAwaiter().GetResult())));
         }
 
         /// <summary>

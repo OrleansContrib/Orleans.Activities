@@ -19,18 +19,14 @@ namespace Orleans.Activities.Tracking
         protected TrackingParticipant()
         { }
 
-        protected sealed override IAsyncResult BeginTrack(TrackingRecord record, TimeSpan timeout, AsyncCallback callback, object state) =>
-            AsyncFactory.ToBegin(TrackAsync(record, timeout), callback, state);
+        protected sealed override IAsyncResult BeginTrack(TrackingRecord record, TimeSpan timeout, AsyncCallback callback, object state)
+            => AsyncFactory.ToBegin(TrackAsync(record, timeout), callback, state);
 
         protected sealed override void EndTrack(IAsyncResult result)
-        {
-            AsyncFactory.ToEnd(result);
-        }
+            => AsyncFactory.ToEnd(result);
 
         protected sealed override void Track(TrackingRecord record, TimeSpan timeout)
-        {
-            throw new NotSupportedException("Track is not supported.");
-        }
+            => throw new NotSupportedException("Track is not supported.");
 
         protected abstract Task TrackAsync(TrackingRecord record, TimeSpan timeout);
     }

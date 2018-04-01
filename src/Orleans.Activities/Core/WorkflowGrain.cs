@@ -93,10 +93,10 @@ namespace Orleans.Activities
             if (!typeof(TGrain).IsAssignableFrom(GetType()))
                 throw new InvalidProgramException($"Type '{typeof(TGrain).GetFriendlyName()}' is not assignable from current type '{GetType().GetFriendlyName()}'.");
 
-            workflowHost = new WorkflowHost(new WorkflowHostCallback(this),
-                (WorkflowIdentity workflowIdentity) => workflowDefinitionFactory(State, workflowIdentity),
-                workflowDefinitionIdentityFactory == null ? default(Func<WorkflowIdentity>) : () => workflowDefinitionIdentityFactory(State));
-            workflowInterfaceProxy = WorkflowInterfaceProxy<TWorkflowInterface>.CreateProxy(workflowHost);
+            this.workflowHost = new WorkflowHost(new WorkflowHostCallback(this),
+                (WorkflowIdentity workflowIdentity) => workflowDefinitionFactory(this.State, workflowIdentity),
+                workflowDefinitionIdentityFactory == null ? default(Func<WorkflowIdentity>) : () => workflowDefinitionIdentityFactory(this.State));
+            this.workflowInterfaceProxy = WorkflowInterfaceProxy<TWorkflowInterface>.CreateProxy(this.workflowHost);
         }
 
         private IParameters parameters;
@@ -105,15 +105,15 @@ namespace Orleans.Activities
         {
             get
             {
-                if (parameters == null)
-                    parameters = new Parameters();
-                return parameters;
+                if (this.parameters == null)
+                    this.parameters = new Parameters();
+                return this.parameters;
             }
             set
             {
-                if (parameters != null)
-                    throw new InvalidOperationException(nameof(Parameters) + " property is already set!");
-                parameters = value ?? throw new ArgumentNullException(nameof(value));
+                if (this.parameters != null)
+                    throw new InvalidOperationException(nameof(this.Parameters) + " property is already set!");
+                this.parameters = value ?? throw new ArgumentNullException(nameof(value));
             }
         }
 
@@ -123,11 +123,11 @@ namespace Orleans.Activities
 
         public override async Task OnDeactivateAsync()
         {
-            await workflowHost.DeactivateAsync();
+            await this.workflowHost.DeactivateAsync();
             await base.OnDeactivateAsync();
         }
 
-        public virtual Task ReceiveReminder(string reminderName, TickStatus tickStatus) => workflowHost.ReminderAsync(reminderName);
+        public virtual Task ReceiveReminder(string reminderName, TickStatus tickStatus) => this.workflowHost.ReminderAsync(reminderName);
 
         #endregion
 
@@ -145,26 +145,26 @@ namespace Orleans.Activities
                 this.workflowCallbackInterfaceProxy = WorkflowCallbackInterfaceProxy<TWorkflowCallbackInterface>.CreateProxy(grain as TWorkflowCallbackInterface);
             }
 
-            public Guid PrimaryKey => grain.GetPrimaryKey();
+            public Guid PrimaryKey => this.grain.GetPrimaryKey();
 
-            public IWorkflowState WorkflowState => grain.State;
+            public IWorkflowState WorkflowState => this.grain.State;
 
-            public Task LoadWorkflowStateAsync() => grain.ReadStateAsync();
+            public Task LoadWorkflowStateAsync() => this.grain.ReadStateAsync();
 
-            public Task SaveWorkflowStateAsync() => grain.WriteStateAsync();
+            public Task SaveWorkflowStateAsync() => this.grain.WriteStateAsync();
 
             private static TimeSpan oneMinuteTimeSpan = TimeSpan.FromMinutes(1);
 
-            public Task RegisterOrUpdateReminderAsync(string reminderName, TimeSpan dueTime, TimeSpan period) =>
-                grain.RegisterOrUpdateReminder(reminderName, dueTime, period < oneMinuteTimeSpan ? oneMinuteTimeSpan : period);
+            public Task RegisterOrUpdateReminderAsync(string reminderName, TimeSpan dueTime, TimeSpan period)
+                => this.grain.RegisterOrUpdateReminder(reminderName, dueTime, period < oneMinuteTimeSpan ? oneMinuteTimeSpan : period);
 
             public async Task UnregisterReminderAsync(string reminderName)
             {
                 try
                 {
-                    IGrainReminder grainReminder = await grain.GetReminder(reminderName);
+                    var grainReminder = await this.grain.GetReminder(reminderName);
                     if (grainReminder != null)
-                        await grain.UnregisterReminder(grainReminder);
+                        await this.grain.UnregisterReminder(grainReminder);
                 }
                 catch (AggregateException ae)
                 {
@@ -172,24 +172,24 @@ namespace Orleans.Activities
                 }
             }
 
-            public async Task<IEnumerable<string>> GetRemindersAsync() => from grainReminder in await grain.GetReminders() select grainReminder.ReminderName;
+            public async Task<IEnumerable<string>> GetRemindersAsync() => from grainReminder in await this.grain.GetReminders() select grainReminder.ReminderName;
 
-            public IParameters Parameters => grain.Parameters;
+            public IParameters Parameters => this.grain.Parameters;
 
-            public Task OnUnhandledExceptionAsync(Exception exception, Activity source) =>
-                grain.OnUnhandledExceptionAsync(exception, source);
+            public Task OnUnhandledExceptionAsync(Exception exception, Activity source)
+                => this.grain.OnUnhandledExceptionAsync(exception, source);
 
-            public Task<Func<Task<TResponseResult>>> OnOperationAsync<TRequestParameter, TResponseResult>(string operationName, TRequestParameter requestParameter) =>
-                workflowCallbackInterfaceProxy.OnOperationAsync<TRequestParameter, TResponseResult>(operationName, requestParameter);
+            public Task<Func<Task<TResponseResult>>> OnOperationAsync<TRequestParameter, TResponseResult>(string operationName, TRequestParameter requestParameter)
+                => this.workflowCallbackInterfaceProxy.OnOperationAsync<TRequestParameter, TResponseResult>(operationName, requestParameter);
 
-            public Task<Func<Task>> OnOperationAsync<TRequestParameter>(string operationName, TRequestParameter requestParameter) =>
-                workflowCallbackInterfaceProxy.OnOperationAsync<TRequestParameter>(operationName, requestParameter);
+            public Task<Func<Task>> OnOperationAsync<TRequestParameter>(string operationName, TRequestParameter requestParameter)
+                => this.workflowCallbackInterfaceProxy.OnOperationAsync<TRequestParameter>(operationName, requestParameter);
 
-            public Task<Func<Task<TResponseResult>>> OnOperationAsync<TResponseResult>(string operationName) =>
-                workflowCallbackInterfaceProxy.OnOperationAsync<TResponseResult>(operationName);
+            public Task<Func<Task<TResponseResult>>> OnOperationAsync<TResponseResult>(string operationName)
+                => this.workflowCallbackInterfaceProxy.OnOperationAsync<TResponseResult>(operationName);
 
-            public Task<Func<Task>> OnOperationAsync(string operationName) =>
-                workflowCallbackInterfaceProxy.OnOperationAsync(operationName);
+            public Task<Func<Task>> OnOperationAsync(string operationName)
+                => this.workflowCallbackInterfaceProxy.OnOperationAsync(operationName);
         }
 
         #endregion
@@ -198,12 +198,12 @@ namespace Orleans.Activities
         /// The control functions of the workflow is accessible through this property.
         /// <para>Under normal circumstances there is no need to access these functions.</para>
         /// </summary>
-        protected IWorkflowHostControl WorkflowControl => workflowHost;
+        protected IWorkflowHostControl WorkflowControl => this.workflowHost;
 
         /// <summary>
         /// The TWorkflowInterface operations of the workflow are accessible through this property.
         /// </summary>
-        protected TWorkflowInterface WorkflowInterface => workflowInterfaceProxy;
+        protected TWorkflowInterface WorkflowInterface => this.workflowInterfaceProxy;
 
         /// <summary>
         /// Exceptions are propagated back to the caller before a grain incoming request's response has been sent back, but after the workflow runs on the tail of the request,

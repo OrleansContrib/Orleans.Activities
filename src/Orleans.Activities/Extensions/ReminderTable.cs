@@ -75,29 +75,27 @@ namespace Orleans.Activities.Extensions
             public ReminderState ReminderState { get; set; }
 
             public ReminderInfo(Bookmark bookmark, ReminderState reminderState)
-                : this(bookmark, reminderState, default(DateTime))
+                : this(bookmark, reminderState, default)
             { }
 
             public ReminderInfo(Bookmark bookmark, ReminderState reminderState, DateTime dueTime)
             {
-                Bookmark = bookmark;
-                DueTime = dueTime;
-                ReminderState = reminderState;
+                this.Bookmark = bookmark;
+                this.DueTime = dueTime;
+                this.ReminderState = reminderState;
             }
         }
 
         public static class WorkflowNamespace
         {
-            private static readonly XNamespace remindersPath = XNamespace.Get(Persistence.WorkflowNamespace.BaseNamespace + "/reminders");
+            private static readonly XNamespace RemindersPath = XNamespace.Get(Persistence.WorkflowNamespace.BaseNamespace + "/reminders");
 
-            private static readonly XName bookmarks= remindersPath.GetName(nameof(Bookmarks));
-            public static XName Bookmarks => bookmarks; // used for persistence
+            public static readonly XName Bookmarks = RemindersPath.GetName(nameof(Bookmarks));
 
-            private static readonly XName reactivation = remindersPath.GetName(nameof(Reactivation));
-            public static XName Reactivation => reactivation; // used for reactivation reminder naming
+            public static readonly XName Reactivation = RemindersPath.GetName(nameof(Reactivation));
 
             public static readonly string ReminderNameForReactivation = Reactivation.ToString();
-            public static readonly string ReminderPrefixForBookmarks = "{" + remindersPath.NamespaceName + "/bookmarks" + "}";
+            public static readonly string ReminderPrefixForBookmarks = "{" + RemindersPath.NamespaceName + "/bookmarks" + "}";
         }
 
         protected IActivityContext instance;
@@ -111,24 +109,24 @@ namespace Orleans.Activities.Extensions
             //this.hasReactivationReminder = false;
         }
 
-        public static bool IsReactivationReminder(string reminderName) =>
-            reminderName == WorkflowNamespace.ReminderNameForReactivation;
+        public static bool IsReactivationReminder(string reminderName)
+            => reminderName == WorkflowNamespace.ReminderNameForReactivation;
 
         public Bookmark GetBookmark(string reminderName)
         {
-            if (reminders.TryGetValue(reminderName, out ReminderInfo reminderInfo))
+            if (this.reminders.TryGetValue(reminderName, out var reminderInfo))
                 return reminderInfo.Bookmark;
             return null;
         }
 
-        protected static string CreateReminderName(Bookmark bookmark) =>
-            WorkflowNamespace.ReminderPrefixForBookmarks + bookmark.ToString();
+        protected static string CreateReminderName(Bookmark bookmark)
+            => WorkflowNamespace.ReminderPrefixForBookmarks + bookmark.ToString();
 
         public void RegisterOrUpdateReminder(Bookmark bookmark, TimeSpan dueTime)
         {
-            string reminderName = CreateReminderName(bookmark);
+            var reminderName = CreateReminderName(bookmark);
             ReminderState reminderState;
-            if (reminders.TryGetValue(reminderName, out ReminderInfo reminderInfo))
+            if (this.reminders.TryGetValue(reminderName, out var reminderInfo))
                 reminderState = reminderInfo.ReminderState;
             else
                 reminderState = ReminderState.NonExistent;
@@ -137,11 +135,11 @@ namespace Orleans.Activities.Extensions
                 case ReminderState.NonExistent:
                 case ReminderState.RegisterAndSave:
                 case ReminderState.Unregister:
-                    reminders[reminderName] = new ReminderInfo(bookmark, ReminderState.RegisterAndSave, DateTime.UtcNow + dueTime);
+                    this.reminders[reminderName] = new ReminderInfo(bookmark, ReminderState.RegisterAndSave, DateTime.UtcNow + dueTime);
                     break;
                 case ReminderState.ReregisterAndResave:
                 case ReminderState.SaveAndUnregister:
-                    reminders[reminderName] = new ReminderInfo(bookmark, ReminderState.ReregisterAndResave, DateTime.UtcNow + dueTime);
+                    this.reminders[reminderName] = new ReminderInfo(bookmark, ReminderState.ReregisterAndResave, DateTime.UtcNow + dueTime);
                     break;
                 //case ReminderState.RegisteredButNotSaved:
                 //case ReminderState.RegisteredButNotResaved:
@@ -152,14 +150,12 @@ namespace Orleans.Activities.Extensions
         }
 
         public void UnregisterReminder(Bookmark bookmark)
-        {
-            UnregisterReminder(CreateReminderName(bookmark));
-        }
+            => UnregisterReminder(CreateReminderName(bookmark));
 
         public void UnregisterReminder(string reminderName)
         {
             ReminderState reminderState;
-            if (reminders.TryGetValue(reminderName, out ReminderInfo reminderInfo))
+            if (this.reminders.TryGetValue(reminderName, out var reminderInfo))
                 reminderState = reminderInfo.ReminderState;
             else
                 reminderState = ReminderState.NonExistent;
@@ -170,7 +166,7 @@ namespace Orleans.Activities.Extensions
                 case ReminderState.Unregister:
                     break;
                 case ReminderState.RegisterAndSave:
-                    reminders.Remove(reminderName);
+                    this.reminders.Remove(reminderName);
                     break;
                 case ReminderState.ReregisterAndResave:
                 case ReminderState.RegisteredButNotResaved:
@@ -185,29 +181,29 @@ namespace Orleans.Activities.Extensions
             }
         }
 
-        protected static bool ParticipateInOnPaused(ReminderState reminderState) =>
-            reminderState == ReminderState.RegisterAndSave
+        protected static bool ParticipateInOnPaused(ReminderState reminderState)
+            => reminderState == ReminderState.RegisterAndSave
             || reminderState == ReminderState.ReregisterAndResave
             || reminderState == ReminderState.Unregister;
 
         public async Task OnPausedAsync()
         {
-            foreach (KeyValuePair<string, ReminderInfo> kvp in reminders
+            foreach (var kvp in this.reminders
                 .Where((kvp) => ParticipateInOnPaused(kvp.Value.ReminderState))
                 .ToList()) // because we will modify the dictionary
                 switch (kvp.Value.ReminderState)
                 {
                     case ReminderState.RegisterAndSave:
                         kvp.Value.ReminderState = ReminderState.RegisteredButNotSaved;
-                        await instance.RegisterOrUpdateReminderAsync(kvp.Key, kvp.Value.DueTime - DateTime.UtcNow);
+                        await this.instance.RegisterOrUpdateReminderAsync(kvp.Key, kvp.Value.DueTime - DateTime.UtcNow);
                         break;
                     case ReminderState.ReregisterAndResave:
                         kvp.Value.ReminderState = ReminderState.RegisteredButNotResaved;
-                        await instance.RegisterOrUpdateReminderAsync(kvp.Key, kvp.Value.DueTime - DateTime.UtcNow);
+                        await this.instance.RegisterOrUpdateReminderAsync(kvp.Key, kvp.Value.DueTime - DateTime.UtcNow);
                         break;
                     case ReminderState.Unregister:
-                        reminders.Remove(kvp.Key);
-                        await instance.UnregisterReminderAsync(kvp.Key);
+                        this.reminders.Remove(kvp.Key);
+                        await this.instance.UnregisterReminderAsync(kvp.Key);
                         break;
                     //case ReminderState.RegisteredButNotSaved:
                     //case ReminderState.RegisteredButNotResaved:
@@ -218,9 +214,9 @@ namespace Orleans.Activities.Extensions
                 }
         }
 
-        protected static bool ParticipateInCollectValues(ReminderState reminderState) =>
+        protected static bool ParticipateInCollectValues(ReminderState reminderState)
             // do not save bookmarks where the associated reminder will be unregistered during/after save
-            reminderState != ReminderState.SaveAndUnregister
+            => reminderState != ReminderState.SaveAndUnregister
             && reminderState != ReminderState.Unregister;
 
         public void CollectValues(out IDictionary<XName, object> readWriteValues, out IDictionary<XName, object> writeOnlyValues)
@@ -228,9 +224,9 @@ namespace Orleans.Activities.Extensions
             readWriteValues = null;
             writeOnlyValues = null;
 
-            if (reminders.Count > 0)
+            if (this.reminders.Count > 0)
             {
-                readWriteValues = new Dictionary<XName, object>(1) {{ WorkflowNamespace.Bookmarks, reminders
+                readWriteValues = new Dictionary<XName, object>(1) {{ WorkflowNamespace.Bookmarks, this.reminders
                     .Where((kvp) => ParticipateInCollectValues(kvp.Value.ReminderState))
                     .Select((kvp) => kvp.Value.Bookmark)
                     .ToList()}};
@@ -239,12 +235,12 @@ namespace Orleans.Activities.Extensions
 
         protected Task RegisterReactivationReminderIfRequired()
         {
-            if (instance.WorkflowInstanceState == WorkflowInstanceState.Runnable
-                && !reminders.Where((kvp) => kvp.Value.ReminderState == ReminderState.RegisteredAndSaved).Any())
+            if (this.instance.WorkflowInstanceState == WorkflowInstanceState.Runnable
+                && !this.reminders.Where((kvp) => kvp.Value.ReminderState == ReminderState.RegisteredAndSaved).Any())
             {
                 // always update it on each save, not just when not yet registered
-                hasReactivationReminder = true;
-                return instance.RegisterOrUpdateReminderAsync(WorkflowNamespace.ReminderNameForReactivation, instance.Parameters.ReactivationReminderPeriod);
+                this.hasReactivationReminder = true;
+                return this.instance.RegisterOrUpdateReminderAsync(WorkflowNamespace.ReminderNameForReactivation, this.instance.Parameters.ReactivationReminderPeriod);
             }
             else
                 return TaskConstants.Completed;
@@ -252,24 +248,24 @@ namespace Orleans.Activities.Extensions
 
         protected Task UnregisterReactivationReminderIfNotRequired()
         {
-            if (hasReactivationReminder
-                && (instance.WorkflowInstanceState != WorkflowInstanceState.Runnable
-                    || reminders.Where((kvp) => kvp.Value.ReminderState == ReminderState.RegisteredAndSaved).Any()))
+            if (this.hasReactivationReminder
+                && (this.instance.WorkflowInstanceState != WorkflowInstanceState.Runnable
+                    || this.reminders.Where((kvp) => kvp.Value.ReminderState == ReminderState.RegisteredAndSaved).Any()))
             {
-                hasReactivationReminder = false;
-                return instance.UnregisterReminderAsync(WorkflowNamespace.ReminderNameForReactivation);
+                this.hasReactivationReminder = false;
+                return this.instance.UnregisterReminderAsync(WorkflowNamespace.ReminderNameForReactivation);
             }
             else
                 return TaskConstants.Completed;
         }
 
-        protected static bool ParticipateInOnSaving(ReminderState reminderState) =>
-            reminderState != ReminderState.RegisteredAndSaved
+        protected static bool ParticipateInOnSaving(ReminderState reminderState)
+            => reminderState != ReminderState.RegisteredAndSaved
             && reminderState != ReminderState.SaveAndUnregister;
 
         public async Task OnSavingAsync()
         {
-            foreach (KeyValuePair<string, ReminderInfo> kvp in reminders
+            foreach (var kvp in this.reminders
                 .Where((kvp) => ParticipateInOnSaving(kvp.Value.ReminderState))
                 .ToList()) // because we will modify the dictionary
                 switch (kvp.Value.ReminderState)
@@ -277,15 +273,15 @@ namespace Orleans.Activities.Extensions
                     case ReminderState.RegisterAndSave:
                     case ReminderState.ReregisterAndResave:
                         kvp.Value.ReminderState = ReminderState.RegisteredAndSaved;
-                        await instance.RegisterOrUpdateReminderAsync(kvp.Key, kvp.Value.DueTime - DateTime.UtcNow);
+                        await this.instance.RegisterOrUpdateReminderAsync(kvp.Key, kvp.Value.DueTime - DateTime.UtcNow);
                         break;
                     case ReminderState.RegisteredButNotSaved:
                     case ReminderState.RegisteredButNotResaved:
                         kvp.Value.ReminderState = ReminderState.RegisteredAndSaved;
                         break;
                     case ReminderState.Unregister:
-                        reminders.Remove(kvp.Key);
-                        await instance.UnregisterReminderAsync(kvp.Key);
+                        this.reminders.Remove(kvp.Key);
+                        await this.instance.UnregisterReminderAsync(kvp.Key);
                         break;
                     //case ReminderState.RegisteredAndSaved:
                     //case ReminderState.SaveAndUnregister:
@@ -298,14 +294,14 @@ namespace Orleans.Activities.Extensions
 
         public async Task OnSavedAsync()
         {
-            foreach (KeyValuePair<string, ReminderInfo> kvp in reminders
+            foreach (var kvp in this.reminders
                 .Where((kvp) => kvp.Value.ReminderState != ReminderState.RegisteredAndSaved)
                 .ToList()) // because we will modify the dictionary
                 switch (kvp.Value.ReminderState)
                 {
                     case ReminderState.SaveAndUnregister:
-                        reminders.Remove(kvp.Key);
-                        await instance.UnregisterReminderAsync(kvp.Key);
+                        this.reminders.Remove(kvp.Key);
+                        await this.instance.UnregisterReminderAsync(kvp.Key);
                         break;
                     //case ReminderState.RegisterAndSave:
                     //case ReminderState.ReregisterAndResave:
@@ -321,18 +317,18 @@ namespace Orleans.Activities.Extensions
 
         public async Task LoadAsync(IDictionary<XName, object> readWriteValues)
         {
-            reminders.Clear();
-            hasReactivationReminder = false;
+            this.reminders.Clear();
+            this.hasReactivationReminder = false;
 
-            if (readWriteValues != null && readWriteValues.TryGetValue(WorkflowNamespace.Bookmarks, out object reminderBookmarks))
-                foreach (Bookmark reminderBookmark in (reminderBookmarks as List<Bookmark>))
-                    reminders[CreateReminderName(reminderBookmark)] = new ReminderInfo(reminderBookmark, ReminderState.RegisteredAndSaved);
-            foreach (string reminderName in await instance.GetRemindersAsync())
+            if (readWriteValues != null && readWriteValues.TryGetValue(WorkflowNamespace.Bookmarks, out var reminderBookmarks))
+                foreach (var reminderBookmark in (reminderBookmarks as List<Bookmark>))
+                    this.reminders[CreateReminderName(reminderBookmark)] = new ReminderInfo(reminderBookmark, ReminderState.RegisteredAndSaved);
+            foreach (var reminderName in await this.instance.GetRemindersAsync())
                 if (reminderName == WorkflowNamespace.ReminderNameForReactivation)
-                    hasReactivationReminder = true;
+                    this.hasReactivationReminder = true;
                 else if (reminderName.StartsWith(WorkflowNamespace.ReminderPrefixForBookmarks) // there can be other reminders
-                    && !reminders.ContainsKey(reminderName))
-                    await instance.UnregisterReminderAsync(reminderName);
+                    && !this.reminders.ContainsKey(reminderName))
+                    await this.instance.UnregisterReminderAsync(reminderName);
 
             await UnregisterReactivationReminderIfNotRequired();
         }

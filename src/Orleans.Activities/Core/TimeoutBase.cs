@@ -17,12 +17,7 @@ namespace Orleans.Activities
     /// </summary>
     public abstract class TimeoutBase : NativeActivity
     {
-        private Variable<Bookmark> timerExpiredBookmark;
-
-        protected TimeoutBase()
-        {
-            timerExpiredBookmark = new Variable<Bookmark>();
-        }
+        private Variable<Bookmark> timerExpiredBookmark = new Variable<Bookmark>();
 
         /// <summary>
         /// Implement it to calculate the delay for the activity.
@@ -35,27 +30,27 @@ namespace Orleans.Activities
 
         protected override void CacheMetadata(NativeActivityMetadata metadata)
         {
-            metadata.AddImplementationVariable(timerExpiredBookmark);
+            metadata.AddImplementationVariable(this.timerExpiredBookmark);
             metadata.RequireExtension<TimerExtension>();
             base.CacheMetadata(metadata);
         }
 
         protected override void Execute(NativeActivityContext context)
         {
-            TimeSpan delay = CalculateDelay(context);
+            var delay = CalculateDelay(context);
             if (delay < TimeSpan.Zero)
                 throw new ArgumentOutOfRangeException(nameof(delay), delay, "Delay is negative.");
             if (delay > TimeSpan.Zero)
             {
-                Bookmark bookmark = context.CreateBookmark();
+                var bookmark = context.CreateBookmark();
                 context.GetTimerExtension().RegisterTimer(delay, bookmark);
-                timerExpiredBookmark.Set(context, bookmark);
+                this.timerExpiredBookmark.Set(context, bookmark);
             }
         }
 
         protected override void Cancel(NativeActivityContext context)
         {
-            Bookmark bookmark = timerExpiredBookmark.Get(context);
+            var bookmark = this.timerExpiredBookmark.Get(context);
             if (bookmark != null)
             {
                 context.GetTimerExtension().CancelTimer(bookmark);
@@ -66,7 +61,7 @@ namespace Orleans.Activities
 
         protected override void Abort(NativeActivityAbortContext context)
         {
-            Bookmark bookmark = timerExpiredBookmark.Get(context);
+            var bookmark = this.timerExpiredBookmark.Get(context);
             if (bookmark != null)
             {
                 context.GetTimerExtension().CancelTimer(bookmark);

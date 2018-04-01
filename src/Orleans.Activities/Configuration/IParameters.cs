@@ -23,7 +23,7 @@ namespace Orleans.Activities.Configuration
         /// <summary>
         /// If not set in the RetryDelay activity, the retry delay time multiplicated with this value on each iteration.
         /// </summary>
-        Single DefaultRetryDelayDelayMultiplicator { get; }
+        float DefaultRetryDelayDelayMultiplicator { get; }
         /// <summary>
         /// If not set in the RetryDelay activity, the maximum of the retry delay after several iterations is this value.
         /// <para>Must be at least 1 min (lower limit of reminders).</para>

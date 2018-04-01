@@ -10,9 +10,7 @@ namespace Orleans.Activities
     {
         public static IEnumerable<TSource> Append<TSource>(this IEnumerable<TSource> source, TSource item)
         {
-            if (source == null)
-                throw new ArgumentNullException(nameof(source));
-            foreach (TSource element in source)
+            foreach (var element in source ?? throw new ArgumentNullException(nameof(source)))
                 yield return element;
             yield return item;
         }
@@ -30,7 +28,6 @@ namespace Orleans.Activities
             public static readonly Func<IEnumerable<TElement>> Instance = () => Enumerable.Empty<TElement>();
         }
 
-        public static Func<IEnumerable<TSource>> Empty<TSource>() =>
-            EmptyEnumerableFactory<TSource>.Instance;
+        public static Func<IEnumerable<TSource>> Empty<TSource>() => EmptyEnumerableFactory<TSource>.Instance;
     }
 }

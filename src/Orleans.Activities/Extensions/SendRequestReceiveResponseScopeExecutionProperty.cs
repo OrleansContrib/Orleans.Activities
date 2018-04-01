@@ -14,7 +14,7 @@ namespace Orleans.Activities.Extensions
     {
         public static SendRequestReceiveResponseScopeExecutionProperty GetSendRequestReceiveResponseScopeExecutionProperty(this NativeActivityContext context)
         {
-            SendRequestReceiveResponseScopeExecutionProperty executionProperty =
+            var executionProperty =
                 context.Properties.Find(SendRequestReceiveResponseScope.ExecutionPropertyName) as SendRequestReceiveResponseScopeExecutionProperty;
             if (executionProperty == null)
                 throw new ValidationException(nameof(SendRequestReceiveResponseScopeExecutionProperty) + " is not found.");
@@ -24,7 +24,7 @@ namespace Orleans.Activities.Extensions
         public static SendRequestReceiveResponseScopeExecutionPropertyWithoutResult GetSendRequestReceiveResponseScopeExecutionPropertyWithoutResult(
             this NativeActivityContext context)
         {
-            SendRequestReceiveResponseScopeExecutionPropertyWithoutResult executionProperty =
+            var executionProperty =
                 context.Properties.Find(SendRequestReceiveResponseScope.ExecutionPropertyName) as SendRequestReceiveResponseScopeExecutionPropertyWithoutResult;
             if (executionProperty == null)
                 throw new ValidationException(nameof(SendRequestReceiveResponseScopeExecutionPropertyWithoutResult) + " is not found.");
@@ -34,7 +34,7 @@ namespace Orleans.Activities.Extensions
         public static SendRequestReceiveResponseScopeExecutionPropertyWithResult<TResponseResult> GetSendRequestReceiveResponseScopeExecutionPropertyWithResult<TResponseResult>(
             this NativeActivityContext context)
         {
-            SendRequestReceiveResponseScopeExecutionPropertyWithResult<TResponseResult> executionProperty =
+            var executionProperty =
                 context.Properties.Find(SendRequestReceiveResponseScope.ExecutionPropertyName) as SendRequestReceiveResponseScopeExecutionPropertyWithResult<TResponseResult>;
             if (executionProperty == null)
                 throw new ValidationException(typeof(SendRequestReceiveResponseScopeExecutionPropertyWithResult<TResponseResult>).GetFriendlyName() + " is not found.");
@@ -70,7 +70,7 @@ namespace Orleans.Activities.Extensions
 
         private void AssertIsNotStarted()
         {
-            if (responseResultTaskFuncTask != null)
+            if (this.responseResultTaskFuncTask != null)
                 throw new InvalidOperationException(nameof(SendRequestReceiveResponseScopeExecutionPropertyWithoutResult) + " is already initialized.");
         }
 
@@ -78,35 +78,33 @@ namespace Orleans.Activities.Extensions
         public override void StartOnOperationAsync(IActivityContext activityContext, string operationName)
         {
             AssertIsNotStarted();
-            responseResultTaskFuncTask = activityContext.OnOperationAsync(operationName);
+            this.responseResultTaskFuncTask = activityContext.OnOperationAsync(operationName);
         }
 
         // Called by SendRequest.
         public override void StartOnOperationAsync<TRequestParameter>(IActivityContext activityContext, string operationName, TRequestParameter parameter)
         {
             AssertIsNotStarted();
-            responseResultTaskFuncTask = activityContext.OnOperationAsync<TRequestParameter>(operationName, parameter);
+            this.responseResultTaskFuncTask = activityContext.OnOperationAsync<TRequestParameter>(operationName, parameter);
         }
 
         // Called by ReceiveResponse.
         public void AssertIsStarted()
         {
-            if (responseResultTaskFuncTask == null)
+            if (this.responseResultTaskFuncTask == null)
                 throw new InvalidOperationException(nameof(SendRequestReceiveResponseScopeExecutionPropertyWithoutResult) +
                     " is not initialized, StartOnOperationAsync() must be called by SendRequest before any ReceiveResponse activity.");
         }
 
         // Called by ReceiveResponse.
-        public Task<Func<Task>> OnOperationTask => responseResultTaskFuncTask;
+        public Task<Func<Task>> OnOperationTask => this.responseResultTaskFuncTask;
 
         // Called by SendRequestReceiveResponseScope.
-        public override Task UntypedOnOperationTask => responseResultTaskFuncTask;
+        public override Task UntypedOnOperationTask => this.responseResultTaskFuncTask;
 
         // Called by ReceiveResponse and SendRequestReceiveResponseScope.
         public override void OnOperationTaskWaiterIsScheduled()
-        {
-            responseResultTaskFuncTask = null;
-        }
+            => this.responseResultTaskFuncTask = null;
     }
 
     /// <summary>
@@ -120,7 +118,7 @@ namespace Orleans.Activities.Extensions
 
         private void AssertIsNotStarted()
         {
-            if (responseResultTaskFuncTask != null)
+            if (this.responseResultTaskFuncTask != null)
                 throw new InvalidOperationException(typeof(SendRequestReceiveResponseScopeExecutionPropertyWithResult<TResponseResult>).GetFriendlyName() + " is already initialized.");
         }
 
@@ -128,34 +126,31 @@ namespace Orleans.Activities.Extensions
         public override void StartOnOperationAsync(IActivityContext activityContext, string operationName)
         {
             AssertIsNotStarted();
-            responseResultTaskFuncTask = activityContext.OnOperationAsync<TResponseResult>(operationName);
+            this.responseResultTaskFuncTask = activityContext.OnOperationAsync<TResponseResult>(operationName);
         }
 
         // Called by SendRequest.
         public override void StartOnOperationAsync<TRequestParameter>(IActivityContext activityContext, string operationName, TRequestParameter parameter)
         {
             AssertIsNotStarted();
-            responseResultTaskFuncTask = activityContext.OnOperationAsync<TRequestParameter, TResponseResult>(operationName, parameter);
+            this.responseResultTaskFuncTask = activityContext.OnOperationAsync<TRequestParameter, TResponseResult>(operationName, parameter);
         }
 
         // Called by ReceiveResponse.
         public void AssertIsStarted()
         {
-            if (responseResultTaskFuncTask == null)
+            if (this.responseResultTaskFuncTask == null)
                 throw new InvalidOperationException(typeof(SendRequestReceiveResponseScopeExecutionPropertyWithResult<TResponseResult>).GetFriendlyName() +
                     " is not initialized, StartOnOperationAsync() must be called by SendRequest before any ReceiveResponse activity.");
         }
 
         // Called by ReceiveResponse.
-        public Task<Func<Task<TResponseResult>>> OnOperationTask => responseResultTaskFuncTask;
+        public Task<Func<Task<TResponseResult>>> OnOperationTask => this.responseResultTaskFuncTask;
 
         // Called by SendRequestReceiveResponseScope.
-        public override Task UntypedOnOperationTask => responseResultTaskFuncTask;
+        public override Task UntypedOnOperationTask => this.responseResultTaskFuncTask;
 
         // Called by ReceiveResponse and SendRequestReceiveResponseScope.
-        public override void OnOperationTaskWaiterIsScheduled()
-        {
-            responseResultTaskFuncTask = null;
-        }
+        public override void OnOperationTaskWaiterIsScheduled() => this.responseResultTaskFuncTask = null;
     }
 }

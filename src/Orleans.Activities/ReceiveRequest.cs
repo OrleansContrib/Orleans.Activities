@@ -20,7 +20,7 @@ namespace Orleans.Activities
         // Reads out the parameters of the incoming operation, ie. the bookmark. WorkflowHost sends a TaskCompletionSource and a Func<Task> or Func<Task<>> in an array.
         public static void GetOperationParameters<TTask>(object value, out object taskCompletionSource, out Func<TTask> requestResultTaskFunc)
         {
-            object[] parameters = value as object[];
+            var parameters = value as object[];
             if (parameters == null || parameters.Length != 2 || parameters[0] == null || parameters[1] == null)
                 throw new ArgumentException("ReceiveRequest has invalid parameters.");
             if (!parameters[0].GetType().IsGenericTypeOf(typeof(TaskCompletionSource<>)))
@@ -68,33 +68,33 @@ namespace Orleans.Activities
 
         public ReceiveRequest()
         {
-            OperationNames = new ObservableCollection<string>();
-            requestResultEvaluator = TaskFuncEvaluator.CreateActivityDelegate();
-            Constraints.Add(OperationActivityHelper.VerifyParentIsWorkflowActivity());
-            Constraints.Add(OperationActivityHelper.VerifyParentIsReceiveRequestSendResponseScope());
-            Constraints.Add(OperationActivityHelper.VerifyIsOperationNameSetAndValid());
+            this.OperationNames = new ObservableCollection<string>();
+            this.requestResultEvaluator = TaskFuncEvaluator.CreateActivityDelegate();
+            this.Constraints.Add(OperationActivityHelper.VerifyParentIsWorkflowActivity());
+            this.Constraints.Add(OperationActivityHelper.VerifyParentIsReceiveRequestSendResponseScope());
+            this.Constraints.Add(OperationActivityHelper.VerifyIsOperationNameSetAndValid());
         }
         
         protected override void CacheMetadata(NativeActivityMetadata metadata)
         {
-            metadata.AddImplementationDelegate(requestResultEvaluator);
+            metadata.AddImplementationDelegate(this.requestResultEvaluator);
             base.CacheMetadata(metadata);
         }
 
         protected override void Execute(NativeActivityContext context)
         {
-            context.GetReceiveRequestSendResponseScopeExecutionProperty().Initialize(OperationName);
-            context.CreateBookmark(OperationName, BookmarkResumptionCallback);
+            context.GetReceiveRequestSendResponseScopeExecutionProperty().Initialize(this.OperationName);
+            context.CreateBookmark(this.OperationName, this.BookmarkResumptionCallback);
         }
         
         private void BookmarkResumptionCallback(NativeActivityContext context, Bookmark bookmark, object value)
         {
-            ReceiveRequestExtensions.GetOperationParameters(value, out object taskCompletionSource, out Func<Task> requestResultTaskFunc);
+            ReceiveRequestExtensions.GetOperationParameters(value, out var taskCompletionSource, out Func<Task> requestResultTaskFunc);
 
             // Initializes the execution property held by the scope. SendResponse or the scope will use it (the scope for propagating any exception).
             context.GetReceiveRequestSendResponseScopeExecutionProperty().Initialize(taskCompletionSource);
             // Schedules the receiving delegate.
-            context.ScheduleAction(requestResultEvaluator, requestResultTaskFunc, EvaluatorCompletionCallback);
+            context.ScheduleAction(this.requestResultEvaluator, requestResultTaskFunc, this.EvaluatorCompletionCallback);
         }
 
         private void EvaluatorCompletionCallback(NativeActivityContext context, ActivityInstance completedInstance)
@@ -102,7 +102,7 @@ namespace Orleans.Activities
             // The receiving delegate completed.
             if (completedInstance.State == ActivityInstanceState.Closed)
                 if (context.GetActivityContext().TrackingEnabled)
-                    context.Track(new ReceiveRequestRecord(OperationName));
+                    context.Track(new ReceiveRequestRecord(this.OperationName));
         }
     }
 
@@ -141,33 +141,33 @@ namespace Orleans.Activities
 
         public ReceiveRequest()
         {
-            OperationNames = new ObservableCollection<string>();
-            requestResultEvaluator = TaskFuncEvaluator<TRequestResult>.CreateActivityDelegate();
-            Constraints.Add(OperationActivityHelper.VerifyParentIsWorkflowActivity());
-            Constraints.Add(OperationActivityHelper.VerifyParentIsReceiveRequestSendResponseScope());
-            Constraints.Add(OperationActivityHelper.VerifyIsOperationNameSetAndValid());
+            this.OperationNames = new ObservableCollection<string>();
+            this.requestResultEvaluator = TaskFuncEvaluator<TRequestResult>.CreateActivityDelegate();
+            this.Constraints.Add(OperationActivityHelper.VerifyParentIsWorkflowActivity());
+            this.Constraints.Add(OperationActivityHelper.VerifyParentIsReceiveRequestSendResponseScope());
+            this.Constraints.Add(OperationActivityHelper.VerifyIsOperationNameSetAndValid());
         }
 
         protected override void CacheMetadata(NativeActivityMetadata metadata)
         {
-            metadata.AddImplementationDelegate(requestResultEvaluator);
+            metadata.AddImplementationDelegate(this.requestResultEvaluator);
             base.CacheMetadata(metadata);
         }
 
         protected override void Execute(NativeActivityContext context)
         {
-            context.GetReceiveRequestSendResponseScopeExecutionProperty().Initialize(OperationName);
-            context.CreateBookmark(OperationName, BookmarkResumptionCallback);
+            context.GetReceiveRequestSendResponseScopeExecutionProperty().Initialize(this.OperationName);
+            context.CreateBookmark(this.OperationName, this.BookmarkResumptionCallback);
         }
 
         private void BookmarkResumptionCallback(NativeActivityContext context, Bookmark bookmark, object value)
         {
-            ReceiveRequestExtensions.GetOperationParameters(value, out object taskCompletionSource, out Func<Task<TRequestResult>> requestResultTaskFunc);
+            ReceiveRequestExtensions.GetOperationParameters(value, out var taskCompletionSource, out Func<Task<TRequestResult>> requestResultTaskFunc);
 
             // Initializes the execution property held by the scope. SendResponse or the scope will use it (the scope for propagating any exception).
             context.GetReceiveRequestSendResponseScopeExecutionProperty().Initialize(taskCompletionSource);
             // Schedules the receiving delegate.
-            context.ScheduleFunc(requestResultEvaluator, requestResultTaskFunc, EvaluatorCompletionCallback);
+            context.ScheduleFunc(this.requestResultEvaluator, requestResultTaskFunc, this.EvaluatorCompletionCallback);
         }
 
         private void EvaluatorCompletionCallback(NativeActivityContext context, ActivityInstance completedInstance, TRequestResult result)
@@ -176,10 +176,10 @@ namespace Orleans.Activities
             if (completedInstance.State == ActivityInstanceState.Closed)
             {
                 // Sets the result of the incoming request's processing.
-                RequestResult.Set(context, result);
+                this.RequestResult.Set(context, result);
 
                 if (context.GetActivityContext().TrackingEnabled)
-                    context.Track(new ReceiveRequestRecord(OperationName, result));
+                    context.Track(new ReceiveRequestRecord(this.OperationName, result));
             }
         }
     }

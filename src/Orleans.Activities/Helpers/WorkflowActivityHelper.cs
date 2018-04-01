@@ -19,8 +19,8 @@ namespace Orleans.Activities.Helpers
         public static Constraint VerifyWorkflowInterface<TWorkflowInterface>()
             where TWorkflowInterface : class
         {
-            DelegateInArgument<Activity> element = new DelegateInArgument<Activity>();
-            DelegateInArgument<ValidationContext> context = new DelegateInArgument<ValidationContext>();
+            var element = new DelegateInArgument<Activity>();
+            var context = new DelegateInArgument<ValidationContext>();
             
             return new Constraint<Activity>
             {
@@ -41,8 +41,8 @@ namespace Orleans.Activities.Helpers
         public static Constraint VerifyWorkflowCallbackInterface<TWorkflowCallbackInterface>()
             where TWorkflowCallbackInterface : class
         {
-            DelegateInArgument<Activity> element = new DelegateInArgument<Activity>();
-            DelegateInArgument<ValidationContext> context = new DelegateInArgument<ValidationContext>();
+            var element = new DelegateInArgument<Activity>();
+            var context = new DelegateInArgument<ValidationContext>();
 
             return new Constraint<Activity>
             {

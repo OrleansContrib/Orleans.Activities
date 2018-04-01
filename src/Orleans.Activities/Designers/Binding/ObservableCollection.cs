@@ -34,11 +34,11 @@ namespace Orleans.Activities.Designers.Binding
             // Be nice - use BlockReentrancy like MSDN said
             using (BlockReentrancy())
             {
-                System.Collections.Specialized.NotifyCollectionChangedEventHandler eventHandler = CollectionChanged;
+                var eventHandler = CollectionChanged;
                 if (eventHandler == null)
                     return;
 
-                Delegate[] delegates = eventHandler.GetInvocationList();
+                var delegates = eventHandler.GetInvocationList();
                 // Walk thru invocation list
                 foreach (System.Collections.Specialized.NotifyCollectionChangedEventHandler handler in delegates)
                 {
@@ -56,11 +56,11 @@ namespace Orleans.Activities.Designers.Binding
 
         public void Set(IEnumerable<T> values)
         {
-            T[] valueArray = values?.ToArray();
-            int valueArrayLength = valueArray?.Length ?? 0;
-            bool equal = (Count == valueArrayLength);
+            var valueArray = values?.ToArray();
+            var valueArrayLength = valueArray?.Length ?? 0;
+            var equal = (this.Count == valueArrayLength);
             if (equal)
-                for (int i = 0; i < valueArrayLength; i++)
+                for (var i = 0; i < valueArrayLength; i++)
                     if (!object.Equals(valueArray[i], this[i]))
                     {
                         equal = false;
@@ -70,9 +70,9 @@ namespace Orleans.Activities.Designers.Binding
             {
                 Clear();
                 if (valueArray != null)
-                    foreach (T value in valueArray)
+                    foreach (var value in valueArray)
                         Add(value);
-                OnPropertyChanged(new PropertyChangedEventArgs(nameof(Count)));
+                OnPropertyChanged(new PropertyChangedEventArgs(nameof(this.Count)));
                 OnPropertyChanged(new PropertyChangedEventArgs("Item[]"));
                 OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
             }

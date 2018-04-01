@@ -25,13 +25,11 @@ namespace Orleans.Activities.Helpers
             private TaskCompletionSource<TResult> taskCompletionSource;
 
             public ActiveTaskCompletionSource(TaskCompletionSource<TResult> taskCompletionSource)
-            {
-                this.taskCompletionSource = taskCompletionSource;
-            }
+                => this.taskCompletionSource = taskCompletionSource;
 
-            public override bool TrySetException(Exception exception) => taskCompletionSource.TrySetException(exception);
-            public override bool TrySetDefaultResult() => taskCompletionSource.TrySetResult(default(TResult));
-            public override bool IsCompleted => taskCompletionSource.Task.IsCompleted;
+            public override bool TrySetException(Exception exception) => this.taskCompletionSource.TrySetException(exception);
+            public override bool TrySetDefaultResult() => this.taskCompletionSource.TrySetResult(default);
+            public override bool IsCompleted => this.taskCompletionSource.Task.IsCompleted;
         }
 
         public enum TaskCompletionSourceProtectionLevel
@@ -48,42 +46,33 @@ namespace Orleans.Activities.Helpers
 
         public TaskCompletionSourceProtectionLevel ProtectionLevel { get; set; }
 
-        private Dictionary<object, ActiveTaskCompletionSource> activeTaskCompletionSources;
+        private Dictionary<object, ActiveTaskCompletionSource> activeTaskCompletionSources = new Dictionary<object, ActiveTaskCompletionSource>();
         private Exception storedException;
 
-        public ActiveTaskCompletionSources()
-        {
-            activeTaskCompletionSources = new Dictionary<object, ActiveTaskCompletionSource>();
-        }
-
         public void Add<TResult>(TaskCompletionSource<TResult> taskCompletionSource)
-        {
-            activeTaskCompletionSources.Add(taskCompletionSource, new ActiveTaskCompletionSource<TResult>(taskCompletionSource));
-        }
+            => this.activeTaskCompletionSources.Add(taskCompletionSource, new ActiveTaskCompletionSource<TResult>(taskCompletionSource));
 
         public void Remove<TResult>(TaskCompletionSource<TResult> taskCompletionSource)
-        {
-            activeTaskCompletionSources.Remove(taskCompletionSource);
-        }
+            => this.activeTaskCompletionSources.Remove(taskCompletionSource);
 
         private bool TryStoreException(Exception exception)
         {
-            if (storedException != null
-                || !activeTaskCompletionSources.Any((kvp) => !kvp.Value.IsCompleted))
+            if (this.storedException != null
+                || !this.activeTaskCompletionSources.Any((kvp) => !kvp.Value.IsCompleted))
                 return false;
-            storedException = exception;
+            this.storedException = exception;
             return true;
         }
 
         public bool TrySetException(Exception exception)
         {
-            if (ProtectionLevel == TaskCompletionSourceProtectionLevel.Preparation)
+            if (this.ProtectionLevel == TaskCompletionSourceProtectionLevel.Preparation)
                 return TryStoreException(exception);
             else // TaskCompletionSourceProtectionLevel.Normal
             {
-                bool result = false;
+                var result = false;
                 // If any TCS accepts the exception, we are successful, ie. we don't need to propagate the exception with OnUnhandledException later.
-                foreach (ActiveTaskCompletionSource activeTaskCompletionSource in activeTaskCompletionSources.Values.ToList())
+                foreach (var activeTaskCompletionSource in this.activeTaskCompletionSources.Values.ToList())
                     if (activeTaskCompletionSource.TrySetException(exception))
                         result = true;
                 return result;
@@ -92,18 +81,18 @@ namespace Orleans.Activities.Helpers
 
         public bool TrySetCompleted()
         {
-            if (storedException != null) // TaskCompletionSourceProtectionLevel.Preparation
+            if (this.storedException != null) // TaskCompletionSourceProtectionLevel.Preparation
             {
-                Exception storedException = this.storedException;
+                var storedException = this.storedException;
                 this.storedException = null;
                 // We assume, that this will be always successful, because nothing else will set this TCS during Preparation.
-                foreach (ActiveTaskCompletionSource activeTaskCompletionSource in activeTaskCompletionSources.Values.ToList())
+                foreach (var activeTaskCompletionSource in this.activeTaskCompletionSources.Values.ToList())
                     activeTaskCompletionSource.TrySetException(storedException);
                 return true;
             }
-            else if (ProtectionLevel == TaskCompletionSourceProtectionLevel.Preparation)
+            else if (this.ProtectionLevel == TaskCompletionSourceProtectionLevel.Preparation)
             {
-                foreach (ActiveTaskCompletionSource activeTaskCompletionSource in activeTaskCompletionSources.Values.ToList())
+                foreach (var activeTaskCompletionSource in this.activeTaskCompletionSources.Values.ToList())
                     activeTaskCompletionSource.TrySetDefaultResult();
                 return true;
             }

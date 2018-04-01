@@ -15,15 +15,15 @@ namespace Orleans.Activities.Test
 
         public TaskTimer(Func<Task> callback, TimeSpan dueTime, TimeSpan period)
         {
-            cts = new CancellationTokenSource();
+            this.cts = new CancellationTokenSource();
             Task.Factory.StartNew(async () =>
             {
                 await Task.Yield();
                 try
                 {
                     if (dueTime > TimeSpan.Zero)
-                        await Task.Delay(dueTime, cts.Token);
-                    while (!cts.Token.IsCancellationRequested)
+                        await Task.Delay(dueTime, this.cts.Token);
+                    while (!this.cts.Token.IsCancellationRequested)
                     {
                         try
                         {
@@ -32,7 +32,7 @@ namespace Orleans.Activities.Test
                         catch
                         { }
                         if (period > TimeSpan.Zero)
-                            await Task.Delay(period, cts.Token);
+                            await Task.Delay(period, this.cts.Token);
                     }
                 }
                 catch
@@ -40,15 +40,9 @@ namespace Orleans.Activities.Test
             });
         }
 
-        public void Cancel()
-        {
-            cts.Cancel();
-        }
+        public void Cancel() => this.cts.Cancel();
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Design", "CA1063:ImplementIDisposableCorrectly")]
-        public void Dispose()
-        {
-            cts.Dispose();
-        }
+        public void Dispose() => this.cts.Dispose();
     }
 }

@@ -15,7 +15,7 @@ namespace Orleans.Activities.Helpers
     {
         public static ActivityAction<Task> CreateActivityDelegate()
         {
-            DelegateInArgument<Task> resultTask = new DelegateInArgument<Task>();
+            var resultTask = new DelegateInArgument<Task>();
             return new ActivityAction<Task>()
             {
                 Argument = resultTask,
@@ -28,7 +28,7 @@ namespace Orleans.Activities.Helpers
 
         public InArgument<Task> ResultTask { get; set; }
 
-        protected override Task ExecuteAsync(AsyncCodeActivityContext context) => ResultTask.Get(context);
+        protected override Task ExecuteAsync(AsyncCodeActivityContext context) => this.ResultTask.Get(context);
     }
 
     /// <summary>
@@ -38,8 +38,8 @@ namespace Orleans.Activities.Helpers
     {
         public static ActivityFunc<Task<Func<Task>>, Func<Task>> CreateActivityDelegate()
         {
-            DelegateInArgument<Task<Func<Task>>> resultTaskFuncTask = new DelegateInArgument<Task<Func<Task>>>();
-            DelegateOutArgument<Func<Task>> result = new DelegateOutArgument<Func<Task>>();
+            var resultTaskFuncTask = new DelegateInArgument<Task<Func<Task>>>();
+            var result = new DelegateOutArgument<Func<Task>>();
             return new ActivityFunc<Task<Func<Task>>, Func<Task>>()
             {
                 Argument = resultTaskFuncTask,
@@ -54,7 +54,7 @@ namespace Orleans.Activities.Helpers
 
         public InArgument<Task<Func<Task>>> ResultTaskFuncTask { get; set; }
 
-        protected override Task<Func<Task>> ExecuteAsync(AsyncCodeActivityContext context) => ResultTaskFuncTask.Get(context);
+        protected override Task<Func<Task>> ExecuteAsync(AsyncCodeActivityContext context) => this.ResultTaskFuncTask.Get(context);
     }
 
     /// <summary>
@@ -65,8 +65,8 @@ namespace Orleans.Activities.Helpers
     {
         public static ActivityFunc<Task<Func<Task<TResult>>>, Func<Task<TResult>>> CreateActivityDelegate()
         {
-            DelegateInArgument<Task<Func<Task<TResult>>>> resultTaskFuncTask = new DelegateInArgument<Task<Func<Task<TResult>>>>();
-            DelegateOutArgument<Func<Task<TResult>>> result = new DelegateOutArgument<Func<Task<TResult>>>();
+            var resultTaskFuncTask = new DelegateInArgument<Task<Func<Task<TResult>>>>();
+            var result = new DelegateOutArgument<Func<Task<TResult>>>();
             return new ActivityFunc<Task<Func<Task<TResult>>>, Func<Task<TResult>>>()
             {
                 Argument = resultTaskFuncTask,
@@ -81,6 +81,6 @@ namespace Orleans.Activities.Helpers
 
         public InArgument<Task<Func<Task<TResult>>>> ResultTaskFuncTask { get; set; }
 
-        protected override Task<Func<Task<TResult>>> ExecuteAsync(AsyncCodeActivityContext context) => ResultTaskFuncTask.Get(context);
+        protected override Task<Func<Task<TResult>>> ExecuteAsync(AsyncCodeActivityContext context) => this.ResultTaskFuncTask.Get(context);
     }
 }

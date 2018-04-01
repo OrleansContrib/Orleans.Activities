@@ -68,8 +68,8 @@ namespace Orleans.Activities.Hosting
     /// </summary>
     public class WorkflowInstance : System.Activities.Hosting.WorkflowInstance, IWorkflowInstance, IActivityContext
     {
-        public static bool IsCompleted(IDictionary<XName, InstanceValue> instanceValues) =>
-            WorkflowStatus.IsCompleted(instanceValues[WorkflowNamespace.Status].Value as string);
+        public static bool IsCompleted(IDictionary<XName, InstanceValue> instanceValues)
+            => WorkflowStatus.IsCompleted(instanceValues[WorkflowNamespace.Status].Value as string);
 
         #region protected/private fields
 
@@ -86,14 +86,14 @@ namespace Orleans.Activities.Hosting
         {
             this.host = host;
 
-            SynchronizationContext = new SynchronizationContext();
+            this.SynchronizationContext = new SynchronizationContext();
         }
 
         #endregion
 
         #region IActivityContext members
 
-        public IParameters Parameters => host.Parameters;
+        public IParameters Parameters => this.host.Parameters;
 
         // It is common with IWorkflowInstance.
         //public WorkflowInstanceState WorkflowInstanceState { get; }
@@ -105,57 +105,57 @@ namespace Orleans.Activities.Hosting
         // IsReloaded is true from a Load with Runnable state up to the first Save.
         public bool IsReloaded { get; private set; }
 
-        public bool TrackingEnabled => Controller.TrackingEnabled;
+        public bool TrackingEnabled => this.Controller.TrackingEnabled;
 
-        public Task<BookmarkResumptionResult> ResumeBookmarkThroughHostAsync(Bookmark bookmark, object value, TimeSpan timeout) =>
-            host.ResumeBookmarkAsync(bookmark, value, timeout);
+        public Task<BookmarkResumptionResult> ResumeBookmarkThroughHostAsync(Bookmark bookmark, object value, TimeSpan timeout)
+            => this.host.ResumeBookmarkAsync(bookmark, value, timeout);
 
-        public Task AbortThroughHostAsync(Exception reason) =>
-            host.AbortAsync(reason);
+        public Task AbortThroughHostAsync(Exception reason)
+            => this.host.AbortAsync(reason);
 
-        public async Task<bool> NotifyHostOnUnhandledExceptionAsync(Exception exception, Activity source) =>
-            await ExecuteWithExceptionTrackingAsync(async () =>
+        public async Task<bool> NotifyHostOnUnhandledExceptionAsync(Exception exception, Activity source)
+            => await ExecuteWithExceptionTrackingAsync(async () =>
             {
                 await IfHasPendingThenFlushTrackingRecordsAsync();
-                await host.OnUnhandledExceptionAsync(exception, source);
+                await this.host.OnUnhandledExceptionAsync(exception, source);
             }) == null;
 
-        public Task<Func<Task<TResponseResult>>> OnOperationAsync<TRequestParameter, TResponseResult>(string operationName, TRequestParameter requestParameter) =>
-            host.OnOperationAsync<TRequestParameter, TResponseResult>(operationName, requestParameter);
+        public Task<Func<Task<TResponseResult>>> OnOperationAsync<TRequestParameter, TResponseResult>(string operationName, TRequestParameter requestParameter)
+            => this.host.OnOperationAsync<TRequestParameter, TResponseResult>(operationName, requestParameter);
 
-        public Task<Func<Task>> OnOperationAsync<TRequestParameter>(string operationName, TRequestParameter requestParameter) =>
-            host.OnOperationAsync<TRequestParameter>(operationName, requestParameter);
+        public Task<Func<Task>> OnOperationAsync<TRequestParameter>(string operationName, TRequestParameter requestParameter)
+            => this.host.OnOperationAsync<TRequestParameter>(operationName, requestParameter);
 
-        public Task<Func<Task<TResponseResult>>> OnOperationAsync<TResponseResult>(string operationName) =>
-            host.OnOperationAsync<TResponseResult>(operationName);
+        public Task<Func<Task<TResponseResult>>> OnOperationAsync<TResponseResult>(string operationName)
+            => this.host.OnOperationAsync<TResponseResult>(operationName);
 
-        public Task<Func<Task>> OnOperationAsync(string operationName) =>
-            host.OnOperationAsync(operationName);
+        public Task<Func<Task>> OnOperationAsync(string operationName)
+            => this.host.OnOperationAsync(operationName);
 
         public async Task RegisterOrUpdateReminderAsync(string reminderName, TimeSpan dueTime)
         {
-            if (Controller.TrackingEnabled)
+            if (this.Controller.TrackingEnabled)
             {
-                Controller.Track(new WorkflowInstanceReminderRecord(Id, WorkflowDefinition.DisplayName,
-                    Tracking.WorkflowInstanceStates.ReminderRegistered, reminderName, DefinitionIdentity));
+                this.Controller.Track(new WorkflowInstanceReminderRecord(this.Id, this.WorkflowDefinition.DisplayName,
+                    Tracking.WorkflowInstanceStates.ReminderRegistered, reminderName, this.DefinitionIdentity));
                 await IfHasPendingThenFlushTrackingRecordsAsync();
             }
-            await host.RegisterOrUpdateReminderAsync(reminderName, dueTime);
+            await this.host.RegisterOrUpdateReminderAsync(reminderName, dueTime);
         }
 
         public async Task UnregisterReminderAsync(string reminderName)
         {
-            if (Controller.TrackingEnabled)
+            if (this.Controller.TrackingEnabled)
             {
-                Controller.Track(new WorkflowInstanceReminderRecord(Id, WorkflowDefinition.DisplayName,
-                    Tracking.WorkflowInstanceStates.ReminderUnregistered, reminderName, DefinitionIdentity));
+                this.Controller.Track(new WorkflowInstanceReminderRecord(this.Id, this.WorkflowDefinition.DisplayName,
+                    Tracking.WorkflowInstanceStates.ReminderUnregistered, reminderName, this.DefinitionIdentity));
                 await IfHasPendingThenFlushTrackingRecordsAsync();
             }
-            await host.UnregisterReminderAsync(reminderName);
+            await this.host.UnregisterReminderAsync(reminderName);
         }
 
-        public Task<IEnumerable<string>> GetRemindersAsync() =>
-            host.GetRemindersAsync();
+        public Task<IEnumerable<string>> GetRemindersAsync()
+            => this.host.GetRemindersAsync();
 
         #endregion
 
@@ -176,10 +176,10 @@ namespace Orleans.Activities.Hosting
 
         public Task DeactivateAsync()
         {
-            if (Controller.TrackingEnabled)
+            if (this.Controller.TrackingEnabled)
             {
-                Controller.Track(new WorkflowInstanceRecord(Id, WorkflowDefinition.DisplayName,
-                    Tracking.WorkflowInstanceStates.Deactivated, DefinitionIdentity));
+                this.Controller.Track(new WorkflowInstanceRecord(this.Id, this.WorkflowDefinition.DisplayName,
+                    Tracking.WorkflowInstanceStates.Deactivated, this.DefinitionIdentity));
                 return IfHasPendingThenFlushTrackingRecordsAsync();
             }
             else
@@ -187,55 +187,55 @@ namespace Orleans.Activities.Hosting
         }
 
         public WorkflowInstanceState WorkflowInstanceState =>
-            Controller.State;
+            this.Controller.State;
 
         public async Task AbortAsync(Exception reason)
         {
             await IfHasPendingThenFlushTrackingRecordsAsync();
             // We can't call Abort() on the persistence pipeline, because we can't be reentrant, when we are here, no pipeline operations are running.
-            Controller.Abort(reason);
+            this.Controller.Abort(reason);
             // Call it, because RunAsync() won't be called after Abort().
             await IfHasPendingThenFlushTrackingRecordsAsync();
         }
 
         public Task ScheduleCancelAsync()
         {
-            Controller.ScheduleCancel();
+            this.Controller.ScheduleCancel();
             return IfHasPendingThenFlushTrackingRecordsAsync();
         }
 
         public Task TerminateAsync(Exception reason)
         {
-            Controller.Terminate(reason);
+            this.Controller.Terminate(reason);
             return IfHasPendingThenFlushTrackingRecordsAsync();
         }
 
         public async Task<BookmarkResumptionResult> ScheduleBookmarkResumptionAsync(Bookmark bookmark, object value)
         {
-            BookmarkResumptionResult resumptionResult = Controller.ScheduleBookmarkResumption(bookmark, value);
+            var resumptionResult = this.Controller.ScheduleBookmarkResumption(bookmark, value);
             if (resumptionResult == BookmarkResumptionResult.Success)
                 await IfHasPendingThenFlushTrackingRecordsAsync();
             return resumptionResult;
         }
 
-        public Task<BookmarkResumptionResult> ScheduleOperationBookmarkResumptionAsync(string operationName, object value) =>
-            ScheduleBookmarkResumptionAsync(new Bookmark(operationName), value);
+        public Task<BookmarkResumptionResult> ScheduleOperationBookmarkResumptionAsync(string operationName, object value)
+            => ScheduleBookmarkResumptionAsync(new Bookmark(operationName), value);
 
         public async Task<BookmarkResumptionResult> ScheduleReminderBookmarkResumptionAsync(string reminderName)
         {
-            BookmarkResumptionResult result = BookmarkResumptionResult.Success;
-            if (!durableReminderExtension.IsReactivationReminder(reminderName))
+            var result = BookmarkResumptionResult.Success;
+            if (!this.durableReminderExtension.IsReactivationReminder(reminderName))
             {
-                result = await ScheduleBookmarkResumptionAsync(durableReminderExtension.GetBookmark(reminderName), null);
-                if (result != BookmarkResumptionResult.NotReady || WorkflowInstanceState == WorkflowInstanceState.Complete) // Success || NotFound || NotReady && Complete
-                    durableReminderExtension.UnregisterReminder(reminderName);
+                result = await ScheduleBookmarkResumptionAsync(this.durableReminderExtension.GetBookmark(reminderName), null);
+                if (result != BookmarkResumptionResult.NotReady || this.WorkflowInstanceState == WorkflowInstanceState.Complete) // Success || NotFound || NotReady && Complete
+                    this.durableReminderExtension.UnregisterReminder(reminderName);
             }
             return result;
         }
 
         public Task RunAsync()
         {
-            Controller.Run();
+            this.Controller.Run();
             return IfHasPendingThenFlushTrackingRecordsAsync();
         }
 
@@ -246,12 +246,12 @@ namespace Orleans.Activities.Hosting
         // Used by OnNotifyPausedAsync().
         protected async Task OnPausedAsync()
         {
-            IEnumerable<INotificationParticipant> notificationParticipants = GetExtensions<INotificationParticipant>();
+            var notificationParticipants = GetExtensions<INotificationParticipant>();
             // If the notificationParticipants throw during OnPausedAsync, the pipeline will rethrow, and the controller/executor will abort.
             if (notificationParticipants.Any())
             {
-                NotificationPipeline notificationPipeline = new NotificationPipeline(notificationParticipants);
-                await notificationPipeline.OnPausedAsync(Parameters.ExtensionsPersistenceTimeout);
+                var notificationPipeline = new NotificationPipeline(notificationParticipants);
+                await notificationPipeline.OnPausedAsync(this.Parameters.ExtensionsPersistenceTimeout);
             }
         }
 
@@ -262,16 +262,16 @@ namespace Orleans.Activities.Hosting
         // Used by IWorkflowInstance.Start() and IWorkflowInstance.LoadAsync()
         protected void RegisterExtensions(IEnumerable<object> extensions)
         {
-            WorkflowInstanceExtensionManager extensionManager = new WorkflowInstanceExtensionManager();
+            var extensionManager = new WorkflowInstanceExtensionManager();
 
             extensionManager.Add(new ActivityContextExtension(this));
 
             // Add it in advance to prevent existing TimerExtension dependent activities to create DurableTimerExtension.
-            durableReminderExtension = new DurableReminderExtension(this);
-            extensionManager.Add(durableReminderExtension);
+            this.durableReminderExtension = new DurableReminderExtension(this);
+            extensionManager.Add(this.durableReminderExtension);
 
             if (extensions != null)
-                foreach (object extension in extensions)
+                foreach (var extension in extensions)
                     extensionManager.Add(extension);
 
             RegisterExtensionManager(extensionManager);
@@ -280,97 +280,97 @@ namespace Orleans.Activities.Hosting
         // Used by IWorkflowInstance.Start().
         protected void Start(IDictionary<string, object> inputArguments)
         {
-            Initialize(inputArguments, default(IList<Handle>));
-            IsStarting = true;
+            Initialize(inputArguments, default);
+            this.IsStarting = true;
         }
 
         // Used by OnPersist() and OnNotifyPaused().
         protected async Task SaveAsync()
         {
-            if (Controller.TrackingEnabled)
+            if (this.Controller.TrackingEnabled)
             {
-                Controller.Track(new WorkflowInstanceRecord(Id, WorkflowDefinition.DisplayName,
-                    System.Activities.Tracking.WorkflowInstanceStates.Persisted, DefinitionIdentity));
+                this.Controller.Track(new WorkflowInstanceRecord(this.Id, this.WorkflowDefinition.DisplayName,
+                    System.Activities.Tracking.WorkflowInstanceStates.Persisted, this.DefinitionIdentity));
                 await IfHasPendingThenFlushTrackingRecordsAsync();
             }
 
-            IDictionary<XName, InstanceValue> instanceValues = SaveWorkflow();
-            IsReloaded = false;
+            var instanceValues = SaveWorkflow();
+            this.IsReloaded = false;
 
             // Yes, IEnumerable<object> is ugly, but there is nothing common in IPersistenceParticipant and PersistenceParticipant.
-            IEnumerable<object> persistenceParticipants =
+            var persistenceParticipants =
                 ((IEnumerable<object>)GetExtensions<System.Activities.Persistence.PersistenceParticipant>())
                 .Concat(
                 ((IEnumerable<object>)GetExtensions<IPersistenceParticipant>()));
             // If the persistenceParticipants throw during OnSaveAsync() and OnLoadAsync(), the pipeline will rethrow, and the controller/executor will abort.
             if (persistenceParticipants.Any())
             {
-                PersistencePipeline persistencePipeline = new PersistencePipeline(persistenceParticipants, instanceValues, Parameters.PersistWriteOnlyValues);
+                var persistencePipeline = new PersistencePipeline(persistenceParticipants, instanceValues, this.Parameters.PersistWriteOnlyValues);
                 persistencePipeline.Collect();
                 persistencePipeline.Map();
-                await persistencePipeline.OnSaveAsync(Parameters.ExtensionsPersistenceTimeout);
-                await host.SaveAsync(instanceValues);
-                await persistencePipeline.OnSavedAsync(Parameters.ExtensionsPersistenceTimeout);
+                await persistencePipeline.OnSaveAsync(this.Parameters.ExtensionsPersistenceTimeout);
+                await this.host.SaveAsync(instanceValues);
+                await persistencePipeline.OnSavedAsync(this.Parameters.ExtensionsPersistenceTimeout);
             }
             else
-                await host.SaveAsync(instanceValues);
+                await this.host.SaveAsync(instanceValues);
         }
 
         // Used by IWorkflowInstance.LoadAsync()
         protected async Task LoadAsync(IDictionary<XName, InstanceValue> instanceValues)
         {
-            Initialize(LoadWorkflow(instanceValues), default(DynamicUpdateMap));
-            if (Controller.State == WorkflowInstanceState.Runnable)
-                IsReloaded = true;
+            Initialize(LoadWorkflow(instanceValues), default);
+            if (this.Controller.State == WorkflowInstanceState.Runnable)
+                this.IsReloaded = true;
 
             // Yes, IEnumerable<object> is ugly, but there is nothing common in IPersistenceParticipant and PersistenceParticipant.
-            IEnumerable<object> persistenceParticipants =
+            var persistenceParticipants =
                 ((IEnumerable<object>)GetExtensions<System.Activities.Persistence.PersistenceParticipant>())
                 .Concat(
                 ((IEnumerable<object>)GetExtensions<IPersistenceParticipant>()));
             // If the persistenceParticipants throw during OnSaveAsync() and OnLoadAsync(), the pipeline will rethrow, and the controller/executor will abort.
             if (persistenceParticipants.Any())
             {
-                PersistencePipeline persistencePipeline = new PersistencePipeline(persistenceParticipants, instanceValues);
-                await persistencePipeline.OnLoadAsync(Parameters.ExtensionsPersistenceTimeout);
+                var persistencePipeline = new PersistencePipeline(persistenceParticipants, instanceValues);
+                await persistencePipeline.OnLoadAsync(this.Parameters.ExtensionsPersistenceTimeout);
                 persistencePipeline.Publish();
             }
         }
 
         private IDictionary<XName, InstanceValue> SaveWorkflow()
         {
-            if (Controller.State == WorkflowInstanceState.Aborted)
+            if (this.Controller.State == WorkflowInstanceState.Aborted)
                 throw new InvalidOperationException("Cannot generate data for an aborted instance.");
 
-            Dictionary<XName, InstanceValue> instanceValues = new Dictionary<XName, InstanceValue>(10);
+            var instanceValues = new Dictionary<XName, InstanceValue>(10);
 
-            if (Parameters.PersistWriteOnlyValues)
+            if (this.Parameters.PersistWriteOnlyValues)
             {
                 instanceValues[WorkflowNamespace.LastUpdate] = new InstanceValue(DateTime.UtcNow, InstanceValueOptions.WriteOnly | InstanceValueOptions.Optional);
-                instanceValues[WorkflowNamespace.Bookmarks] = new InstanceValue(Controller.GetBookmarks(), InstanceValueOptions.WriteOnly | InstanceValueOptions.Optional);
-                foreach (KeyValuePair<string, LocationInfo> mappedVariable in Controller.GetMappedVariables())
+                instanceValues[WorkflowNamespace.Bookmarks] = new InstanceValue(this.Controller.GetBookmarks(), InstanceValueOptions.WriteOnly | InstanceValueOptions.Optional);
+                foreach (var mappedVariable in this.Controller.GetMappedVariables())
                     instanceValues[WorkflowNamespace.VariablesPath.GetName(mappedVariable.Key)] = new InstanceValue(mappedVariable.Value, InstanceValueOptions.WriteOnly | InstanceValueOptions.Optional);
             }
 
-            if (Controller.State != WorkflowInstanceState.Complete) // Idle || Runnable
+            if (this.Controller.State != WorkflowInstanceState.Complete) // Idle || Runnable
             {
-                instanceValues[WorkflowNamespace.Workflow] = new InstanceValue(Controller.PrepareForSerialization());
-                if (IsStarting)
+                instanceValues[WorkflowNamespace.Workflow] = new InstanceValue(this.Controller.PrepareForSerialization());
+                if (this.IsStarting)
                     instanceValues[WorkflowNamespace.IsStarting] = new InstanceValue(true);
-                instanceValues[WorkflowNamespace.Status] = new InstanceValue(Controller.State == WorkflowInstanceState.Idle ? WorkflowStatus.Idle : WorkflowStatus.Executing);
+                instanceValues[WorkflowNamespace.Status] = new InstanceValue(this.Controller.State == WorkflowInstanceState.Idle ? WorkflowStatus.Idle : WorkflowStatus.Executing);
             }
             else // Complete
             {
-                if (Parameters.PersistWriteOnlyValues)
-                    instanceValues[WorkflowNamespace.Workflow] = new InstanceValue(Controller.PrepareForSerialization(), InstanceValueOptions.Optional);
+                if (this.Parameters.PersistWriteOnlyValues)
+                    instanceValues[WorkflowNamespace.Workflow] = new InstanceValue(this.Controller.PrepareForSerialization(), InstanceValueOptions.Optional);
 
-                ActivityInstanceState completionState = Controller.GetCompletionState(out IDictionary<string, object> outputs, out Exception terminationException);
+                var completionState = this.Controller.GetCompletionState(out var outputs, out var terminationException);
 
                 if (completionState == ActivityInstanceState.Closed)
                 {
                     instanceValues[WorkflowNamespace.Status] = new InstanceValue(WorkflowStatus.Closed);
                     if (outputs != null)
-                        foreach (KeyValuePair<string, object> output in outputs)
+                        foreach (var output in outputs)
                             instanceValues[WorkflowNamespace.OutputPath.GetName(output.Key)] = new InstanceValue(output.Value);
                 }
                 else if (completionState == ActivityInstanceState.Canceled)
@@ -388,7 +388,7 @@ namespace Orleans.Activities.Hosting
 
         private object LoadWorkflow(IDictionary<XName, InstanceValue> instanceValues)
         {
-            IsStarting = instanceValues.TryGetValue(WorkflowNamespace.IsStarting, out InstanceValue value) && (bool)value.Value;
+            this.IsStarting = instanceValues.TryGetValue(WorkflowNamespace.IsStarting, out var value) && (bool)value.Value;
             return instanceValues[WorkflowNamespace.Workflow].Value;
         }
 
@@ -398,8 +398,8 @@ namespace Orleans.Activities.Hosting
 
         protected Task IfHasPendingThenFlushTrackingRecordsAsync()
         {
-            if (Controller.HasPendingTrackingRecords)
-                return AsyncFactory.FromApm<TimeSpan>(Controller.BeginFlushTrackingRecords, Controller.EndFlushTrackingRecords, Parameters.TrackingTimeout);
+            if (this.Controller.HasPendingTrackingRecords)
+                return AsyncFactory.FromApm<TimeSpan>(this.Controller.BeginFlushTrackingRecords, this.Controller.EndFlushTrackingRecords, this.Parameters.TrackingTimeout);
             else
                 return TaskConstants.Completed;
         }
@@ -414,12 +414,12 @@ namespace Orleans.Activities.Hosting
             }
             catch (Exception e)
             {
-                if (Controller.TrackingEnabled)
+                if (this.Controller.TrackingEnabled)
                     try
                     {
                         // At least leave some trace of this exception 
-                        Controller.Track(new WorkflowInstanceExceptionRecord(
-                            Id, WorkflowDefinition.DisplayName, e, DefinitionIdentity));
+                        this.Controller.Track(new WorkflowInstanceExceptionRecord(
+                            this.Id, this.WorkflowDefinition.DisplayName, e, this.DefinitionIdentity));
                         await IfHasPendingThenFlushTrackingRecordsAsync();
                     }
                     catch
@@ -438,12 +438,12 @@ namespace Orleans.Activities.Hosting
             }
             catch (Exception e)
             {
-                if (Controller.TrackingEnabled)
+                if (this.Controller.TrackingEnabled)
                     try
                     {
                         // At least leave some trace of this exception 
-                        Controller.Track(new WorkflowInstanceExceptionRecord(
-                            Id, WorkflowDefinition.DisplayName, e, DefinitionIdentity));
+                        this.Controller.Track(new WorkflowInstanceExceptionRecord(
+                            this.Id, this.WorkflowDefinition.DisplayName, e, this.DefinitionIdentity));
                         await IfHasPendingThenFlushTrackingRecordsAsync();
                     }
                     catch
@@ -456,49 +456,38 @@ namespace Orleans.Activities.Hosting
 
         #region WorkflowInstance abstract method implementations
 
-        public override Guid Id => host.PrimaryKey;
+        public override Guid Id => this.host.PrimaryKey;
 
         #region instance keys
 
         // TODO Can we use instance keys for anything under Orleans at all?
         protected override bool SupportsInstanceKeys => false;
 
-        protected override IAsyncResult OnBeginAssociateKeys(ICollection<InstanceKey> keys, AsyncCallback callback, object state)
-        {
-            throw new NotImplementedException();
-        }
+        protected override IAsyncResult OnBeginAssociateKeys(ICollection<InstanceKey> keys, AsyncCallback callback, object state) => throw new NotImplementedException();
 
-        protected override void OnEndAssociateKeys(IAsyncResult result)
-        {
-            throw new NotImplementedException();
-        }
+        protected override void OnEndAssociateKeys(IAsyncResult result) => throw new NotImplementedException();
 
-        protected override void OnDisassociateKeys(ICollection<InstanceKey> keys)
-        {
-            throw new NotImplementedException();
-        }
+        protected override void OnDisassociateKeys(ICollection<InstanceKey> keys) => throw new NotImplementedException();
 
         #endregion
 
         #region persistence
 
-        protected override IAsyncResult OnBeginPersist(AsyncCallback callback, object state) =>
-            AsyncFactory.ToBegin(SaveAsync(), callback, state);
+        protected override IAsyncResult OnBeginPersist(AsyncCallback callback, object state)
+            => AsyncFactory.ToBegin(SaveAsync(), callback, state);
 
         protected override void OnEndPersist(IAsyncResult result)
-        {
-            AsyncFactory.ToEnd(result);
-        }
+            => AsyncFactory.ToEnd(result);
 
         #endregion
 
         #region bookmark resumption
 
-        protected override IAsyncResult OnBeginResumeBookmark(Bookmark bookmark, object value, TimeSpan timeout, AsyncCallback callback, object state) =>
-            AsyncFactory<BookmarkResumptionResult>.ToBegin(host.ResumeBookmarkAsync(bookmark, value, timeout), callback, state);
+        protected override IAsyncResult OnBeginResumeBookmark(Bookmark bookmark, object value, TimeSpan timeout, AsyncCallback callback, object state)
+            => AsyncFactory<BookmarkResumptionResult>.ToBegin(this.host.ResumeBookmarkAsync(bookmark, value, timeout), callback, state);
 
-        protected override BookmarkResumptionResult OnEndResumeBookmark(IAsyncResult result) =>
-            AsyncFactory<BookmarkResumptionResult>.ToEnd(result);
+        protected override BookmarkResumptionResult OnEndResumeBookmark(IAsyncResult result)
+            => AsyncFactory<BookmarkResumptionResult>.ToEnd(result);
 
         #endregion
 
@@ -518,18 +507,16 @@ namespace Orleans.Activities.Hosting
 
         // Callback from the controller/executor at the end.
         protected override void OnNotifyUnhandledException(Exception exception, Activity source, string sourceInstanceId)
-        {
-            Task.Factory.StartNew(async () =>
+            => Task.Factory.StartNew(async () =>
             {
                 await Task.Yield();
                 await OnNotifyUnhandledExceptionAsync(exception, source, sourceInstanceId);
             });
-        }
 
         // The TAP async version of OnNotifyUnhandledException() above.
         protected async Task OnNotifyUnhandledExceptionAsync(Exception exception, Activity source, string sourceInstanceId)
         {
-            UnhandledExceptionAction unhandledExceptionAction = Parameters.UnhandledExceptionAction;
+            var unhandledExceptionAction = this.Parameters.UnhandledExceptionAction;
             if (! await NotifyHostOnUnhandledExceptionAsync(exception, source))
                 // If the host can't handle it, the instance will abort, independently from the configuration.
                 unhandledExceptionAction = UnhandledExceptionAction.Abort;
@@ -558,19 +545,15 @@ namespace Orleans.Activities.Hosting
         // - we don't call Controller.Abort(), because controller/executor is still running, and will abort automatically
         // - we don't call tracking, because that is async, and controller/executor is already tracking it's activities
         protected override void OnRequestAbort(Exception reason)
-        {
-            onRequestAbortReason = reason;
-        }
+            => this.onRequestAbortReason = reason;
 
         // Callback from the controller/executor at the end.
         protected override void OnNotifyPaused()
-        {
-            Task.Factory.StartNew(async () =>
+            => Task.Factory.StartNew(async () =>
             {
                 await Task.Yield();
                 await OnNotifyPausedAsync();
             });
-        }
 
         private Exception onRequestAbortReason;
         private bool hasRaisedCompleted;
@@ -578,12 +561,12 @@ namespace Orleans.Activities.Hosting
         // The TAP async version of OnNotifyPaused() above.
         protected async Task OnNotifyPausedAsync()
         {
-            WorkflowInstanceState workflowInstanceState = Controller.State;
+            var workflowInstanceState = this.Controller.State;
             if (workflowInstanceState == WorkflowInstanceState.Aborted)
             {
                 // If there were a OnRequestAbort() previously, notify the host now.
-                if (onRequestAbortReason != null)
-                    await NotifyHostOnUnhandledExceptionAsync(onRequestAbortReason, null);
+                if (this.onRequestAbortReason != null)
+                    await NotifyHostOnUnhandledExceptionAsync(this.onRequestAbortReason, null);
             }
             else
             {
@@ -591,12 +574,12 @@ namespace Orleans.Activities.Hosting
                 {
                     // If it's completed, call OnCompletedAsync() on host.
                     if (workflowInstanceState == WorkflowInstanceState.Complete
-                        && !hasRaisedCompleted)
+                        && !this.hasRaisedCompleted)
                     {
                         await IfHasPendingThenFlushTrackingRecordsAsync();
-                        ActivityInstanceState completionState = Controller.GetCompletionState(out IDictionary<string, object> outputs, out Exception terminationException);
-                        await host.OnCompletedAsync(completionState, outputs, terminationException);
-                        hasRaisedCompleted = true;
+                        var completionState = this.Controller.GetCompletionState(out var outputs, out var terminationException);
+                        await this.host.OnCompletedAsync(completionState, outputs, terminationException);
+                        this.hasRaisedCompleted = true;
                     }
 
                     // Call OnPausedAsync() on INotificationParticipant extensions.
@@ -604,19 +587,19 @@ namespace Orleans.Activities.Hosting
 
                     // Track the Idle state.
                     if (workflowInstanceState == WorkflowInstanceState.Idle
-                        && Controller.TrackingEnabled)
+                        && this.Controller.TrackingEnabled)
                     {
-                        Controller.Track(new WorkflowInstanceRecord(Id, WorkflowDefinition.DisplayName,
-                            System.Activities.Tracking.WorkflowInstanceStates.Idle, DefinitionIdentity));
+                        this.Controller.Track(new WorkflowInstanceRecord(this.Id, this.WorkflowDefinition.DisplayName,
+                            System.Activities.Tracking.WorkflowInstanceStates.Idle, this.DefinitionIdentity));
                         await IfHasPendingThenFlushTrackingRecordsAsync();
                     }
 
                     // If required, save state.
-                    if (Controller.IsPersistable)
+                    if (this.Controller.IsPersistable)
                     {
-                        if (IdlePersistenceModeExtensions.ShouldSave(Parameters.IdlePersistenceMode, workflowInstanceState, IsStarting))
+                        if (IdlePersistenceModeExtensions.ShouldSave(this.Parameters.IdlePersistenceMode, workflowInstanceState, this.IsStarting))
                             await SaveAsync();
-                        IsStarting = false;
+                        this.IsStarting = false;
                     }
                 }
                 catch (Exception e)
@@ -629,7 +612,7 @@ namespace Orleans.Activities.Hosting
                     {
                         return AbortAsync(e);
                     });
-                    workflowInstanceState = Controller.State;
+                    workflowInstanceState = this.Controller.State;
                 }
             }
             // finally
@@ -643,7 +626,7 @@ namespace Orleans.Activities.Hosting
                     return RunAsync();
                 else
                 {
-                    host.OnNotifyIdle();
+                    this.host.OnNotifyIdle();
                     return TaskConstants.Completed;
                 }
             });

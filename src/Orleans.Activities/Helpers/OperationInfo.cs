@@ -20,11 +20,11 @@ namespace Orleans.Activities.Helpers
 
         static OperationInfo()
         {
-            Type[] interfaces = typeof(T).GetInterfaces();
-            ISet<string> interfaceNames = new HashSet<string> { nameof(T) };
+            var interfaces = typeof(T).GetInterfaces();
+            var interfaceNames = new HashSet<string> { nameof(T) };
             isNamespaceRequiredForOperationNames = interfaces.Any((i) => !interfaceNames.Add(i.GetNongenericName()));
 
-            MethodInfo[] operationMethods =
+            var operationMethods =
                 typeof(T).GetMethods(BindingFlags.Instance | BindingFlags.Public)
                 .Concat(
                 typeof(T).GetInterfaces().SelectMany((i) => i.GetMethods(BindingFlags.Instance | BindingFlags.Public)))
@@ -35,7 +35,7 @@ namespace Orleans.Activities.Helpers
 
         public static string GetOperationName(MethodInfo method)
         {
-            string interfaceName = method.DeclaringType.GetNongenericName();
+            var interfaceName = method.DeclaringType.GetNongenericName();
             return (isNamespaceRequiredForOperationNames ? method.DeclaringType.Namespace + "." + interfaceName : interfaceName) + "." + method.Name;
         }
     }

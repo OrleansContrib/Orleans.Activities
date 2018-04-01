@@ -13,14 +13,8 @@ namespace Orleans.Activities.Hosting
     /// </summary>
     public class SynchronizationContext : System.Threading.SynchronizationContext
     {
-        public override void Post(SendOrPostCallback d, object state)
-        {
-            Task.Factory.StartNew((_state) => d(_state), state);
-        }
+        public override void Post(SendOrPostCallback d, object state) => Task.Factory.StartNew((_state) => d(_state), state);
 
-        public override void Send(SendOrPostCallback d, object state)
-        {
-            throw new NotSupportedException("Send is not supported.");
-        }
+        public override void Send(SendOrPostCallback d, object state) => throw new NotSupportedException("Send is not supported.");
     }
 }

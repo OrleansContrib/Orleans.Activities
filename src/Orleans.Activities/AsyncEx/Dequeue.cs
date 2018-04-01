@@ -41,7 +41,7 @@ namespace Orleans.Activities.AsyncEx
         {
             if (capacity < 1)
                 throw new ArgumentOutOfRangeException(nameof(capacity), "Capacity must be greater than 0.");
-            buffer = new T[capacity];
+            this.buffer = new T[capacity];
         }
 
         /// <summary>
@@ -50,15 +50,15 @@ namespace Orleans.Activities.AsyncEx
         /// <param name="collection">The collection.</param>
         public Deque(IEnumerable<T> collection)
         {
-            int count = collection.Count();
+            var count = collection.Count();
             if (count > 0)
             {
-                buffer = new T[count];
+                this.buffer = new T[count];
                 DoInsertRange(0, collection, count);
             }
             else
             {
-                buffer = new T[DefaultCapacity];
+                this.buffer = new T[DefaultCapacity];
             }
         }
 
@@ -89,13 +89,13 @@ namespace Orleans.Activities.AsyncEx
         {
             get
             {
-                CheckExistingIndexArgument(Count, index);
+                CheckExistingIndexArgument(this.Count, index);
                 return DoGetItem(index);
             }
 
             set
             {
-                CheckExistingIndexArgument(Count, index);
+                CheckExistingIndexArgument(this.Count, index);
                 DoSetItem(index, value);
             }
         }
@@ -113,7 +113,7 @@ namespace Orleans.Activities.AsyncEx
         /// </exception>
         public void Insert(int index, T item)
         {
-            CheckNewIndexArgument(Count, index);
+            CheckNewIndexArgument(this.Count, index);
             DoInsert(index, item);
         }
 
@@ -129,7 +129,7 @@ namespace Orleans.Activities.AsyncEx
         /// </exception>
         public void RemoveAt(int index)
         {
-            CheckExistingIndexArgument(Count, index);
+            CheckExistingIndexArgument(this.Count, index);
             DoRemoveAt(index);
         }
 
@@ -141,7 +141,7 @@ namespace Orleans.Activities.AsyncEx
         public int IndexOf(T item)
         {
             var comparer = EqualityComparer<T>.Default;
-            int ret = 0;
+            var ret = 0;
             foreach (var sourceItem in this)
             {
                 if (comparer.Equals(item, sourceItem))
@@ -159,10 +159,7 @@ namespace Orleans.Activities.AsyncEx
         /// <exception cref="T:System.NotSupportedException">
         /// This list is read-only.
         /// </exception>
-        void ICollection<T>.Add(T item)
-        {
-            DoInsert(Count, item);
-        }
+        void ICollection<T>.Add(T item) => DoInsert(this.Count, item);
 
         /// <summary>
         /// Determines whether this list contains a specific value.
@@ -171,8 +168,7 @@ namespace Orleans.Activities.AsyncEx
         /// <returns>
         /// true if <paramref name="item"/> is found in this list; otherwise, false.
         /// </returns>
-        bool ICollection<T>.Contains(T item) =>
-            this.Contains(item, null);
+        bool ICollection<T>.Contains(T item) => this.Contains(item, null);
 
         /// <summary>
         /// Copies the elements of this list to an <see cref="T:System.Array"/>, starting at a particular <see cref="T:System.Array"/> index.
@@ -195,9 +191,9 @@ namespace Orleans.Activities.AsyncEx
             if (array == null)
                 throw new ArgumentNullException(nameof(array), "Array is null");
 
-            int count = Count;
+            var count = this.Count;
             CheckRangeArguments(array.Length, arrayIndex, count);
-            for (int i = 0; i != count; ++i)
+            for (var i = 0; i != count; ++i)
             {
                 array[arrayIndex + i] = this[i];
             }
@@ -215,7 +211,7 @@ namespace Orleans.Activities.AsyncEx
         /// </exception>
         public bool Remove(T item)
         {
-            int index = IndexOf(item);
+            var index = IndexOf(item);
             if (index == -1)
                 return false;
 
@@ -231,8 +227,8 @@ namespace Orleans.Activities.AsyncEx
         /// </returns>
         public IEnumerator<T> GetEnumerator()
         {
-            int count = Count;
-            for (int i = 0; i != count; ++i)
+            var count = this.Count;
+            for (var i = 0; i != count; ++i)
             {
                 yield return DoGetItem(i);
             }
@@ -244,8 +240,8 @@ namespace Orleans.Activities.AsyncEx
         /// <returns>
         /// An <see cref="T:System.Collections.IEnumerator"/> object that can be used to iterate through the collection.
         /// </returns>
-        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() =>
-            GetEnumerator();
+        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
+            => GetEnumerator();
 
         #endregion
         #region ObjectListImplementations
@@ -253,28 +249,20 @@ namespace Orleans.Activities.AsyncEx
         int System.Collections.IList.Add(object value)
         {
             AddToBack((T)value);
-            return Count - 1;
+            return this.Count - 1;
         }
 
-        bool System.Collections.IList.Contains(object value) =>
-            this.Contains((T)value);
+        bool System.Collections.IList.Contains(object value) => this.Contains((T)value);
 
-        int System.Collections.IList.IndexOf(object value) =>
-            IndexOf((T)value);
+        int System.Collections.IList.IndexOf(object value) => IndexOf((T)value);
 
-        void System.Collections.IList.Insert(int index, object value)
-        {
-            Insert(index, (T)value);
-        }
+        void System.Collections.IList.Insert(int index, object value) => Insert(index, (T)value);
 
         bool System.Collections.IList.IsFixedSize => false;
 
         bool System.Collections.IList.IsReadOnly => false;
 
-        void System.Collections.IList.Remove(object value)
-        {
-            Remove((T)value);
-        }
+        void System.Collections.IList.Remove(object value) => Remove((T)value);
 
         object System.Collections.IList.this[int index]
         {
@@ -286,9 +274,9 @@ namespace Orleans.Activities.AsyncEx
         {
             if (array == null)
                 throw new ArgumentNullException(nameof(array), "Destination array cannot be null.");
-            CheckRangeArguments(array.Length, index, Count);
+            CheckRangeArguments(array.Length, index, this.Count);
 
-            for (int i = 0; i != Count; ++i)
+            for (var i = 0; i != this.Count; ++i)
             {
                 try
                 {
@@ -368,20 +356,20 @@ namespace Orleans.Activities.AsyncEx
         /// Gets a value indicating whether this instance is empty.
         /// </summary>
         private bool IsEmpty =>
-            Count == 0;
+            this.Count == 0;
 
         /// <summary>
         /// Gets a value indicating whether this instance is at full capacity.
         /// </summary>
         private bool IsFull =>
-            Count == Capacity;
+            this.Count == this.Capacity;
 
         /// <summary>
         /// Gets a value indicating whether the buffer is "split" (meaning the beginning of the view is at a later index in <see cref="buffer"/> than the end).
         /// </summary>
         private bool IsSplit =>
             // Overflow-safe version of "(offset + Count) > Capacity"
-            offset > (Capacity - Count);
+            this.offset > (this.Capacity - this.Count);
 
         /// <summary>
         /// Gets or sets the capacity for this deque. This value must always be greater than zero, and this property cannot be set to a value less than <see cref="Count"/>.
@@ -389,37 +377,37 @@ namespace Orleans.Activities.AsyncEx
         /// <exception cref="InvalidOperationException"><c>Capacity</c> cannot be set to a value less than <see cref="Count"/>.</exception>
         public int Capacity
         {
-            get => buffer.Length;
+            get => this.buffer.Length;
 
             set
             {
                 if (value < 1)
                     throw new ArgumentOutOfRangeException(nameof(value), "Capacity must be greater than 0.");
 
-                if (value < Count)
+                if (value < this.Count)
                     throw new InvalidOperationException("Capacity cannot be set to a value less than Count");
 
-                if (value == buffer.Length)
+                if (value == this.buffer.Length)
                     return;
 
                 // Create the new buffer and copy our existing range.
-                T[] newBuffer = new T[value];
-                if (IsSplit)
+                var newBuffer = new T[value];
+                if (this.IsSplit)
                 {
                     // The existing buffer is split, so we have to copy it in parts
-                    int length = Capacity - offset;
-                    Array.Copy(buffer, offset, newBuffer, 0, length);
-                    Array.Copy(buffer, 0, newBuffer, length, Count - length);
+                    var length = this.Capacity - this.offset;
+                    Array.Copy(this.buffer, this.offset, newBuffer, 0, length);
+                    Array.Copy(this.buffer, 0, newBuffer, length, this.Count - length);
                 }
                 else
                 {
                     // The existing buffer is whole
-                    Array.Copy(buffer, offset, newBuffer, 0, Count);
+                    Array.Copy(this.buffer, this.offset, newBuffer, 0, this.Count);
                 }
 
                 // Set up to use the new buffer.
-                buffer = newBuffer;
-                offset = 0;
+                this.buffer = newBuffer;
+                this.offset = 0;
             }
         }
 
@@ -434,26 +422,21 @@ namespace Orleans.Activities.AsyncEx
         /// </summary>
         /// <param name="index">The deque index.</param>
         /// <returns>The buffer index.</returns>
-        private int DequeIndexToBufferIndex(int index) =>
-            (index + offset) % Capacity;
+        private int DequeIndexToBufferIndex(int index) => (index + this.offset) % this.Capacity;
 
         /// <summary>
         /// Gets an element at the specified view index.
         /// </summary>
         /// <param name="index">The zero-based view index of the element to get. This index is guaranteed to be valid.</param>
         /// <returns>The element at the specified index.</returns>
-        private T DoGetItem(int index) =>
-            buffer[DequeIndexToBufferIndex(index)];
+        private T DoGetItem(int index) => this.buffer[DequeIndexToBufferIndex(index)];
 
         /// <summary>
         /// Sets an element at the specified view index.
         /// </summary>
         /// <param name="index">The zero-based view index of the element to get. This index is guaranteed to be valid.</param>
         /// <param name="item">The element to store in the list.</param>
-        private void DoSetItem(int index, T item)
-        {
-            buffer[DequeIndexToBufferIndex(index)] = item;
-        }
+        private void DoSetItem(int index, T item) => this.buffer[DequeIndexToBufferIndex(index)] = item;
 
         /// <summary>
         /// Inserts an element at the specified view index.
@@ -469,7 +452,7 @@ namespace Orleans.Activities.AsyncEx
                 DoAddToFront(item);
                 return;
             }
-            else if (index == Count)
+            else if (index == this.Count)
             {
                 DoAddToBack(item);
                 return;
@@ -489,7 +472,7 @@ namespace Orleans.Activities.AsyncEx
                 DoRemoveFromFront();
                 return;
             }
-            else if (index == Count - 1)
+            else if (index == this.Count - 1)
             {
                 DoRemoveFromBack();
                 return;
@@ -505,9 +488,9 @@ namespace Orleans.Activities.AsyncEx
         /// <returns>The value of <see cref="offset"/> after it was incremented.</returns>
         private int PostIncrement(int value)
         {
-            int ret = offset;
-            offset += value;
-            offset %= Capacity;
+            var ret = this.offset;
+            this.offset += value;
+            this.offset %= this.Capacity;
             return ret;
         }
 
@@ -518,10 +501,10 @@ namespace Orleans.Activities.AsyncEx
         /// <returns>The value of <see cref="offset"/> before it was decremented.</returns>
         private int PreDecrement(int value)
         {
-            offset -= value;
-            if (offset < 0)
-                offset += Capacity;
-            return offset;
+            this.offset -= value;
+            if (this.offset < 0)
+                this.offset += this.Capacity;
+            return this.offset;
         }
 
         /// <summary>
@@ -530,8 +513,8 @@ namespace Orleans.Activities.AsyncEx
         /// <param name="value">The element to insert.</param>
         private void DoAddToBack(T value)
         {
-            buffer[DequeIndexToBufferIndex(Count)] = value;
-            ++Count;
+            this.buffer[DequeIndexToBufferIndex(this.Count)] = value;
+            ++this.Count;
         }
 
         /// <summary>
@@ -540,8 +523,8 @@ namespace Orleans.Activities.AsyncEx
         /// <param name="value">The element to insert.</param>
         private void DoAddToFront(T value)
         {
-            buffer[PreDecrement(1)] = value;
-            ++Count;
+            this.buffer[PreDecrement(1)] = value;
+            ++this.Count;
         }
 
         /// <summary>
@@ -550,8 +533,8 @@ namespace Orleans.Activities.AsyncEx
         /// <returns>The former last element.</returns>
         private T DoRemoveFromBack()
         {
-            T ret = buffer[DequeIndexToBufferIndex(Count - 1)];
-            --Count;
+            var ret = this.buffer[DequeIndexToBufferIndex(this.Count - 1)];
+            --this.Count;
             return ret;
         }
 
@@ -561,8 +544,8 @@ namespace Orleans.Activities.AsyncEx
         /// <returns>The former first element.</returns>
         private T DoRemoveFromFront()
         {
-            --Count;
-            return buffer[PostIncrement(1)];
+            --this.Count;
+            return this.buffer[PostIncrement(1)];
         }
 
         /// <summary>
@@ -574,17 +557,17 @@ namespace Orleans.Activities.AsyncEx
         private void DoInsertRange(int index, IEnumerable<T> collection, int collectionCount)
         {
             // Make room in the existing list
-            if (index < Count / 2)
+            if (index < this.Count / 2)
             {
                 // Inserting into the first half of the list
 
                 // Move lower items down: [0, index) -> [Capacity - collectionCount, Capacity - collectionCount + index)
                 // This clears out the low "index" number of items, moving them "collectionCount" places down;
                 //   after rotation, there will be a "collectionCount"-sized hole at "index".
-                int copyCount = index;
-                int writeIndex = Capacity - collectionCount;
-                for (int j = 0; j != copyCount; ++j)
-                    buffer[DequeIndexToBufferIndex(writeIndex + j)] = buffer[DequeIndexToBufferIndex(j)];
+                var copyCount = index;
+                var writeIndex = this.Capacity - collectionCount;
+                for (var j = 0; j != copyCount; ++j)
+                    this.buffer[DequeIndexToBufferIndex(writeIndex + j)] = this.buffer[DequeIndexToBufferIndex(j)];
 
                 // Rotate to the new view
                 PreDecrement(collectionCount);
@@ -594,22 +577,22 @@ namespace Orleans.Activities.AsyncEx
                 // Inserting into the second half of the list
 
                 // Move higher items up: [index, count) -> [index + collectionCount, collectionCount + count)
-                int copyCount = Count - index;
-                int writeIndex = index + collectionCount;
-                for (int j = copyCount - 1; j != -1; --j)
-                    buffer[DequeIndexToBufferIndex(writeIndex + j)] = buffer[DequeIndexToBufferIndex(index + j)];
+                var copyCount = this.Count - index;
+                var writeIndex = index + collectionCount;
+                for (var j = copyCount - 1; j != -1; --j)
+                    this.buffer[DequeIndexToBufferIndex(writeIndex + j)] = this.buffer[DequeIndexToBufferIndex(index + j)];
             }
 
             // Copy new items into place
-            int i = index;
-            foreach (T item in collection)
+            var i = index;
+            foreach (var item in collection)
             {
-                buffer[DequeIndexToBufferIndex(i)] = item;
+                this.buffer[DequeIndexToBufferIndex(i)] = item;
                 ++i;
             }
 
             // Adjust valid count
-            Count += collectionCount;
+            this.Count += collectionCount;
         }
 
         /// <summary>
@@ -623,25 +606,25 @@ namespace Orleans.Activities.AsyncEx
             {
                 // Removing from the beginning: rotate to the new view
                 PostIncrement(collectionCount);
-                Count -= collectionCount;
+                this.Count -= collectionCount;
                 return;
             }
-            else if (index == Count - collectionCount)
+            else if (index == this.Count - collectionCount)
             {
                 // Removing from the ending: trim the existing view
-                Count -= collectionCount;
+                this.Count -= collectionCount;
                 return;
             }
 
-            if ((index + (collectionCount / 2)) < Count / 2)
+            if ((index + (collectionCount / 2)) < this.Count / 2)
             {
                 // Removing from first half of list
 
                 // Move lower items up: [0, index) -> [collectionCount, collectionCount + index)
-                int copyCount = index;
-                int writeIndex = collectionCount;
-                for (int j = copyCount - 1; j != -1; --j)
-                    buffer[DequeIndexToBufferIndex(writeIndex + j)] = buffer[DequeIndexToBufferIndex(j)];
+                var copyCount = index;
+                var writeIndex = collectionCount;
+                for (var j = copyCount - 1; j != -1; --j)
+                    this.buffer[DequeIndexToBufferIndex(writeIndex + j)] = this.buffer[DequeIndexToBufferIndex(j)];
 
                 // Rotate to new view
                 PostIncrement(collectionCount);
@@ -651,14 +634,14 @@ namespace Orleans.Activities.AsyncEx
                 // Removing from second half of list
 
                 // Move higher items down: [index + collectionCount, count) -> [index, count - collectionCount)
-                int copyCount = Count - collectionCount - index;
-                int readIndex = index + collectionCount;
-                for (int j = 0; j != copyCount; ++j)
-                    buffer[DequeIndexToBufferIndex(index + j)] = buffer[DequeIndexToBufferIndex(readIndex + j)];
+                var copyCount = this.Count - collectionCount - index;
+                var readIndex = index + collectionCount;
+                for (var j = 0; j != copyCount; ++j)
+                    this.buffer[DequeIndexToBufferIndex(index + j)] = this.buffer[DequeIndexToBufferIndex(readIndex + j)];
             }
 
             // Adjust valid count
-            Count -= collectionCount;
+            this.Count -= collectionCount;
         }
 
         /// <summary>
@@ -666,9 +649,9 @@ namespace Orleans.Activities.AsyncEx
         /// </summary>
         private void EnsureCapacityForOneElement()
         {
-            if (IsFull)
+            if (this.IsFull)
             {
-                Capacity = Capacity * 2;
+                this.Capacity = this.Capacity * 2;
             }
         }
 
@@ -700,13 +683,13 @@ namespace Orleans.Activities.AsyncEx
         /// <exception cref="ArgumentOutOfRangeException"><paramref name="index"/> is not a valid index to an insertion point for the source.</exception>
         public void InsertRange(int index, IEnumerable<T> collection)
         {
-            int collectionCount = collection.Count();
-            CheckNewIndexArgument(Count, index);
+            var collectionCount = collection.Count();
+            CheckNewIndexArgument(this.Count, index);
 
             // Overflow-safe check for "Count + collectionCount > Capacity"
-            if (collectionCount > Capacity - Count)
+            if (collectionCount > this.Capacity - this.Count)
             {
-                Capacity = checked(Count + collectionCount);
+                this.Capacity = checked(this.Count + collectionCount);
             }
 
             if (collectionCount == 0)
@@ -726,7 +709,7 @@ namespace Orleans.Activities.AsyncEx
         /// <exception cref="ArgumentException">The range [<paramref name="offset"/>, <paramref name="offset"/> + <paramref name="count"/>) is not within the range [0, <see cref="Count"/>).</exception>
         public void RemoveRange(int offset, int count)
         {
-            CheckRangeArguments(Count, offset, count);
+            CheckRangeArguments(this.Count, offset, count);
 
             if (count == 0)
             {
@@ -743,7 +726,7 @@ namespace Orleans.Activities.AsyncEx
         /// <exception cref="InvalidOperationException">The deque is empty.</exception>
         public T RemoveFromBack()
         {
-            if (IsEmpty)
+            if (this.IsEmpty)
                 throw new InvalidOperationException("The deque is empty.");
 
             return DoRemoveFromBack();
@@ -756,7 +739,7 @@ namespace Orleans.Activities.AsyncEx
         /// <exception cref="InvalidOperationException">The deque is empty.</exception>
         public T RemoveFromFront()
         {
-            if (IsEmpty)
+            if (this.IsEmpty)
                 throw new InvalidOperationException("The deque is empty.");
 
             return DoRemoveFromFront();
@@ -767,8 +750,8 @@ namespace Orleans.Activities.AsyncEx
         /// </summary>
         public void Clear()
         {
-            offset = 0;
-            Count = 0;
+            this.offset = 0;
+            this.Count = 0;
         }
 
         [DebuggerNonUserCode]
@@ -776,18 +759,15 @@ namespace Orleans.Activities.AsyncEx
         {
             private readonly Deque<T> deque;
 
-            public DebugView(Deque<T> deque)
-            {
-                this.deque = deque;
-            }
+            public DebugView(Deque<T> deque) => this.deque = deque;
 
             [DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
             public T[] Items
             {
                 get
                 {
-                    var array = new T[deque.Count];
-                    ((ICollection<T>)deque).CopyTo(array, 0);
+                    var array = new T[this.deque.Count];
+                    ((ICollection<T>)this.deque).CopyTo(array, 0);
                     return array;
                 }
             }

@@ -29,7 +29,7 @@ namespace Orleans.Activities
         [Description("This value is added to the delay time expressed by Expire argument to handle the time inaccuracy in different systems. If not set, the DefaultTimeoutDelay parameter will be used.")]
         public InArgument<TimeSpan?> Delay { get; set; }
 
-        protected override TimeSpan CalculateDelay(NativeActivityContext context) =>
-            Expire.Get(context) + (Delay.Get(context) ?? context.GetActivityContext().Parameters.DefaultTimeoutDelay) - DateTime.UtcNow;
+        protected override TimeSpan CalculateDelay(NativeActivityContext context)
+            => this.Expire.Get(context) + (this.Delay.Get(context) ?? context.GetActivityContext().Parameters.DefaultTimeoutDelay) - DateTime.UtcNow;
     }
 }

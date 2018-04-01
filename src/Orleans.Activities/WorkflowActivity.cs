@@ -21,7 +21,9 @@ namespace Orleans.Activities
     /// </summary>
     /// <typeparam name="TWorkflowInterface"></typeparam>
     /// <typeparam name="TWorkflowCallbackInterface"></typeparam>
+#pragma warning disable IDE0009 // Member access should be qualified.
     [ContentProperty(nameof(Body))]
+#pragma warning restore IDE0009 // Member access should be qualified.
     [Designer(typeof(WorkflowActivityDesigner))]
     [ToolboxBitmap(typeof(WorkflowActivity<,>), nameof(WorkflowActivity<TWorkflowInterface, TWorkflowCallbackInterface>) + ".png")]
     [Description("The de facto \"root\" activity to get the TWorkflowInterface and TWorkflowCallbackInterface types.\n" +
@@ -37,20 +39,20 @@ namespace Orleans.Activities
 
         public WorkflowActivity()
         {
-            Constraints.Add(WorkflowActivityHelper.VerifyWorkflowInterface<TWorkflowInterface>());
-            Constraints.Add(WorkflowActivityHelper.VerifyWorkflowCallbackInterface<TWorkflowCallbackInterface>());
+            this.Constraints.Add(WorkflowActivityHelper.VerifyWorkflowInterface<TWorkflowInterface>());
+            this.Constraints.Add(WorkflowActivityHelper.VerifyWorkflowCallbackInterface<TWorkflowCallbackInterface>());
         }
 
         protected override void CacheMetadata(NativeActivityMetadata metadata)
         {
-            metadata.AddChild(Body);
+            metadata.AddChild(this.Body);
             base.CacheMetadata(metadata);
         }
 
         protected override void Execute(NativeActivityContext context)
         {
-            if (Body != null)
-                context.ScheduleActivity(Body);
+            if (this.Body != null)
+                context.ScheduleActivity(this.Body);
         }
     }
 }

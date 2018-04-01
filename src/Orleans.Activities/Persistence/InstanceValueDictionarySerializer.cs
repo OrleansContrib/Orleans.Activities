@@ -29,24 +29,24 @@ namespace Orleans.Activities.Persistence
         [SerializerMethod]
         public static void Serializer(object item, ISerializationContext context, Type expected)
         {
-            byte[] buffer = Serialize(item);
+            var buffer = Serialize(item);
             context.StreamWriter.Write(buffer.Length);
             context.StreamWriter.Write(buffer);
         }
 
         [DeserializerMethod]
-        public static object Deserializer(Type expected, IDeserializationContext context) =>
-            Deserialize(context.StreamReader.ReadBytes(context.StreamReader.ReadInt()));
+        public static object Deserializer(Type expected, IDeserializationContext context)
+            => Deserialize(context.StreamReader.ReadBytes(context.StreamReader.ReadInt()));
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2202:Do not dispose objects multiple times")]
         public static byte[] Serialize(object graph)
         {
-            using (MemoryStream memStream = new MemoryStream())
-            using (GZipStream zipStream = new GZipStream(memStream, CompressionMode.Compress))
+            using (var memStream = new MemoryStream())
+            using (var zipStream = new GZipStream(memStream, CompressionMode.Compress))
             {
-                using (XmlDictionaryWriter xmlDictionaryWriter = XmlDictionaryWriter.CreateBinaryWriter(zipStream))
+                using (var xmlDictionaryWriter = XmlDictionaryWriter.CreateBinaryWriter(zipStream))
                 {
-                    NetDataContractSerializer serializer = new NetDataContractSerializer();
+                    var serializer = new NetDataContractSerializer();
                     serializer.WriteObject(xmlDictionaryWriter, graph);
                     xmlDictionaryWriter.Close();
                 }
@@ -58,11 +58,11 @@ namespace Orleans.Activities.Persistence
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2202:Do not dispose objects multiple times")]
         public static object Deserialize(byte[] buffer)
         {
-            using (MemoryStream memStream = new MemoryStream(buffer))
-            using (GZipStream zipStream = new GZipStream(memStream, CompressionMode.Decompress))
-            using (XmlDictionaryReader xmlDictionaryReader = XmlDictionaryReader.CreateBinaryReader(zipStream, XmlDictionaryReaderQuotas.Max))
+            using (var memStream = new MemoryStream(buffer))
+            using (var zipStream = new GZipStream(memStream, CompressionMode.Decompress))
+            using (var xmlDictionaryReader = XmlDictionaryReader.CreateBinaryReader(zipStream, XmlDictionaryReaderQuotas.Max))
             {
-                NetDataContractSerializer serializer = new NetDataContractSerializer();
+                var serializer = new NetDataContractSerializer();
                 return serializer.ReadObject(xmlDictionaryReader);
             }
         }

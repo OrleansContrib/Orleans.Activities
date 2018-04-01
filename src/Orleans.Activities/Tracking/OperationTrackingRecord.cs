@@ -30,11 +30,11 @@ namespace Orleans.Activities.Tracking
         {
             if (string.IsNullOrEmpty(operationName))
                 throw new ArgumentNullException(nameof(operationName));
-            Data.Add(OperationName, operationName);
+            this.Data.Add(OperationName, operationName);
         }
 
-        public override string ToString() =>
-            $"{Name} {{ InstanceId = {InstanceId}, RecordNumber = {RecordNumber}, EventTime = {EventTime}, Operation = {Data[OperationName] as string}, Activity {{ {Activity?.ToString() ?? "<null>"} }} }}";
+        public override string ToString()
+            => $"{this.Name} {{ InstanceId = {this.InstanceId}, RecordNumber = {this.RecordNumber}, EventTime = {this.EventTime}, Operation = {this.Data[OperationName] as string}, Activity {{ {this.Activity?.ToString() ?? "<null>"} }} }}";
     }
 
     /// <summary>
@@ -46,8 +46,8 @@ namespace Orleans.Activities.Tracking
             : base(name)
         { }
 
-        public override string ToString() =>
-            $"{Name} {{ InstanceId = {InstanceId}, RecordNumber = {RecordNumber}, EventTime = {EventTime}, Activity {{ {Activity?.ToString() ?? "<null>"} }} }}";
+        public override string ToString()
+            => $"{this.Name} {{ InstanceId = {this.InstanceId}, RecordNumber = {this.RecordNumber}, EventTime = {this.EventTime}, Activity {{ {this.Activity?.ToString() ?? "<null>"} }} }}";
     }
 
     /// <summary>
@@ -55,7 +55,7 @@ namespace Orleans.Activities.Tracking
     /// </summary>
     public sealed class SendRequestRecord : OperationRequestTrackingRecord
     {
-        private static readonly string RecordName = nameof(SendRequestRecord);
+        private const string RecordName = nameof(SendRequestRecord);
         private const string RequestParameter = "RequestParameter";
 
         public SendRequestRecord(string operationName)
@@ -64,9 +64,7 @@ namespace Orleans.Activities.Tracking
 
         public SendRequestRecord(string operationName, object requestParameter)
             : this(operationName)
-        {
-            Data.Add(RequestParameter, requestParameter);
-        }
+            => this.Data.Add(RequestParameter, requestParameter);
     }
 
     /// <summary>
@@ -74,7 +72,7 @@ namespace Orleans.Activities.Tracking
     /// </summary>
     public sealed class ReceiveResponseRecord : OperationResponseTrackingRecord
     {
-        private static readonly string RecordName = nameof(ReceiveResponseRecord);
+        private const string RecordName = nameof(ReceiveResponseRecord);
         private const string ResponseResult = "ResponseResult";
 
         public ReceiveResponseRecord()
@@ -83,9 +81,7 @@ namespace Orleans.Activities.Tracking
 
         public ReceiveResponseRecord(object responseResult)
             : this()
-        {
-            Data.Add(ResponseResult, responseResult);
-        }
+            => this.Data.Add(ResponseResult, responseResult);
     }
 
     /// <summary>
@@ -93,7 +89,7 @@ namespace Orleans.Activities.Tracking
     /// </summary>
     public sealed class ReceiveRequestRecord : OperationRequestTrackingRecord
     {
-        private static readonly string RecordName = nameof(ReceiveRequestRecord);
+        private const string RecordName = nameof(ReceiveRequestRecord);
         private const string RequestResult = "RequestResult";
 
         public ReceiveRequestRecord(string operationName)
@@ -102,9 +98,7 @@ namespace Orleans.Activities.Tracking
 
         public ReceiveRequestRecord(string operationName, object requestResult)
             : this(operationName)
-        {
-            Data.Add(RequestResult, requestResult);
-        }
+            => this.Data.Add(RequestResult, requestResult);
     }
 
     /// <summary>
@@ -112,7 +106,7 @@ namespace Orleans.Activities.Tracking
     /// </summary>
     public sealed class SendResponseRecord : OperationResponseTrackingRecord
     {
-        private static readonly string RecordName = nameof(SendResponseRecord);
+        private const string RecordName = nameof(SendResponseRecord);
         private const string ResponseParameter = "ResponseParameter";
 
         public SendResponseRecord()
@@ -121,8 +115,6 @@ namespace Orleans.Activities.Tracking
 
         public SendResponseRecord(object responseParameter)
             : this()
-        {
-            Data.Add(ResponseParameter, responseParameter);
-        }
+            => this.Data.Add(ResponseParameter, responseParameter);
     }
 }

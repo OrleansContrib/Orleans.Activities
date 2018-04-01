@@ -31,34 +31,28 @@ namespace Orleans.Activities.Tracking
         {
             if (string.IsNullOrEmpty(activityDefinitionId))
                 throw new ArgumentNullException(nameof(activityDefinitionId));
-            ReminderName = reminderName ?? throw new ArgumentNullException(nameof(reminderName));
-            Level = TraceLevel.Info;
+            this.ReminderName = reminderName ?? throw new ArgumentNullException(nameof(reminderName));
+            this.Level = TraceLevel.Info;
         }
 
         public WorkflowInstanceReminderRecord(Guid instanceId, string activityDefinitionId, string state, string reminderName, WorkflowIdentity workflowDefinitionIdentity)
             : this(instanceId, activityDefinitionId, state, reminderName)
-        {
-            WorkflowDefinitionIdentity = workflowDefinitionIdentity;
-        }
+            => this.WorkflowDefinitionIdentity = workflowDefinitionIdentity;
 
         public WorkflowInstanceReminderRecord(Guid instanceId, long recordNumber, string activityDefinitionId, string state, string reminderName, WorkflowIdentity workflowDefinitionIdentity)
             : this(instanceId, recordNumber, activityDefinitionId, state, reminderName)
-        {
-            WorkflowDefinitionIdentity = workflowDefinitionIdentity;
-        }
+            => this.WorkflowDefinitionIdentity = workflowDefinitionIdentity;
 
         private WorkflowInstanceReminderRecord(WorkflowInstanceReminderRecord record)
             : base(record)
-        {
-            ReminderName = record.ReminderName;
-        }
+            => this.ReminderName = record.ReminderName;
 
         protected override TrackingRecord Clone() => new WorkflowInstanceReminderRecord(this);
 
-        public override string ToString() =>
+        public override string ToString()
             // For backward compatibility, the ToString() does not return WorkflowIdentity, if it is null.
-            WorkflowDefinitionIdentity == null
-                ? $"WorkflowInstanceReminderRecord {{ InstanceId = {InstanceId}, RecordNumber = {RecordNumber}, EventTime = {EventTime}, ActivityDefinitionId = {ActivityDefinitionId}, State = {State}, ReminderName = {ReminderName} }} "
-                : $"WorkflowInstanceReminderRecord {{ InstanceId = {InstanceId}, RecordNumber = {RecordNumber}, EventTime = {EventTime}, ActivityDefinitionId = {ActivityDefinitionId}, State = {State}, ReminderName = {ReminderName}, WorkflowDefinitionIdentity = {WorkflowDefinitionIdentity} }} ";
+            => this.WorkflowDefinitionIdentity == null
+                ? $"WorkflowInstanceReminderRecord {{ InstanceId = {this.InstanceId}, RecordNumber = {this.RecordNumber}, EventTime = {this.EventTime}, ActivityDefinitionId = {this.ActivityDefinitionId}, State = {this.State}, ReminderName = {this.ReminderName} }} "
+                : $"WorkflowInstanceReminderRecord {{ InstanceId = {this.InstanceId}, RecordNumber = {this.RecordNumber}, EventTime = {this.EventTime}, ActivityDefinitionId = {this.ActivityDefinitionId}, State = {this.State}, ReminderName = {this.ReminderName}, WorkflowDefinitionIdentity = {this.WorkflowDefinitionIdentity} }} ";
     }
 }

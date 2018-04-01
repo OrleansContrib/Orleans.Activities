@@ -13,7 +13,7 @@ namespace Orleans.Activities.Extensions
     {
         public static IActivityContext GetActivityContext(this ActivityContext context)
         {
-            ActivityContextExtension activityContextExtension = context.GetExtension<ActivityContextExtension>();
+            var activityContextExtension = context.GetExtension<ActivityContextExtension>();
             if (activityContextExtension == null)
                 throw new ValidationException(nameof(ActivityContextExtension) + " is not found.");
             return activityContextExtension.ActivityContext;
@@ -28,8 +28,6 @@ namespace Orleans.Activities.Extensions
         public IActivityContext ActivityContext { get; }
 
         public ActivityContextExtension(IActivityContext activityContext)
-        {
-            ActivityContext = activityContext;
-        }
+            => this.ActivityContext = activityContext;
     }
 }

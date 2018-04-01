@@ -19,13 +19,13 @@ namespace System.Threading.Tasks.Schedulers
     {
         /// <summary>Whether the current thread is processing work items.</summary> 
         [ThreadStatic]
-        private static bool _currentThreadIsProcessingItems;
+        private static bool currentThreadIsProcessingItems;
         /// <summary>The list of tasks to be executed.</summary> 
-        private readonly LinkedList<Task> _tasks = new LinkedList<Task>(); // protected by lock(_tasks) 
+        private readonly LinkedList<Task> tasks = new LinkedList<Task>(); // protected by lock(_tasks) 
         /// <summary>The maximum concurrency level allowed by this scheduler.</summary> 
-        private readonly int _maxDegreeOfParallelism;
+        private readonly int maxDegreeOfParallelism;
         /// <summary>Whether the scheduler is currently processing work items.</summary> 
-        private int _delegatesQueuedOrRunning = 0; // protected by lock(_tasks) 
+        private int delegatesQueuedOrRunning = 0; // protected by lock(_tasks) 
 
         /// <summary> 
         /// Initializes an instance of the LimitedConcurrencyLevelTaskScheduler class with the 
@@ -35,7 +35,7 @@ namespace System.Threading.Tasks.Schedulers
         public LimitedConcurrencyLevelTaskScheduler(int maxDegreeOfParallelism)
         {
             if (maxDegreeOfParallelism < 1) throw new ArgumentOutOfRangeException(nameof(maxDegreeOfParallelism));
-            _maxDegreeOfParallelism = maxDegreeOfParallelism;
+            this.maxDegreeOfParallelism = maxDegreeOfParallelism;
         }
 
         /// <summary>Queues a task to the scheduler.</summary> 
@@ -44,12 +44,12 @@ namespace System.Threading.Tasks.Schedulers
         {
             // Add the task to the list of tasks to be processed.  If there aren't enough 
             // delegates currently queued or running to process tasks, schedule another. 
-            lock (_tasks)
+            lock (this.tasks)
             {
-                _tasks.AddLast(task);
-                if (_delegatesQueuedOrRunning < _maxDegreeOfParallelism)
+                this.tasks.AddLast(task);
+                if (this.delegatesQueuedOrRunning < this.maxDegreeOfParallelism)
                 {
-                    ++_delegatesQueuedOrRunning;
+                    ++this.delegatesQueuedOrRunning;
                     NotifyThreadPoolOfPendingWork();
                 }
             }
@@ -59,31 +59,30 @@ namespace System.Threading.Tasks.Schedulers
         /// Informs the ThreadPool that there's work to be executed for this scheduler. 
         /// </summary> 
         private void NotifyThreadPoolOfPendingWork()
-        {
-            ThreadPool.UnsafeQueueUserWorkItem(_ =>
+            => ThreadPool.UnsafeQueueUserWorkItem(_ =>
             {
                 // Note that the current thread is now processing work items. 
                 // This is necessary to enable inlining of tasks into this thread. 
-                _currentThreadIsProcessingItems = true;
+                currentThreadIsProcessingItems = true;
                 try
                 {
                     // Process all available items in the queue. 
                     while (true)
                     {
                         Task item;
-                        lock (_tasks)
+                        lock (this.tasks)
                         {
                             // When there are no more items to be processed, 
                             // note that we're done processing, and get out. 
-                            if (_tasks.Count == 0)
+                            if (this.tasks.Count == 0)
                             {
-                                --_delegatesQueuedOrRunning;
+                                --this.delegatesQueuedOrRunning;
                                 break;
                             }
 
                             // Get the next item from the queue 
-                            item = _tasks.First.Value;
-                            _tasks.RemoveFirst();
+                            item = this.tasks.First.Value;
+                            this.tasks.RemoveFirst();
                         }
 
                         // Execute the task we pulled out of the queue 
@@ -91,9 +90,8 @@ namespace System.Threading.Tasks.Schedulers
                     }
                 }
                 // We're done processing items on the current thread 
-                finally { _currentThreadIsProcessingItems = false; }
+                finally { currentThreadIsProcessingItems = false; }
             }, null);
-        }
 
         /// <summary>Attempts to execute the specified task on the current thread.</summary> 
         /// <param name="task">The task to be executed.</param> 
@@ -102,7 +100,7 @@ namespace System.Threading.Tasks.Schedulers
         protected sealed override bool TryExecuteTaskInline(Task task, bool taskWasPreviouslyQueued)
         {
             // If this thread isn't already processing a task, we don't support inlining 
-            if (!_currentThreadIsProcessingItems) return false;
+            if (!currentThreadIsProcessingItems) return false;
 
             // If the task was previously queued, remove it from the queue 
             if (taskWasPreviouslyQueued) TryDequeue(task);
@@ -116,26 +114,26 @@ namespace System.Threading.Tasks.Schedulers
         /// <returns>Whether the task could be found and removed.</returns> 
         protected sealed override bool TryDequeue(Task task)
         {
-            lock (_tasks) return _tasks.Remove(task);
+            lock (this.tasks) return this.tasks.Remove(task);
         }
 
         /// <summary>Gets the maximum concurrency level supported by this scheduler.</summary> 
-        public sealed override int MaximumConcurrencyLevel => _maxDegreeOfParallelism;
+        public sealed override int MaximumConcurrencyLevel => this.maxDegreeOfParallelism;
 
         /// <summary>Gets an enumerable of the tasks currently scheduled on this scheduler.</summary> 
         /// <returns>An enumerable of the tasks currently scheduled.</returns> 
         protected sealed override IEnumerable<Task> GetScheduledTasks()
         {
-            bool lockTaken = false;
+            var lockTaken = false;
             try
             {
-                Monitor.TryEnter(_tasks, ref lockTaken);
-                if (lockTaken) return _tasks.ToArray();
+                Monitor.TryEnter(this.tasks, ref lockTaken);
+                if (lockTaken) return this.tasks.ToArray();
                 else throw new NotSupportedException();
             }
             finally
             {
-                if (lockTaken) Monitor.Exit(_tasks);
+                if (lockTaken) Monitor.Exit(this.tasks);
             }
         }
     }

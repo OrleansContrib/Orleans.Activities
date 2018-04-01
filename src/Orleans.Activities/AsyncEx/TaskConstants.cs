@@ -15,18 +15,18 @@ namespace Orleans.Activities.AsyncEx
     {
         // MODIFIED
         //private static readonly Task<bool> booleanTrue = TaskShim.FromResult(true);
-        private static readonly Task<bool> booleanTrue = Task.FromResult(true);
+        //private static readonly Task<bool> booleanTrue = Task.FromResult(true);
         // MODIFIED
         //private static readonly Task<int> intNegativeOne = TaskShim.FromResult(-1);
-        private static readonly Task<int> intNegativeOne = Task.FromResult(-1);
+        //private static readonly Task<int> intNegativeOne = Task.FromResult(-1);
 
         // MODIFIED
-        private static readonly Task<string> stringEmpty = Task.FromResult(string.Empty);
+        //private static readonly Task<string> stringEmpty = Task.FromResult(string.Empty);
 
         /// <summary>
         /// A task that has been completed with the value <c>true</c>.
         /// </summary>
-        public static Task<bool> BooleanTrue => booleanTrue;
+        public static readonly Task<bool> BooleanTrue = Task.FromResult(true);
 
         /// <summary>
         /// A task that has been completed with the value <c>false</c>.
@@ -41,18 +41,18 @@ namespace Orleans.Activities.AsyncEx
         /// <summary>
         /// A task that has been completed with the value <c>-1</c>.
         /// </summary>
-        public static Task<int> Int32NegativeOne => intNegativeOne;
+        public static readonly Task<int> Int32NegativeOne = Task.FromResult(-1);
 
         // MODIFIED
         /// <summary>
         /// A task that has been completed with the value <c>string.Empty</c>.
         /// </summary>
-        public static Task<string> StringEmpty => stringEmpty;
+        public static readonly Task<string> StringEmpty = Task.FromResult(string.Empty);
 
         /// <summary>
         /// A <see cref="Task"/> that has been completed.
         /// </summary>
-        public static Task Completed => booleanTrue;
+        public static Task Completed => BooleanTrue;
 
         // MODIFIED
         ///// <summary>
@@ -74,12 +74,12 @@ namespace Orleans.Activities.AsyncEx
     {
         // MODIFIED
         //private static readonly Task<T> defaultValue = TaskShim.FromResult(default(T));
-        private static readonly Task<T> defaultValue = Task.FromResult(default(T));
+        //private static readonly Task<T> defaultValue = Task.FromResult(default(T));
 
         // MODIFIED
         //private static readonly Task<T> never = new TaskCompletionSource<T>().Task;
 
-        private static readonly Task<T> canceled = CanceledTask();
+        //private static readonly Task<T> canceled = CanceledTask();
 
         private static Task<T> CanceledTask()
         {
@@ -91,7 +91,7 @@ namespace Orleans.Activities.AsyncEx
         /// <summary>
         /// A task that has been completed with the default value of <typeparamref name="T"/>.
         /// </summary>
-        public static Task<T> Default => defaultValue;
+        public static readonly Task<T> Default = Task.FromResult(default(T));
 
         // MODIFIED
         ///// <summary>
@@ -102,6 +102,6 @@ namespace Orleans.Activities.AsyncEx
         /// <summary>
         /// A task that has been canceled.
         /// </summary>
-        public static Task<T> Canceled => canceled;
+        public static readonly Task<T> Canceled = CanceledTask();
     }
 }

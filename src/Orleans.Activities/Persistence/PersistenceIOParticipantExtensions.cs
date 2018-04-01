@@ -34,6 +34,7 @@ namespace Orleans.Activities.Persistence
 
         static PersistenceIOParticipantExtensions()
         {
+#pragma warning disable IDE0007 // Use implicit type (https://github.com/dotnet/roslyn/issues/766)
             ParameterExpression instance = Expression.Parameter(typeof(System.Activities.Persistence.PersistenceIOParticipant), "this");
             ParameterExpression readWriteValues = Expression.Parameter(typeof(IDictionary<XName, object>), nameof(readWriteValues));
             ParameterExpression writeOnlyValues = Expression.Parameter(typeof(IDictionary<XName, object>), nameof(writeOnlyValues));
@@ -42,6 +43,7 @@ namespace Orleans.Activities.Persistence
             ParameterExpression state = Expression.Parameter(typeof(object), nameof(state));
             ParameterExpression result = Expression.Parameter(typeof(IAsyncResult), nameof(result));
             MethodInfo method;
+#pragma warning restore IDE0007 // Use implicit type
 
             method = typeof(System.Activities.Persistence.PersistenceIOParticipant).GetMethod(
                 PersistenceParticipantExtensions.IPersistencePipelineModuleFullName + nameof(BeginOnSave), BindingFlags.Instance | BindingFlags.NonPublic);
@@ -72,45 +74,39 @@ namespace Orleans.Activities.Persistence
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static IAsyncResult BeginOnSave(this System.Activities.Persistence.PersistenceIOParticipant persistenceIOParticipant,
                 IDictionary<XName, object> readWriteValues, IDictionary<XName, object> writeOnlyValues, TimeSpan timeout,
-                AsyncCallback callback, object state) =>
-            beginOnSave(persistenceIOParticipant, readWriteValues, writeOnlyValues, timeout, callback, state);
+                AsyncCallback callback, object state)
+            => beginOnSave(persistenceIOParticipant, readWriteValues, writeOnlyValues, timeout, callback, state);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void EndOnSave(this System.Activities.Persistence.PersistenceIOParticipant persistenceIOParticipant, IAsyncResult result)
-        {
-            endOnSave(persistenceIOParticipant, result);
-        }
+            => endOnSave(persistenceIOParticipant, result);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Task OnSaveAsync(this System.Activities.Persistence.PersistenceIOParticipant persistenceIOParticipant,
-                IDictionary<XName, object> readWriteValues, IDictionary<XName, object> writeOnlyValues, TimeSpan timeout) =>
-            AsyncFactory.FromApm<IDictionary<XName, object>, IDictionary<XName, object>, TimeSpan>(
+                IDictionary<XName, object> readWriteValues, IDictionary<XName, object> writeOnlyValues, TimeSpan timeout)
+            => AsyncFactory.FromApm<IDictionary<XName, object>, IDictionary<XName, object>, TimeSpan>(
                 persistenceIOParticipant.BeginOnSave, persistenceIOParticipant.EndOnSave,
                 readWriteValues, writeOnlyValues, timeout);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static IAsyncResult BeginOnLoad(this System.Activities.Persistence.PersistenceIOParticipant persistenceIOParticipant,
                 IDictionary<XName, object> readWriteValues, TimeSpan timeout,
-                AsyncCallback callback, object state) =>
-            beginOnLoad(persistenceIOParticipant, readWriteValues, timeout, callback, state);
+                AsyncCallback callback, object state)
+            => beginOnLoad(persistenceIOParticipant, readWriteValues, timeout, callback, state);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void EndOnLoad(this System.Activities.Persistence.PersistenceIOParticipant persistenceIOParticipant, IAsyncResult result)
-        {
-            endOnLoad(persistenceIOParticipant, result);
-        }
+            => endOnLoad(persistenceIOParticipant, result);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Task OnLoadAsync(this System.Activities.Persistence.PersistenceIOParticipant persistenceIOParticipant,
-                IDictionary<XName, object> readWriteValues, TimeSpan timeout) =>
-            AsyncFactory.FromApm<IDictionary<XName, object>, TimeSpan>(
+                IDictionary<XName, object> readWriteValues, TimeSpan timeout)
+            => AsyncFactory.FromApm<IDictionary<XName, object>, TimeSpan>(
                 persistenceIOParticipant.BeginOnLoad, persistenceIOParticipant.EndOnLoad,
                 readWriteValues, timeout);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Abort(this System.Activities.Persistence.PersistenceIOParticipant persistenceIOParticipant)
-        {
-            abort(persistenceIOParticipant);
-        }
+            => abort(persistenceIOParticipant);
     }
 }

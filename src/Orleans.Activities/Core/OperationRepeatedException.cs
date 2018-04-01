@@ -40,41 +40,31 @@ namespace Orleans.Activities
     {
         private TPreviousResponseParameter previousResponseParameter;
 
-        public TPreviousResponseParameter PreviousResponseParameter => previousResponseParameter;
+        public TPreviousResponseParameter PreviousResponseParameter
+            => this.previousResponseParameter;
 
         private void Init(TPreviousResponseParameter previousResponseParameter)
-        {
-            this.previousResponseParameter = previousResponseParameter;
-        }
+            => this.previousResponseParameter = previousResponseParameter;
 
         public OperationRepeatedException(TPreviousResponseParameter previousResponseParameter)
-        {
-            Init(previousResponseParameter);
-        }
+            => Init(previousResponseParameter);
 
         public OperationRepeatedException(TPreviousResponseParameter previousResponseParameter, string message)
             : base(message)
-        {
-            Init(previousResponseParameter);
-        }
+            => Init(previousResponseParameter);
 
         public OperationRepeatedException(TPreviousResponseParameter previousResponseParameter, string message, Exception innerException)
             : base(message, innerException)
-        {
-            Init(previousResponseParameter);
-        }
+            => Init(previousResponseParameter);
 
         protected OperationRepeatedException(SerializationInfo info, StreamingContext context)
             : base(info, context)
-        {
-            previousResponseParameter = (TPreviousResponseParameter)info.GetValue(nameof(previousResponseParameter), typeof(TPreviousResponseParameter));
-        }
+            => previousResponseParameter = (TPreviousResponseParameter)info.GetValue(nameof(previousResponseParameter), typeof(TPreviousResponseParameter));
 
         public override void GetObjectData(SerializationInfo info, StreamingContext context)
         {
             base.GetObjectData(info, context);
-
-            info.AddValue(nameof(previousResponseParameter), previousResponseParameter);
+            info.AddValue(nameof(this.previousResponseParameter), this.previousResponseParameter);
         }
     }
 }

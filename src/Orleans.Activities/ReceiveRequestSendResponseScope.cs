@@ -57,31 +57,24 @@ namespace Orleans.Activities
             public InArgument<ReceiveRequestSendResponseScope> ReceiveRequestSendResponseScope { get; set; }
 
             protected override void Execute(CodeActivityContext context)
-            {
-                ReceiveRequestSendResponseScope.Get(context).receiveRequestSendResponseScopeExecutionPropertyFactory =
-                    ISendResponse.Get(context).CreateReceiveRequestSendResponseScopeExecutionPropertyFactory();
-            }
+                => this.ReceiveRequestSendResponseScope.Get(context).receiveRequestSendResponseScopeExecutionPropertyFactory =
+                    this.ISendResponse.Get(context).CreateReceiveRequestSendResponseScopeExecutionPropertyFactory();
         }
 
         // Private activity to cancel the operations' taskCompletionSource in case it is not completed yet.
         private class ProtectClosedOrCanceledOperation : NativeActivity
         {
-            private Activity persist;
-
-            public ProtectClosedOrCanceledOperation()
-            {
-                persist = new Persist();
-            }
+            private Activity persist = new Persist();
 
             protected override void CacheMetadata(NativeActivityMetadata metadata)
             {
-                metadata.AddImplementationChild(persist);
+                metadata.AddImplementationChild(this.persist);
                 base.CacheMetadata(metadata);
             }
 
             protected override void Execute(NativeActivityContext context)
             {
-                ReceiveRequestSendResponseScopeExecutionProperty executionProperty = context.GetReceiveRequestSendResponseScopeExecutionProperty();
+                var executionProperty = context.GetReceiveRequestSendResponseScopeExecutionProperty();
                 if (!executionProperty.Faulted && !executionProperty.IsInitializedAndCompleted)
                 {
                     // The taskCompletionSource from an incoming request is not completed (we don't have it or we have but not completed).
@@ -90,14 +83,14 @@ namespace Orleans.Activities
                         // We don't have taskCompletionSource from an incoming request.
                         if (executionProperty.Idempotent
                             && context.GetPreviousResponseParameterExtension().TrySetResponseCanceled(executionProperty.OperationName))
-                            context.ScheduleActivity(persist);
+                            context.ScheduleActivity(this.persist);
                     }
                     else
                     {
                         // We have taskCompletionSource from an incoming request, after setting the response in the extension we cancel the taskCompletionSource also.
                         if (executionProperty.Idempotent
                             && context.GetPreviousResponseParameterExtension().TrySetResponseCanceled(executionProperty.OperationName))
-                            context.ScheduleActivity(persist, PersistCompletionCallback);
+                            context.ScheduleActivity(this.persist, this.PersistCompletionCallback);
                         else
                             executionProperty.TrySetTaskCompletionSourceCanceled();
                     }
@@ -105,9 +98,7 @@ namespace Orleans.Activities
             }
 
             private void PersistCompletionCallback(NativeActivityContext context, ActivityInstance completedInstance)
-            {
-                context.GetReceiveRequestSendResponseScopeExecutionProperty().TrySetTaskCompletionSourceCanceled();
-            }
+                => context.GetReceiveRequestSendResponseScopeExecutionProperty().TrySetTaskCompletionSourceCanceled();
         }
 
         // Private activity to fault the operations' taskCompletionSource in case of fault propagation.
@@ -121,9 +112,9 @@ namespace Orleans.Activities
 
             public ProtectFaultedOperation()
             {
-                cancelWorkflow = new CancelWorkflow();
-                DelegateInArgument<Exception> exception = new DelegateInArgument<Exception>();
-                terminateWorkflow = new ActivityAction<Exception>
+                this.cancelWorkflow = new CancelWorkflow();
+                var exception = new DelegateInArgument<Exception>();
+                this.terminateWorkflow = new ActivityAction<Exception>
                 {
                     Argument = exception,
                     Handler = new TerminateWorkflow
@@ -135,17 +126,17 @@ namespace Orleans.Activities
 
             protected override void CacheMetadata(NativeActivityMetadata metadata)
             {
-                metadata.AddImplementationChild(cancelWorkflow);
-                metadata.AddImplementationDelegate(terminateWorkflow);
+                metadata.AddImplementationChild(this.cancelWorkflow);
+                metadata.AddImplementationDelegate(this.terminateWorkflow);
                 base.CacheMetadata(metadata);
             }
 
             // We behave like an UnhandledException.
             protected override async Task<UnhandledExceptionAction> ExecuteAsync(NativeActivityContext context)
             {
-                Exception propagatedException = PropagatedException.Get(context);
-                IActivityContext activityContext = context.GetActivityContext();
-                UnhandledExceptionAction unhandledExceptionAction = activityContext.Parameters.UnhandledExceptionAction;
+                var propagatedException = this.PropagatedException.Get(context);
+                var activityContext = context.GetActivityContext();
+                var unhandledExceptionAction = activityContext.Parameters.UnhandledExceptionAction;
 
                 if (unhandledExceptionAction != UnhandledExceptionAction.Abort
                     && ! await activityContext.NotifyHostOnUnhandledExceptionAsync(propagatedException, null))
@@ -156,8 +147,8 @@ namespace Orleans.Activities
 
             protected override void PostExecute(NativeActivityContext context, UnhandledExceptionAction unhandledExceptionAction)
             {
-                Exception propagatedException = PropagatedException.Get(context);
-                ReceiveRequestSendResponseScopeExecutionProperty executionProperty = context.GetReceiveRequestSendResponseScopeExecutionProperty();
+                var propagatedException = this.PropagatedException.Get(context);
+                var executionProperty = context.GetReceiveRequestSendResponseScopeExecutionProperty();
 
                 // Due to this activity will handle the fault, the Finally activity in the TryCatch will be executed also,
                 // we have to prevent canceling the operation and the stored previous response in the extension.
@@ -172,11 +163,11 @@ namespace Orleans.Activities
                         break;
                     case UnhandledExceptionAction.Cancel:
                         // Don't wait for completion, that is critical only for the persistence to happen before the taskCompletionSource of the request is completed.
-                        context.ScheduleActivity(cancelWorkflow);
+                        context.ScheduleActivity(this.cancelWorkflow);
                         break;
                     case UnhandledExceptionAction.Terminate:
                         // Don't wait for completion, that is critical only for the persistence to happen before the taskCompletionSource of the request is completed.
-                        context.ScheduleAction(terminateWorkflow, propagatedException);
+                        context.ScheduleAction(this.terminateWorkflow, propagatedException);
                         break;
                 }
             }
@@ -186,7 +177,7 @@ namespace Orleans.Activities
 
         [DefaultValue(null)]
         [Browsable(false)]
-        public Activity Body { get => tryCatch.Try; set => tryCatch.Try = value; }
+        public Activity Body { get => this.tryCatch.Try; set => this.tryCatch.Try = value; }
 
         private TryCatch tryCatch;
 
@@ -197,8 +188,8 @@ namespace Orleans.Activities
 
         public ReceiveRequestSendResponseScope()
         {
-            DelegateInArgument<Exception> propagatedException = new DelegateInArgument<Exception>();
-            tryCatch = new TryCatch
+            var propagatedException = new DelegateInArgument<Exception>();
+            this.tryCatch = new TryCatch
             {
                 //Try = Body, // it is already set above
                 Catches =
@@ -221,25 +212,27 @@ namespace Orleans.Activities
                 Finally = new ProtectClosedOrCanceledOperation(),
             };
 
-            Constraints.Add(OperationActivityHelper.VerifyParentIsWorkflowActivity());
-            Constraints.Add(ReceiveRequestSendResponseScopeHelper.VerifyReceiveRequestSendResponseScopeChildren());
-            Constraints.Add(ReceiveRequestSendResponseScopeHelper.SetWorkflowInterfaceOperationNames());
-            Constraints.Add(ReceiveRequestSendResponseScopeHelper.SetReceiveRequestSendResponseScopeExecutionPropertyFactory());
+            this.Constraints.Add(OperationActivityHelper.VerifyParentIsWorkflowActivity());
+            this.Constraints.Add(ReceiveRequestSendResponseScopeHelper.VerifyReceiveRequestSendResponseScopeChildren());
+            this.Constraints.Add(ReceiveRequestSendResponseScopeHelper.SetWorkflowInterfaceOperationNames());
+            this.Constraints.Add(ReceiveRequestSendResponseScopeHelper.SetReceiveRequestSendResponseScopeExecutionPropertyFactory());
         }
 
+#pragma warning disable IDE0022 // Use expression body for methods
         protected override void CacheMetadata(NativeActivityMetadata metadata)
         {
-            metadata.AddChild(tryCatch);
+            metadata.AddChild(this.tryCatch);
             //base.CacheMetadata(metadata); // it would add the public Body activity twice
         }
+#pragma warning restore IDE0022 // Use expression body for methods
 
         protected override void Execute(NativeActivityContext context)
         {
-            if (Body != null)
+            if (this.Body != null)
             {
-                ReceiveRequestSendResponseScopeExecutionProperty executionProperty = receiveRequestSendResponseScopeExecutionPropertyFactory();
+                var executionProperty = this.receiveRequestSendResponseScopeExecutionPropertyFactory();
                 context.Properties.Add(ExecutionPropertyName, executionProperty);
-                context.ScheduleActivity(tryCatch);
+                context.ScheduleActivity(this.tryCatch);
             }
         }
     }

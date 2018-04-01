@@ -20,7 +20,9 @@ namespace Orleans.Activities
     /// <para>The main responsibility of this activity, to await the outgoing TWorkflowCallbackInterface operation's task in case ReceiveResponse is unable to do this.
     /// This is necessary in case of a fault propagation, that can be the result of an unhandled exception.</para>
     /// </summary>
+#pragma warning disable IDE0009 // Member access should be qualified.
     [ContentProperty(nameof(Body))]
+#pragma warning restore IDE0009 // Member access should be qualified.
     [Designer(typeof(SendRequestReceiveResponseScopeDesigner))]
     [ToolboxBitmap(typeof(SendRequestReceiveResponseScope), nameof(SendRequestReceiveResponseScope) + ".png")]
     [Description("Scope for SendRequest and ReceiveResponse activities.\n" +
@@ -36,36 +38,29 @@ namespace Orleans.Activities
             public InArgument<SendRequestReceiveResponseScope> SendRequestReceiveResponseScope { get; set; }
 
             protected override void Execute(CodeActivityContext context)
-            {
-                SendRequestReceiveResponseScope.Get(context).sendRequestReceiveResponseScopeExecutionPropertyFactory =
-                    IReceiveResponse.Get(context).CreateSendRequestReceiveResponseScopeExecutionPropertyFactory();
-            }
+                => this.SendRequestReceiveResponseScope.Get(context).sendRequestReceiveResponseScopeExecutionPropertyFactory =
+                    this.IReceiveResponse.Get(context).CreateSendRequestReceiveResponseScopeExecutionPropertyFactory();
         }
 
         // This activity is responsible to await the outgoing TWorkflowCallbackInterface operation's task in case ReceiveResponse is unable to do this.
         // This is necessary in case of a fault propagation, that can be the result of an unhandled exception.
         private sealed class ConditionalOperationTaskWaiter : NativeActivity
         {
-            private ActivityAction<Task> responseResultWaiter;
-
-            public ConditionalOperationTaskWaiter()
-            {
-                responseResultWaiter = TaskWaiter.CreateActivityDelegate();
-            }
+            private ActivityAction<Task> responseResultWaiter = TaskWaiter.CreateActivityDelegate();
 
             protected override void CacheMetadata(NativeActivityMetadata metadata)
             {
-                metadata.AddImplementationDelegate(responseResultWaiter);
+                metadata.AddImplementationDelegate(this.responseResultWaiter);
                 base.CacheMetadata(metadata);
             }
 
             protected override void Execute(NativeActivityContext context)
             {
-                SendRequestReceiveResponseScopeExecutionProperty executionProperty = context.GetSendRequestReceiveResponseScopeExecutionProperty();
+                var executionProperty = context.GetSendRequestReceiveResponseScopeExecutionProperty();
                 if (executionProperty.UntypedOnOperationTask != null)
                 {
                     // We await the task, but we won't execute the task's Func<Task> or Func<Task<TResponseResult>> return value, that is the ReceiveResponse activity's responsibility.
-                    context.ScheduleAction(responseResultWaiter, executionProperty.UntypedOnOperationTask);
+                    context.ScheduleAction(this.responseResultWaiter, executionProperty.UntypedOnOperationTask);
                     executionProperty.OnOperationTaskWaiterIsScheduled();
                 }       
             }
@@ -75,7 +70,7 @@ namespace Orleans.Activities
 
         [DefaultValue(null)]
         [Browsable(false)]
-        public Activity Body { get => tryCatch.Try; set => tryCatch.Try = value; }
+        public Activity Body { get => this.tryCatch.Try; set => this.tryCatch.Try = value; }
 
         private TryCatch tryCatch;
 
@@ -87,7 +82,7 @@ namespace Orleans.Activities
 
         public SendRequestReceiveResponseScope()
         {
-            tryCatch = new TryCatch
+            this.tryCatch = new TryCatch
             {
                 //Try = Body, // it is already set above
                 Catches =
@@ -114,17 +109,17 @@ namespace Orleans.Activities
                 // in this case both Fault and Cancel happens, and we double-check the the operation task's observed state.
                 Finally = new ConditionalOperationTaskWaiter(),
             };
-            noPersistHandle = new Variable<NoPersistHandle>();
-            Constraints.Add(OperationActivityHelper.VerifyParentIsWorkflowActivity());
-            Constraints.Add(SendRequestReceiveResponseScopeHelper.VerifySendRequestReceiveResponseScopeChildren());
-            Constraints.Add(SendRequestReceiveResponseScopeHelper.SetWorkflowCallbackInterfaceOperationNames());
-            Constraints.Add(SendRequestReceiveResponseScopeHelper.SetSendRequestReceiveResponseScopeExecutionPropertyFactory());
+            this.noPersistHandle = new Variable<NoPersistHandle>();
+            this.Constraints.Add(OperationActivityHelper.VerifyParentIsWorkflowActivity());
+            this.Constraints.Add(SendRequestReceiveResponseScopeHelper.VerifySendRequestReceiveResponseScopeChildren());
+            this.Constraints.Add(SendRequestReceiveResponseScopeHelper.SetWorkflowCallbackInterfaceOperationNames());
+            this.Constraints.Add(SendRequestReceiveResponseScopeHelper.SetSendRequestReceiveResponseScopeExecutionPropertyFactory());
         }
 
         protected override void CacheMetadata(NativeActivityMetadata metadata)
         {
-            metadata.AddImplementationVariable(noPersistHandle);
-            metadata.AddChild(tryCatch);
+            metadata.AddImplementationVariable(this.noPersistHandle);
+            metadata.AddChild(this.tryCatch);
             //base.CacheMetadata(metadata); // it would add the public Body activity twice
         }
 
@@ -132,17 +127,17 @@ namespace Orleans.Activities
         // the Scope is responsible to handle the outstanding task in case of Abort, Cancellation or Termination (like a virtual Task.WhenAll() method).
         protected override void Execute(NativeActivityContext context)
         {
-            if (Body != null)
+            if (this.Body != null)
             {
                 // The noPersistHandle will be exited when the activity completes or aborts, because
                 // the handle is an execution property in the background, with a scope on this activity, so it will be removed.
                 // Don't add Exit() to the Completion and/or Fault callback, because if this scope is in an external TryCatch,
                 // this will first Fault, then Canceled by the external TryCatch (if the fault propagation is handled), causing "unmatched exit" exception.
-                noPersistHandle.Get(context).Enter(context);
+                this.noPersistHandle.Get(context).Enter(context);
 
-                SendRequestReceiveResponseScopeExecutionProperty executionProperty = sendRequestReceiveResponseScopeExecutionPropertyFactory();
+                var executionProperty = this.sendRequestReceiveResponseScopeExecutionPropertyFactory();
                 context.Properties.Add(ExecutionPropertyName, executionProperty);
-                context.ScheduleActivity(tryCatch);
+                context.ScheduleActivity(this.tryCatch);
             }
         }
     }

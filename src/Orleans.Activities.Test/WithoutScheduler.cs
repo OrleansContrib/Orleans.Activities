@@ -176,7 +176,7 @@ namespace Orleans.Activities.Test
         [TestMethod]
         public void WorkflowInterfaceProxy()
         {
-            ITestWorkflowInterface2 proxy = WorkflowInterfaceProxy<ITestWorkflowInterface2>.CreateProxy(new WorkflowInterface());
+            var proxy = WorkflowInterfaceProxy<ITestWorkflowInterface2>.CreateProxy(new WorkflowInterface());
             proxy.SayHello1(null);
             proxy.SayHello2(null);
             proxy.SayHello3(null);
@@ -188,7 +188,7 @@ namespace Orleans.Activities.Test
             proxy.SayHello3(null);
             proxy.SayHello4(null);
             proxy.SayHello44(null);
-            ITestWorkflowInterface2Base proxyBase = WorkflowInterfaceProxy<ITestWorkflowInterface2Base>.CreateProxy(new WorkflowInterface());
+            var proxyBase = WorkflowInterfaceProxy<ITestWorkflowInterface2Base>.CreateProxy(new WorkflowInterface());
             proxyBase.SayHello1(null);
             proxyBase.SayHello2(null);
             proxyBase.SayHello3(null);
@@ -198,7 +198,7 @@ namespace Orleans.Activities.Test
         [TestMethod]
         public void WorkflowCallbackInterfaceProxy()
         {
-            IWorkflowHostCallbackOperations proxy = WorkflowCallbackInterfaceProxy<ITestWorkflowCallbackInterface2>.CreateProxy(new WorkflowCallbackInterface());
+            var proxy = WorkflowCallbackInterfaceProxy<ITestWorkflowCallbackInterface2>.CreateProxy(new WorkflowCallbackInterface());
 
             proxy.OnOperationAsync<string, string>("ITestWorkflowCallbackInterface2Base.SayHello1", "foo").Result();
             proxy.OnOperationAsync<string>("ITestWorkflowCallbackInterface2Base.SayHello2", "foo").Result();

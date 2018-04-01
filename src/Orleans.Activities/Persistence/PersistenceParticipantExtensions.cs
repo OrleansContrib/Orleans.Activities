@@ -33,12 +33,14 @@ namespace Orleans.Activities.Persistence
 
         static PersistenceParticipantExtensions()
         {
+#pragma warning disable IDE0007 // Use implicit type (https://github.com/dotnet/roslyn/issues/766)
             ParameterExpression instance = Expression.Parameter(typeof(System.Activities.Persistence.PersistenceParticipant), "this");
             ParameterExpression readWriteValues = Expression.Parameter(typeof(IDictionary<XName, object>), nameof(readWriteValues));
             ParameterExpression outReadWriteValues = Expression.Parameter(typeof(IDictionary<XName, object>).MakeByRefType(), nameof(readWriteValues));
             ParameterExpression writeOnlyValues = Expression.Parameter(typeof(IDictionary<XName, object>), nameof(writeOnlyValues));
             ParameterExpression outWriteOnlyValues = Expression.Parameter(typeof(IDictionary<XName, object>).MakeByRefType(), nameof(writeOnlyValues));
             MethodInfo method;
+#pragma warning restore IDE0007 // Use implicit type
 
             method = typeof(System.Activities.Persistence.PersistenceParticipant).GetProperty(
                 IPersistencePipelineModuleFullName + nameof(IsIOParticipant), BindingFlags.Instance | BindingFlags.NonPublic).GetMethod;
@@ -62,26 +64,22 @@ namespace Orleans.Activities.Persistence
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool IsIOParticipant(this System.Activities.Persistence.PersistenceParticipant persistenceParticipant) =>
-            isIOParticipant(persistenceParticipant);
+        public static bool IsIOParticipant(this System.Activities.Persistence.PersistenceParticipant persistenceParticipant)
+            => isIOParticipant(persistenceParticipant);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void CollectValues(this System.Activities.Persistence.PersistenceParticipant persistenceParticipant,
-            out IDictionary<XName, object> readWriteValues, out IDictionary<XName, object> writeOnlyValues)
-        {
-            collectValues(persistenceParticipant, out readWriteValues, out writeOnlyValues);
-        }
+                out IDictionary<XName, object> readWriteValues, out IDictionary<XName, object> writeOnlyValues)
+            => collectValues(persistenceParticipant, out readWriteValues, out writeOnlyValues);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static IDictionary<XName, object> MapValues(this System.Activities.Persistence.PersistenceParticipant persistenceParticipant,
-                IDictionary<XName, object> readWriteValues, IDictionary<XName, object> writeOnlyValues) =>
-            mapValues(persistenceParticipant, readWriteValues, writeOnlyValues);
+                IDictionary<XName, object> readWriteValues, IDictionary<XName, object> writeOnlyValues)
+            => mapValues(persistenceParticipant, readWriteValues, writeOnlyValues);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void PublishValues(this System.Activities.Persistence.PersistenceParticipant persistenceParticipant,
-            IDictionary<XName, object> readWriteValues)
-        {
-            publishValues(persistenceParticipant, readWriteValues);
-        }
+                IDictionary<XName, object> readWriteValues)
+            => publishValues(persistenceParticipant, readWriteValues);
     }
 }

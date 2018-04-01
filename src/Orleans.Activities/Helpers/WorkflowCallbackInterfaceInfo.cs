@@ -23,7 +23,7 @@ namespace Orleans.Activities.Helpers
         {
             operationNames = new VirtualArray<Type, VirtualArray<Type, List<string>>>();
 
-            List<string> validationMessages = new List<string>();
+            var validationMessages = new List<string>();
 
             if (!typeof(TWorkflowCallbackInterface).IsInterface)
                 validationMessages.Add($"TWorkflowCallbackInterface type '{typeof(TWorkflowCallbackInterface).GetFriendlyName()}' must be an interface!");
@@ -33,17 +33,17 @@ namespace Orleans.Activities.Helpers
             // Task<Func<Task>> ...(... requestParameter)
             // Task<Func<Task<...>>> ...()
             // Task<Func<Task>> ...()
-            foreach (MethodInfo method in OperationInfo<TWorkflowCallbackInterface>.OperationMethods)
+            foreach (var method in OperationInfo<TWorkflowCallbackInterface>.OperationMethods)
             {
-                Type requestParameterType = typeof(void);
-                ParameterInfo[] parameters = method.GetParameters();
+                var requestParameterType = typeof(void);
+                var parameters = method.GetParameters();
                 if (parameters.Length > 1)
                     validationMessages.Add($"TWorkflowCallbackInterface '{method.DeclaringType.GetFriendlyName()}' method '{method.Name}' can have max. 1 parameter (of any type)!");
                 else if (parameters.Length == 1)
                     requestParameterType = parameters[0].ParameterType;
 
-                Type responseResultType = typeof(void);
-                Type returnType = method.ReturnType;
+                var responseResultType = typeof(void);
+                var returnType = method.ReturnType;
                 if (returnType != typeof(Task<Func<Task>>)
                     && (!returnType.IsGenericTypeOf(typeof(Task<>))
                         || !returnType.GetGenericArguments()[0].IsGenericTypeOf(typeof(Func<>))
@@ -58,8 +58,8 @@ namespace Orleans.Activities.Helpers
             IsValidWorkflowCallbackInterface = validationMessages.Count() == 0;
             if (!IsValidWorkflowCallbackInterface)
             {
-                StringBuilder sb = new StringBuilder();
-                foreach (string validationMessage in validationMessages)
+                var sb = new StringBuilder();
+                foreach (var validationMessage in validationMessages)
                     sb.AppendLine(validationMessage);
                 ValidationMessage = sb.ToString();
 
@@ -69,8 +69,8 @@ namespace Orleans.Activities.Helpers
 
         public static IEnumerable<string> GetOperationNames(Type requestParameterType, Type responseResultType)
         {
-            if (!operationNames.TryGetValue(requestParameterType, out VirtualArray<Type, List<string>>  responseResultTypeArray)
-                || !responseResultTypeArray.TryGetValue(responseResultType, out List<string> operationNameList))
+            if (!operationNames.TryGetValue(requestParameterType, out var  responseResultTypeArray)
+                || !responseResultTypeArray.TryGetValue(responseResultType, out var operationNameList))
                 return Enumerable.Empty<string>();
             else
                 return operationNameList;

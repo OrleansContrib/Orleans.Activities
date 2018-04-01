@@ -19,11 +19,11 @@ namespace Orleans.Activities.Helpers
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Maintainability", "CA1506:AvoidExcessiveClassCoupling")]
         public static Constraint VerifyParentIsWorkflowActivity()
         {
-            DelegateInArgument<Activity> element = new DelegateInArgument<Activity>();
-            DelegateInArgument<ValidationContext> context = new DelegateInArgument<ValidationContext>();
+            var element = new DelegateInArgument<Activity>();
+            var context = new DelegateInArgument<ValidationContext>();
             
-            DelegateInArgument<Activity> parent = new DelegateInArgument<Activity>();
-            Variable<bool> result = new Variable<bool>();
+            var parent = new DelegateInArgument<Activity>();
+            var result = new Variable<bool>();
 
             return new Constraint<Activity>
             {
@@ -74,11 +74,11 @@ namespace Orleans.Activities.Helpers
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Maintainability", "CA1506:AvoidExcessiveClassCoupling")]
         public static Constraint VerifyParentIsReceiveRequestSendResponseScope()
         {
-            DelegateInArgument<Activity> element = new DelegateInArgument<Activity>();
-            DelegateInArgument<ValidationContext> context = new DelegateInArgument<ValidationContext>();
+            var element = new DelegateInArgument<Activity>();
+            var context = new DelegateInArgument<ValidationContext>();
 
-            DelegateInArgument<Activity> parent = new DelegateInArgument<Activity>();
-            Variable<bool> result = new Variable<bool>();
+            var parent = new DelegateInArgument<Activity>();
+            var result = new Variable<bool>();
 
             return new Constraint<Activity>
             {
@@ -129,11 +129,11 @@ namespace Orleans.Activities.Helpers
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Maintainability", "CA1506:AvoidExcessiveClassCoupling")]
         public static Constraint VerifyParentIsSendRequestReceiveResponseScope()
         {
-            DelegateInArgument<Activity> element = new DelegateInArgument<Activity>();
-            DelegateInArgument<ValidationContext> context = new DelegateInArgument<ValidationContext>();
+            var element = new DelegateInArgument<Activity>();
+            var context = new DelegateInArgument<ValidationContext>();
 
-            DelegateInArgument<Activity> parent = new DelegateInArgument<Activity>();
-            Variable<bool> result = new Variable<bool>();
+            var parent = new DelegateInArgument<Activity>();
+            var result = new Variable<bool>();
 
             return new Constraint<Activity>
             {
@@ -183,8 +183,8 @@ namespace Orleans.Activities.Helpers
 
         public static Constraint VerifyIsOperationNameSetAndValid()
         {
-            DelegateInArgument<Activity> element = new DelegateInArgument<Activity>();
-            DelegateInArgument<ValidationContext> context = new DelegateInArgument<ValidationContext>();
+            var element = new DelegateInArgument<Activity>();
+            var context = new DelegateInArgument<ValidationContext>();
 
             return new Constraint<Activity>
             {

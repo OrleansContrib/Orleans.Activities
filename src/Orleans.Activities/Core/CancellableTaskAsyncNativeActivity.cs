@@ -24,23 +24,20 @@ namespace Orleans.Activities
 
         protected CancellableTaskAsyncNativeActivityBase()
         {
-            taskCompletionNoPersistHandle = new Variable<NoPersistHandle>();
-            cancellationTokenSource = new Variable<CancellationTokenSource>();
+            this.taskCompletionNoPersistHandle = new Variable<NoPersistHandle>();
+            this.cancellationTokenSource = new Variable<CancellationTokenSource>();
         }
 
         protected sealed override bool CanInduceIdle => true;
 
         protected override void CacheMetadata(NativeActivityMetadata metadata)
         {
-            metadata.AddImplementationVariable(taskCompletionNoPersistHandle);
-            metadata.AddImplementationVariable(cancellationTokenSource);
+            metadata.AddImplementationVariable(this.taskCompletionNoPersistHandle);
+            metadata.AddImplementationVariable(this.cancellationTokenSource);
             base.CacheMetadata(metadata);
         }
 
-        protected sealed override void Cancel(NativeActivityContext context)
-        {
-            cancellationTokenSource.Get(context).Cancel();
-        }
+        protected sealed override void Cancel(NativeActivityContext context) => this.cancellationTokenSource.Get(context).Cancel();
 
         protected void Execute<TTask>(NativeActivityContext context, CancellationTokenSource cts, TTask resultTask,
                 Action<NativeActivityContext> postExecute)
@@ -50,13 +47,13 @@ namespace Orleans.Activities
                 postExecute(context);
             else
             {
-                IActivityContext activityContext = context.GetActivityContext();
+                var activityContext = context.GetActivityContext();
 
-                taskCompletionNoPersistHandle.Get(context).Enter(context);
+                this.taskCompletionNoPersistHandle.Get(context).Enter(context);
 
-                cancellationTokenSource.Set(context, cts);
+                this.cancellationTokenSource.Set(context, cts);
 
-                Bookmark bookmark = context.CreateBookmark(BookmarkResumptionCallback);
+                var bookmark = context.CreateBookmark(this.BookmarkResumptionCallback);
                 // continuations don't use cts, the main task is already completed, we can't cancel it 
                 resultTask
                     .ContinueWith((_resultTask) => activityContext.ResumeBookmarkThroughHostAsync(bookmark, postExecute, TimeSpan.MaxValue),
@@ -73,9 +70,9 @@ namespace Orleans.Activities
 
         protected void BookmarkResumptionCallback(NativeActivityContext context, Bookmark bookmark, object value)
         {
-            Action<NativeActivityContext> postExecute = value as Action<NativeActivityContext>;
+            var postExecute = value as Action<NativeActivityContext>;
 
-            taskCompletionNoPersistHandle.Get(context).Exit(context);
+            this.taskCompletionNoPersistHandle.Get(context).Exit(context);
 
             try
             {
@@ -100,23 +97,20 @@ namespace Orleans.Activities
 
         protected CancellableTaskAsyncNativeActivityWithResultBase()
         {
-            taskCompletionNoPersistHandle = new Variable<NoPersistHandle>();
-            cancellationTokenSource = new Variable<CancellationTokenSource>();
+            this.taskCompletionNoPersistHandle = new Variable<NoPersistHandle>();
+            this.cancellationTokenSource = new Variable<CancellationTokenSource>();
         }
 
         protected sealed override bool CanInduceIdle => true;
 
         protected override void CacheMetadata(NativeActivityMetadata metadata)
         {
-            metadata.AddImplementationVariable(taskCompletionNoPersistHandle);
-            metadata.AddImplementationVariable(cancellationTokenSource);
+            metadata.AddImplementationVariable(this.taskCompletionNoPersistHandle);
+            metadata.AddImplementationVariable(this.cancellationTokenSource);
             base.CacheMetadata(metadata);
         }
 
-        protected sealed override void Cancel(NativeActivityContext context)
-        {
-            cancellationTokenSource.Get(context).Cancel();
-        }
+        protected sealed override void Cancel(NativeActivityContext context) => this.cancellationTokenSource.Get(context).Cancel();
 
         protected void Execute<TTask>(NativeActivityContext context, CancellationTokenSource cts, TTask resultTask,
                 Action<NativeActivityContext> postExecute)
@@ -126,13 +120,13 @@ namespace Orleans.Activities
                 postExecute(context);
             else
             {
-                IActivityContext activityContext = context.GetActivityContext();
+                var activityContext = context.GetActivityContext();
 
-                taskCompletionNoPersistHandle.Get(context).Enter(context);
+                this.taskCompletionNoPersistHandle.Get(context).Enter(context);
 
-                cancellationTokenSource.Set(context, cts);
+                this.cancellationTokenSource.Set(context, cts);
 
-                Bookmark bookmark = context.CreateBookmark(BookmarkResumptionCallback);
+                var bookmark = context.CreateBookmark(this.BookmarkResumptionCallback);
                 // continuations don't use cts, the main task is already completed, we can't cancel it 
                 resultTask
                     .ContinueWith((_resultTask) => activityContext.ResumeBookmarkThroughHostAsync(bookmark, postExecute, TimeSpan.MaxValue),
@@ -149,9 +143,9 @@ namespace Orleans.Activities
 
         protected void BookmarkResumptionCallback(NativeActivityContext context, Bookmark bookmark, object value)
         {
-            Action<NativeActivityContext> postExecute = value as Action<NativeActivityContext>;
+            var postExecute = value as Action<NativeActivityContext>;
 
-            taskCompletionNoPersistHandle.Get(context).Exit(context);
+            this.taskCompletionNoPersistHandle.Get(context).Exit(context);
 
             try
             {
@@ -172,14 +166,13 @@ namespace Orleans.Activities
     {
         protected sealed override void Execute(NativeActivityContext context)
         {
-            CancellationTokenSource cts = new CancellationTokenSource();
-            Task resultTask = ExecuteAsync(context, cts.Token);
-            Action<NativeActivityContext> postExecute = (NativeActivityContext _context) =>
+            var cts = new CancellationTokenSource();
+            var resultTask = ExecuteAsync(context, cts.Token);
+            Execute(context, cts, resultTask, _context =>
             {
                 resultTask.GetAwaiter().GetResult();
                 PostExecute(_context);
-            };
-            Execute(context, cts, resultTask, postExecute);
+            });
         }
 
         /// <summary>
@@ -209,11 +202,10 @@ namespace Orleans.Activities
     {
         protected sealed override void Execute(NativeActivityContext context)
         {
-            CancellationTokenSource cts = new CancellationTokenSource();
-            Task<TTaskResult> resultTask = ExecuteAsync(context, cts.Token);
-            Action<NativeActivityContext> postExecute = (NativeActivityContext _context) =>
-                PostExecute(_context, resultTask.GetAwaiter().GetResult());
-            Execute(context, cts, resultTask, postExecute);
+            var cts = new CancellationTokenSource();
+            var resultTask = ExecuteAsync(context, cts.Token);
+            Execute(context, cts, resultTask, _context =>
+                PostExecute(_context, resultTask.GetAwaiter().GetResult()));
         }
 
         /// <summary>
@@ -266,11 +258,10 @@ namespace Orleans.Activities
     {
         protected sealed override void Execute(NativeActivityContext context)
         {
-            CancellationTokenSource cts = new CancellationTokenSource();
-            Task<TTaskResult> resultTask = ExecuteAsync(context, cts.Token);
-            Action<NativeActivityContext> postExecute = (NativeActivityContext _context) =>
-                Result.Set(_context, PostExecute(_context, resultTask.GetAwaiter().GetResult()));
-            Execute(context, cts, resultTask, postExecute);
+            var cts = new CancellationTokenSource();
+            var resultTask = ExecuteAsync(context, cts.Token);
+            Execute(context, cts, resultTask, _context =>
+                this.Result.Set(_context, PostExecute(_context, resultTask.GetAwaiter().GetResult())));
         }
 
         /// <summary>
@@ -303,15 +294,14 @@ namespace Orleans.Activities
     {
         protected sealed override void Execute(NativeActivityContext context)
         {
-            TState activityState = PreExecute(context);
-            CancellationTokenSource cts = new CancellationTokenSource();
-            Task resultTask = ExecuteAsync(activityState, cts.Token);
-            Action<NativeActivityContext> postExecute = (NativeActivityContext _context) =>
+            var activityState = PreExecute(context);
+            var cts = new CancellationTokenSource();
+            var resultTask = ExecuteAsync(activityState, cts.Token);
+            Execute(context, cts, resultTask, _context =>
             {
                 resultTask.GetAwaiter().GetResult();
-                PostExecute(_context, activityState);
-            };
-            Execute(context, cts, resultTask, postExecute);
+                this.PostExecute(_context, activityState);
+            });
         }
 
         /// <summary>
@@ -352,12 +342,11 @@ namespace Orleans.Activities
     {
         protected sealed override void Execute(NativeActivityContext context)
         {
-            TState activityState = PreExecute(context);
-            CancellationTokenSource cts = new CancellationTokenSource();
-            Task<TTaskResult> resultTask = ExecuteAsync(activityState, cts.Token);
-            Action<NativeActivityContext> postExecute = (NativeActivityContext _context) =>
-                PostExecute(_context, activityState, resultTask.GetAwaiter().GetResult());
-            Execute(context, cts, resultTask, postExecute);
+            var activityState = PreExecute(context);
+            var cts = new CancellationTokenSource();
+            var resultTask = ExecuteAsync(activityState, cts.Token);
+            Execute(context, cts, resultTask, _context =>
+                this.PostExecute(_context, activityState, resultTask.GetAwaiter().GetResult()));
         }
 
         /// <summary>
@@ -426,12 +415,11 @@ namespace Orleans.Activities
     {
         protected sealed override void Execute(NativeActivityContext context)
         {
-            TState activityState = PreExecute(context);
-            CancellationTokenSource cts = new CancellationTokenSource();
-            Task<TTaskResult> resultTask = ExecuteAsync(activityState, cts.Token);
-            Action<NativeActivityContext> postExecute = (NativeActivityContext _context) =>
-                Result.Set(_context, PostExecute(_context, activityState, resultTask.GetAwaiter().GetResult()));
-            Execute(context, cts, resultTask, postExecute);
+            var activityState = PreExecute(context);
+            var cts = new CancellationTokenSource();
+            var resultTask = ExecuteAsync(activityState, cts.Token);
+            Execute(context, cts, resultTask, _context =>
+                this.Result.Set(_context, PostExecute(_context, activityState, resultTask.GetAwaiter().GetResult())));
         }
 
         /// <summary>

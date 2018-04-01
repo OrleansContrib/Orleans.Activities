@@ -14,7 +14,7 @@ namespace Orleans.Activities.Extensions
     {
         public static ReceiveRequestSendResponseScopeExecutionProperty GetReceiveRequestSendResponseScopeExecutionProperty(this NativeActivityContext context)
         {
-            ReceiveRequestSendResponseScopeExecutionProperty executionProperty =
+            var executionProperty =
                 context.Properties.Find(ReceiveRequestSendResponseScope.ExecutionPropertyName) as ReceiveRequestSendResponseScopeExecutionProperty;
             if (executionProperty == null)
                 throw new ValidationException(nameof(ReceiveRequestSendResponseScopeExecutionProperty) + " is not found.");
@@ -23,7 +23,7 @@ namespace Orleans.Activities.Extensions
 
         public static ReceiveRequestSendResponseScopeExecutionProperty<TResult> GetReceiveRequestSendResponseScopeExecutionProperty<TResult>(this NativeActivityContext context)
         {
-            ReceiveRequestSendResponseScopeExecutionProperty<TResult> executionProperty =
+            var executionProperty =
                 context.Properties.Find(ReceiveRequestSendResponseScope.ExecutionPropertyName) as ReceiveRequestSendResponseScopeExecutionProperty<TResult>;
             if (executionProperty == null)
                 throw new ValidationException(typeof(ReceiveRequestSendResponseScopeExecutionProperty<TResult>).GetFriendlyName() + " is not found.");
@@ -49,17 +49,14 @@ namespace Orleans.Activities.Extensions
         public bool Faulted { get; set; }
 
         // Called implicitly by SendResponse.
-        protected ReceiveRequestSendResponseScopeExecutionProperty(bool idempotent)
-        {
-            Idempotent = idempotent;
-        }
+        protected ReceiveRequestSendResponseScopeExecutionProperty(bool idempotent) => this.Idempotent = idempotent;
 
         // Called by ReceiveRequest.
         public void Initialize(string operationName)
         {
-            if (!string.IsNullOrEmpty(OperationName))
-                throw new InvalidOperationException(nameof(OperationName) + " is already initialized.");
-            OperationName = operationName;
+            if (!string.IsNullOrEmpty(this.OperationName))
+                throw new InvalidOperationException(nameof(this.OperationName) + " is already initialized.");
+            this.OperationName = operationName;
         }
 
         // Called by ReceiveRequest.
@@ -102,42 +99,42 @@ namespace Orleans.Activities.Extensions
                 throw new ArgumentException($"Operation's taskCompletionSource is '{taskCompletionSource.GetType().GetFriendlyName()}' and not '{typeof(TaskCompletionSource<TResult>).GetFriendlyName()}', use the proper SendResponse or SendResponse<> activity.");
 
             this.taskCompletionSource = taskCompletionSource as TaskCompletionSource<TResult>;
-            taskCompletionSourceIsInitialized = true;
+            this.taskCompletionSourceIsInitialized = true;
         }
 
         // Called by SendResponse.
         public void AssertIsInitialized()
         {
             // When the workflow is reloaded, the taskCompletionSource is lost (is null), but this is not a problem.
-            if (string.IsNullOrEmpty(OperationName) || !taskCompletionSourceIsInitialized)
+            if (string.IsNullOrEmpty(this.OperationName) || !this.taskCompletionSourceIsInitialized)
                 throw new InvalidOperationException(typeof(ReceiveRequestSendResponseScopeExecutionProperty<TResult>).GetFriendlyName() + " is not initialized, both Initialize() must be called by ReceiveRequest before any SendResponse activity.");
         }
 
         // Called by SendResponse.
         public void SetTaskCompletionSourceResult(TResult responseParameter, bool throwIfAborted)
         {
-            if (taskCompletionSource == null)
+            if (this.taskCompletionSource == null)
             {
                 if (throwIfAborted)
                     throw new InvalidOperationException("Operation can't be completed, this is a reloaded workflow, there is no TaskCompletionSource to set the result on the operation.");
             }
             else
-                taskCompletionSource.SetResult(responseParameter);
+                this.taskCompletionSource.SetResult(responseParameter);
         }
 
         // Called by ReceiveRequestSendResponseScope.
         public override bool IsInitializedButNotCompleted =>
-            !string.IsNullOrEmpty(OperationName) && taskCompletionSource != null && !taskCompletionSource.Task.IsCompleted;
+            !string.IsNullOrEmpty(this.OperationName) && this.taskCompletionSource != null && !this.taskCompletionSource.Task.IsCompleted;
 
         // Called by ReceiveRequestSendResponseScope.
         public override bool IsInitializedAndCompleted =>
-            !string.IsNullOrEmpty(OperationName) && taskCompletionSource != null && taskCompletionSource.Task.IsCompleted;
+            !string.IsNullOrEmpty(this.OperationName) && this.taskCompletionSource != null && this.taskCompletionSource.Task.IsCompleted;
 
         // Called by ReceiveRequestSendResponseScope.
         public override void TrySetTaskCompletionSourceCanceled()
         {
-            if (taskCompletionSource != null)
-                taskCompletionSource.TrySetCanceled();
+            if (this.taskCompletionSource != null)
+                this.taskCompletionSource.TrySetCanceled();
         }
     }
 }

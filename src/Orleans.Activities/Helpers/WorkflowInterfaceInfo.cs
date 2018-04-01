@@ -23,7 +23,7 @@ namespace Orleans.Activities.Helpers
         {
             operationNames = new VirtualArray<Type, VirtualArray<Type, List<string>>>();
 
-            List<string> validationMessages = new List<string>();
+            var validationMessages = new List<string>();
 
             if (!typeof(TWorkflowInterface).IsInterface)
                 validationMessages.Add($"TWorkflowInterface type '{typeof(TWorkflowInterface).GetFriendlyName()}' must be an interface!");
@@ -33,23 +33,23 @@ namespace Orleans.Activities.Helpers
             // Task ...(Func<Task<...>> requestResult)
             // Task <...> ...(Func<Task> requestResult)
             // Task ...(Func<Task> requestResult)
-            foreach (MethodInfo method in OperationInfo<TWorkflowInterface>.OperationMethods)
+            foreach (var method in OperationInfo<TWorkflowInterface>.OperationMethods)
             {
-                Type responseParameterType = typeof(void);
-                Type returnType = method.ReturnType;
+                var responseParameterType = typeof(void);
+                var returnType = method.ReturnType;
                 if (returnType != typeof(Task)
                     && !returnType.IsGenericTypeOf(typeof(Task<>)))
                     validationMessages.Add($"TWorkflowInterface '{method.DeclaringType.GetFriendlyName()}' method '{method.Name}' return type must be Task or Task<...>!");
                 else if (returnType.IsGenericType)
                     responseParameterType = returnType.GetGenericArguments()[0];
 
-                Type requestResultType = typeof(void);
-                ParameterInfo[] parameters = method.GetParameters();
+                var requestResultType = typeof(void);
+                var parameters = method.GetParameters();
                 if (parameters.Length != 1)
                     validationMessages.Add($"TWorkflowInterface '{method.DeclaringType.GetFriendlyName()}' method '{method.Name}' must have 1 parameter!");
                 if (parameters.Length >= 1)
                 {
-                    Type parameterType = parameters[0].ParameterType;
+                    var parameterType = parameters[0].ParameterType;
                     if (parameterType != typeof(Func<Task>)
                         && (!parameterType.IsGenericTypeOf(typeof(Func<>))
                             || !parameterType.GetGenericArguments()[0].IsGenericTypeOf(typeof(Task<>))))
@@ -64,8 +64,8 @@ namespace Orleans.Activities.Helpers
             IsValidWorkflowInterface = validationMessages.Count() == 0;
             if (!IsValidWorkflowInterface)
             {
-                StringBuilder sb = new StringBuilder();
-                foreach (string validationMessage in validationMessages)
+                var sb = new StringBuilder();
+                foreach (var validationMessage in validationMessages)
                     sb.AppendLine(validationMessage);
                 ValidationMessage = sb.ToString();
 
@@ -75,8 +75,8 @@ namespace Orleans.Activities.Helpers
 
         public static IEnumerable<string> GetOperationNames(Type requestResultType, Type responseParameterType)
         {
-            if (!operationNames.TryGetValue(requestResultType, out VirtualArray<Type, List<string>> responseParameterTypeArray)
-                || !responseParameterTypeArray.TryGetValue(responseParameterType, out List<string> operationNameList))
+            if (!operationNames.TryGetValue(requestResultType, out var responseParameterTypeArray)
+                || !responseParameterTypeArray.TryGetValue(responseParameterType, out var operationNameList))
                 return Enumerable.Empty<string>();
             else
                 return operationNameList;

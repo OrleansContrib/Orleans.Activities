@@ -29,14 +29,14 @@ namespace Orleans.Activities
 
     public static class IOperationActivityExtensions
     {
-        public static bool IsOperationNameSet(this Activity activity) =>
-            !string.IsNullOrEmpty((activity as IOperationActivity)?.OperationName);
+        public static bool IsOperationNameSet(this Activity activity)
+            => !string.IsNullOrEmpty((activity as IOperationActivity)?.OperationName);
 
-        public static bool IsOperationNameValid(this Activity activity) =>
-            (activity as IOperationActivity)?.OperationNames.Contains((activity as IOperationActivity)?.OperationName) ?? false;
+        public static bool IsOperationNameValid(this Activity activity)
+            => (activity as IOperationActivity)?.OperationNames.Contains((activity as IOperationActivity)?.OperationName) ?? false;
 
         // To avoid "An expression tree lambda may not contain a null propagating operator." error in validation constraints.
-        public static string GetOperationName(this Activity activity) =>
-            (activity as IOperationActivity)?.OperationName ?? "null";
+        public static string GetOperationName(this Activity activity)
+            => (activity as IOperationActivity)?.OperationName ?? "null";
     }
 }

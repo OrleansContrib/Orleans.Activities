@@ -32,7 +32,7 @@ namespace Orleans.Activities
 
         [Category(Constants.OptionalCategoryName)]
         [Description("The retry delay time multiplicated with this value on each iteration. If not set, the DefaultRetryDelayDelayMultiplicator parameter will be used.")]
-        public InArgument<Single?> DelayMultiplicator { get; set; }
+        public InArgument<float?> DelayMultiplicator { get; set; }
 
         [Category(Constants.OptionalCategoryName)]
         [Description("The maximum of the retry delay after several iterations. If this is less than 1 minute, 1 minute delay will be used due to Reminder limitations. If not set, the DefaultRetryDelayMaxValue parameter will be used.")]
@@ -40,22 +40,22 @@ namespace Orleans.Activities
 
         protected override TimeSpan CalculateDelay(NativeActivityContext context)
         {
-            IParameters parameters = context.GetActivityContext().Parameters;
+            var parameters = context.GetActivityContext().Parameters;
 
-            TimeSpan delay = DelayVariable.Get(context);
-            if (delay == default(TimeSpan))
-                delay = DelayStartValue.Get(context) ?? parameters.DefaultRetryDelayStartValue;
+            var delay = this.DelayVariable.Get(context);
+            if (delay == default)
+                delay = this.DelayStartValue.Get(context) ?? parameters.DefaultRetryDelayStartValue;
             else
             {
-                TimeSpan delayMaxValue = DelayMaxValue.Get(context) ?? parameters.DefaultRetryDelayMaxValue;
+                var delayMaxValue = this.DelayMaxValue.Get(context) ?? parameters.DefaultRetryDelayMaxValue;
                 if (delay < delayMaxValue)
                 {
-                    delay = TimeSpan.FromTicks((Int64)(delay.Ticks * (DelayMultiplicator.Get(context) ?? parameters.DefaultRetryDelayDelayMultiplicator)));
+                    delay = TimeSpan.FromTicks((long)(delay.Ticks * (this.DelayMultiplicator.Get(context) ?? parameters.DefaultRetryDelayDelayMultiplicator)));
                     if (delay > delayMaxValue)
                         delay = delayMaxValue;
                 }
             }
-            DelayVariable.Set(context, delay);
+            this.DelayVariable.Set(context, delay);
 
             return delay;
         }

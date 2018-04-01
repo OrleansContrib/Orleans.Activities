@@ -24,22 +24,18 @@ namespace Orleans.Activities
 
     public static class IWorkflowActivityExtensions
     {
-        public static bool IsWorkflowActivity(this Activity activity) =>
-            activity
+        public static bool IsWorkflowActivity(this Activity activity)
+            => activity
                 .GetType()
                 .GetInterfaces()
                 .Any((i) => i.IsGenericTypeOf(typeof(IWorkflowActivity<,>)));
 
         public static Type GetWorkflowActivityType(this Activity activity)
-        {
-            Type iWorkflowActivityType = activity
+            => activity
                 .GetType()
                 .GetInterfaces()
                 .Where((i) => i.IsGenericTypeOf(typeof(IWorkflowActivity<,>)))
-                .FirstOrDefault();
-            if (iWorkflowActivityType == null)
-                throw new ArgumentException($"Activity '{activity.GetType().GetFriendlyName()}' is not an IWorkflowActivity<,> activity.");
-            return iWorkflowActivityType;
-        }
+                .FirstOrDefault()
+                ?? throw new ArgumentException($"Activity '{activity.GetType().GetFriendlyName()}' is not an IWorkflowActivity<,> activity.");
     }
 }

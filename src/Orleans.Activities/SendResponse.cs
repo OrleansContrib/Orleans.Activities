@@ -35,8 +35,8 @@ namespace Orleans.Activities
 
         // Called by ReceiveRequestSendResponseScope, to create the ReceiveRequestSendResponseScopeExecutionPropertyFactory with the proper TResponseParameter type.
         // Later ReceiveRequest will set the TaskCompletionSource in it to send back the result or let scope propagate unhandled exceptions.
-        Func<ReceiveRequestSendResponseScopeExecutionProperty> ISendResponse.CreateReceiveRequestSendResponseScopeExecutionPropertyFactory() =>
-            () => new ReceiveRequestSendResponseScopeExecutionProperty<object>(Idempotent);
+        Func<ReceiveRequestSendResponseScopeExecutionProperty> ISendResponse.CreateReceiveRequestSendResponseScopeExecutionPropertyFactory()
+            => () => new ReceiveRequestSendResponseScopeExecutionProperty<object>(this.Idempotent);
 
         [Category(Constants.RequiredCategoryName)]
         [Description("The fact, that the response is already sent, will be persisted. If the client repeats the operation later, it will receive a OperationRepeatedException.")]
@@ -50,14 +50,14 @@ namespace Orleans.Activities
 
         public SendResponse()
         {
-            persist = new Persist();
-            Constraints.Add(OperationActivityHelper.VerifyParentIsWorkflowActivity());
-            Constraints.Add(OperationActivityHelper.VerifyParentIsReceiveRequestSendResponseScope());
+            this.persist = new Persist();
+            this.Constraints.Add(OperationActivityHelper.VerifyParentIsWorkflowActivity());
+            this.Constraints.Add(OperationActivityHelper.VerifyParentIsReceiveRequestSendResponseScope());
         }
 
         protected override void CacheMetadata(NativeActivityMetadata metadata)
         {
-            metadata.AddImplementationChild(persist);
+            metadata.AddImplementationChild(this.persist);
             base.CacheMetadata(metadata);
         }
 
@@ -65,14 +65,14 @@ namespace Orleans.Activities
         // TODO: can we do anything against this???
         protected override void Execute(NativeActivityContext context)
         {
-            ReceiveRequestSendResponseScopeExecutionProperty<object> executionProperty = context.GetReceiveRequestSendResponseScopeExecutionProperty<object>();
+            var executionProperty = context.GetReceiveRequestSendResponseScopeExecutionProperty<object>();
             executionProperty.AssertIsInitialized();
 
-            if (Idempotent)
+            if (this.Idempotent)
             {
                 context.GetPreviousResponseParameterExtension().SetResponseParameter(
                     executionProperty.OperationName, typeof(void), null);
-                context.ScheduleActivity(persist, PersistCompletionCallback);
+                context.ScheduleActivity(this.persist, this.PersistCompletionCallback);
             }
             else
                 SetTaskCompletionSourceResult(executionProperty, context);
@@ -86,7 +86,7 @@ namespace Orleans.Activities
 
         private void SetTaskCompletionSourceResult(ReceiveRequestSendResponseScopeExecutionProperty<object> executionProperty, NativeActivityContext context)
         {
-            executionProperty.SetTaskCompletionSourceResult(null, ThrowIfReloaded);
+            executionProperty.SetTaskCompletionSourceResult(null, this.ThrowIfReloaded);
 
             if (context.GetActivityContext().TrackingEnabled)
                 context.Track(new SendResponseRecord());
@@ -107,8 +107,8 @@ namespace Orleans.Activities
 
         // Called by ReceiveRequestSendResponseScope, to create the ReceiveRequestSendResponseScopeExecutionPropertyFactory with the proper TResponseParameter type.
         // Later ReceiveRequest will set the TaskCompletionSource in it to send back the result or let scope propagate unhandled exceptions.
-        Func<ReceiveRequestSendResponseScopeExecutionProperty> ISendResponse.CreateReceiveRequestSendResponseScopeExecutionPropertyFactory() =>
-            () => new ReceiveRequestSendResponseScopeExecutionProperty<TResponseParameter>(Idempotent);
+        Func<ReceiveRequestSendResponseScopeExecutionProperty> ISendResponse.CreateReceiveRequestSendResponseScopeExecutionPropertyFactory()
+            => () => new ReceiveRequestSendResponseScopeExecutionProperty<TResponseParameter>(this.Idempotent);
 
         [RequiredArgument]
         [Category(Constants.RequiredCategoryName)]
@@ -127,14 +127,14 @@ namespace Orleans.Activities
 
         public SendResponse()
         {
-            persist = new Persist();
-            Constraints.Add(OperationActivityHelper.VerifyParentIsWorkflowActivity());
-            Constraints.Add(OperationActivityHelper.VerifyParentIsReceiveRequestSendResponseScope());
+            this.persist = new Persist();
+            this.Constraints.Add(OperationActivityHelper.VerifyParentIsWorkflowActivity());
+            this.Constraints.Add(OperationActivityHelper.VerifyParentIsReceiveRequestSendResponseScope());
         }
 
         protected override void CacheMetadata(NativeActivityMetadata metadata)
         {
-            metadata.AddImplementationChild(persist);
+            metadata.AddImplementationChild(this.persist);
             base.CacheMetadata(metadata);
         }
 
@@ -142,15 +142,15 @@ namespace Orleans.Activities
         // TODO: can we do anything against this???
         protected override void Execute(NativeActivityContext context)
         {
-            ReceiveRequestSendResponseScopeExecutionProperty<TResponseParameter> executionProperty = context.GetReceiveRequestSendResponseScopeExecutionProperty<TResponseParameter>();
+            var executionProperty = context.GetReceiveRequestSendResponseScopeExecutionProperty<TResponseParameter>();
             executionProperty.AssertIsInitialized();
 
-            TResponseParameter responseParameter = ResponseParameter.Get(context);
-            if (Idempotent)
+            var responseParameter = this.ResponseParameter.Get(context);
+            if (this.Idempotent)
             {
                 context.GetPreviousResponseParameterExtension().SetResponseParameter(
                     executionProperty.OperationName, typeof(TResponseParameter), responseParameter);
-                context.ScheduleActivity(persist, PersistCompletionCallback);
+                context.ScheduleActivity(this.persist, this.PersistCompletionCallback);
             }
             else
                 SetTaskCompletionSourceResult(executionProperty, responseParameter, context);
@@ -159,12 +159,12 @@ namespace Orleans.Activities
         private void PersistCompletionCallback(NativeActivityContext context, ActivityInstance completedInstance)
         {
             if (completedInstance.State == ActivityInstanceState.Closed)
-                SetTaskCompletionSourceResult(context.GetReceiveRequestSendResponseScopeExecutionProperty<TResponseParameter>(), ResponseParameter.Get(context), context);
+                SetTaskCompletionSourceResult(context.GetReceiveRequestSendResponseScopeExecutionProperty<TResponseParameter>(), this.ResponseParameter.Get(context), context);
         }
 
         private void SetTaskCompletionSourceResult(ReceiveRequestSendResponseScopeExecutionProperty<TResponseParameter> executionProperty, TResponseParameter responseParameter, NativeActivityContext context)
         {
-            executionProperty.SetTaskCompletionSourceResult(responseParameter, ThrowIfReloaded);
+            executionProperty.SetTaskCompletionSourceResult(responseParameter, this.ThrowIfReloaded);
 
             if (context.GetActivityContext().TrackingEnabled)
                 context.Track(new SendResponseRecord(responseParameter));

@@ -19,7 +19,7 @@ namespace Orleans.Activities
     {
         protected sealed override IAsyncResult BeginExecute(AsyncCodeActivityContext context, AsyncCallback callback, object state)
         {
-            CancellationTokenSource cts = new CancellationTokenSource();
+            var cts = new CancellationTokenSource();
             context.UserState = cts;
             return AsyncFactory.ToBegin(ExecuteAsync(context, cts.Token), callback, state);
         }
@@ -37,10 +37,7 @@ namespace Orleans.Activities
             }
         }
 
-        protected sealed override void Cancel(AsyncCodeActivityContext context)
-        {
-            (context.UserState as CancellationTokenSource).Cancel();
-        }
+        protected sealed override void Cancel(AsyncCodeActivityContext context) => (context.UserState as CancellationTokenSource).Cancel();
 
         /// <summary>
         /// Implement any Task based async operation.
@@ -69,7 +66,7 @@ namespace Orleans.Activities
     {
         protected sealed override IAsyncResult BeginExecute(AsyncCodeActivityContext context, AsyncCallback callback, object state)
         {
-            CancellationTokenSource cts = new CancellationTokenSource();
+            var cts = new CancellationTokenSource();
             context.UserState = cts;
             return AsyncFactory<TTaskResult>.ToBegin(ExecuteAsync(context, cts.Token), callback, state);
         }
@@ -86,10 +83,7 @@ namespace Orleans.Activities
             }
         }
 
-        protected sealed override void Cancel(AsyncCodeActivityContext context)
-        {
-            (context.UserState as CancellationTokenSource).Cancel();
-        }
+        protected sealed override void Cancel(AsyncCodeActivityContext context) => (context.UserState as CancellationTokenSource).Cancel();
 
         /// <summary>
         /// Implement any Task based async operation.
@@ -139,7 +133,7 @@ namespace Orleans.Activities
     {
         protected sealed override IAsyncResult BeginExecute(AsyncCodeActivityContext context, AsyncCallback callback, object state)
         {
-            CancellationTokenSource cts = new CancellationTokenSource();
+            var cts = new CancellationTokenSource();
             context.UserState = cts;
             return AsyncFactory<TTaskResult>.ToBegin(ExecuteAsync(context, cts.Token), callback, state);
         }
@@ -153,14 +147,11 @@ namespace Orleans.Activities
             catch (OperationCanceledException) when (context.IsCancellationRequested)
             {
                 context.MarkCanceled();
-                return default(TActivityResult);
+                return default;
             }
         }
 
-        protected sealed override void Cancel(AsyncCodeActivityContext context)
-        {
-            (context.UserState as CancellationTokenSource).Cancel();
-        }
+        protected sealed override void Cancel(AsyncCodeActivityContext context) => (context.UserState as CancellationTokenSource).Cancel();
 
         /// <summary>
         /// Implement any Task based async operation.
@@ -192,8 +183,8 @@ namespace Orleans.Activities
     {
         protected sealed override IAsyncResult BeginExecute(AsyncCodeActivityContext context, AsyncCallback callback, object state)
         {
-            TState activityState = PreExecute(context);
-            CancellationTokenSource cts = new CancellationTokenSource();
+            var activityState = PreExecute(context);
+            var cts = new CancellationTokenSource();
             context.UserState = new Tuple<TState, CancellationTokenSource>(activityState, cts);
             return AsyncFactory.ToBegin(ExecuteAsync(activityState, cts.Token), callback, state);
         }
@@ -211,10 +202,7 @@ namespace Orleans.Activities
             }
         }
 
-        protected sealed override void Cancel(AsyncCodeActivityContext context)
-        {
-            (context.UserState as Tuple<TState, CancellationTokenSource>).Item2.Cancel();
-        }
+        protected sealed override void Cancel(AsyncCodeActivityContext context) => (context.UserState as Tuple<TState, CancellationTokenSource>).Item2.Cancel();
 
         /// <summary>
         /// Executed before the Task of <see cref="ExecuteAsync"/> executed.
@@ -254,8 +242,8 @@ namespace Orleans.Activities
     {
         protected sealed override IAsyncResult BeginExecute(AsyncCodeActivityContext context, AsyncCallback callback, object state)
         {
-            TState activityState = PreExecute(context);
-            CancellationTokenSource cts = new CancellationTokenSource();
+            var activityState = PreExecute(context);
+            var cts = new CancellationTokenSource();
             context.UserState = new Tuple<TState, CancellationTokenSource>(activityState, cts);
             return AsyncFactory<TTaskResult>.ToBegin(ExecuteAsync(activityState, cts.Token), callback, state);
         }
@@ -272,10 +260,7 @@ namespace Orleans.Activities
             }
         }
 
-        protected sealed override void Cancel(AsyncCodeActivityContext context)
-        {
-            (context.UserState as Tuple<TState, CancellationTokenSource>).Item2.Cancel();
-        }
+        protected sealed override void Cancel(AsyncCodeActivityContext context) => (context.UserState as Tuple<TState, CancellationTokenSource>).Item2.Cancel();
 
         /// <summary>
         /// Executed before the Task of <see cref="ExecuteAsync"/> executed.
@@ -341,8 +326,8 @@ namespace Orleans.Activities
     {
         protected sealed override IAsyncResult BeginExecute(AsyncCodeActivityContext context, AsyncCallback callback, object state)
         {
-            TState activityState = PreExecute(context);
-            CancellationTokenSource cts = new CancellationTokenSource();
+            var activityState = PreExecute(context);
+            var cts = new CancellationTokenSource();
             context.UserState = new Tuple<TState, CancellationTokenSource>(activityState, cts);
             return AsyncFactory<TTaskResult>.ToBegin(ExecuteAsync(activityState, cts.Token), callback, state);
         }
@@ -356,14 +341,11 @@ namespace Orleans.Activities
             catch (OperationCanceledException) when (context.IsCancellationRequested)
             {
                 context.MarkCanceled();
-                return default(TActivityResult);
+                return default;
             }
         }
 
-        protected sealed override void Cancel(AsyncCodeActivityContext context)
-        {
-            (context.UserState as Tuple<TState, CancellationTokenSource>).Item2.Cancel();
-        }
+        protected sealed override void Cancel(AsyncCodeActivityContext context) => (context.UserState as Tuple<TState, CancellationTokenSource>).Item2.Cancel();
 
         /// <summary>
         /// Executed before the Task of <see cref="ExecuteAsync"/> executed.

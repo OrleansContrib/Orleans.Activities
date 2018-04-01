@@ -27,9 +27,9 @@ namespace Orleans.Activities.AsyncEx
 
         public static explicit operator Task(AsyncResultCompletedSynchronously @this) => @this.task;
 
-        public object AsyncState => state;
+        public object AsyncState => this.state;
 
-        public System.Threading.WaitHandle AsyncWaitHandle => (task as IAsyncResult).AsyncWaitHandle;
+        public System.Threading.WaitHandle AsyncWaitHandle => (this.task as IAsyncResult).AsyncWaitHandle;
 
         public bool CompletedSynchronously => true;
 
@@ -53,9 +53,9 @@ namespace Orleans.Activities.AsyncEx
 
         public static explicit operator Task<TResult>(AsyncResultCompletedSynchronously<TResult> @this) => @this.task;
 
-        public object AsyncState => state;
+        public object AsyncState => this.state;
 
-        public System.Threading.WaitHandle AsyncWaitHandle => (task as IAsyncResult).AsyncWaitHandle;
+        public System.Threading.WaitHandle AsyncWaitHandle => (this.task as IAsyncResult).AsyncWaitHandle;
 
         public bool CompletedSynchronously => true;
 

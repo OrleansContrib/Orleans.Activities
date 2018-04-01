@@ -19,12 +19,12 @@ namespace Orleans.Activities.Helpers
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Maintainability", "CA1506:AvoidExcessiveClassCoupling")]
         public static Constraint VerifySendRequestReceiveResponseScopeChildren()
         {
-            DelegateInArgument<SendRequestReceiveResponseScope> element = new DelegateInArgument<SendRequestReceiveResponseScope>();
-            DelegateInArgument<ValidationContext> context = new DelegateInArgument<ValidationContext>();
+            var element = new DelegateInArgument<SendRequestReceiveResponseScope>();
+            var context = new DelegateInArgument<ValidationContext>();
 
-            DelegateInArgument<Activity> child = new DelegateInArgument<Activity>();
-            Variable<int> sendRequestCounter = new Variable<int>();
-            Variable<int> receiveResponseCounter = new Variable<int>();
+            var child = new DelegateInArgument<Activity>();
+            var sendRequestCounter = new Variable<int>();
+            var receiveResponseCounter = new Variable<int>();
 
             return new Constraint<SendRequestReceiveResponseScope>
             {
@@ -119,10 +119,10 @@ namespace Orleans.Activities.Helpers
 
             protected override void Execute(CodeActivityContext context)
             {
-                IOperationActivity sendRequest = SendRequest.Get(context);
-                Type workflowCallbackInterfaceType = WorkflowCallbackInterfaceType.Get(context);
-                Type requestParameterType = RequestParameterType.Get(context);
-                Type responseResultType = ResponseResultType.Get(context);
+                var sendRequest = this.SendRequest.Get(context);
+                var workflowCallbackInterfaceType = this.WorkflowCallbackInterfaceType.Get(context);
+                var requestParameterType = this.RequestParameterType.Get(context);
+                var responseResultType = this.ResponseResultType.Get(context);
 
                 if (sendRequest != null && workflowCallbackInterfaceType != null && requestParameterType != null && responseResultType != null)
                     sendRequest.OperationNames.Set(
@@ -134,15 +134,15 @@ namespace Orleans.Activities.Helpers
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Maintainability", "CA1506:AvoidExcessiveClassCoupling")]
         public static Constraint SetWorkflowCallbackInterfaceOperationNames()
         {
-            DelegateInArgument<SendRequestReceiveResponseScope> element = new DelegateInArgument<SendRequestReceiveResponseScope>();
-            DelegateInArgument<ValidationContext> context = new DelegateInArgument<ValidationContext>();
+            var element = new DelegateInArgument<SendRequestReceiveResponseScope>();
+            var context = new DelegateInArgument<ValidationContext>();
 
-            DelegateInArgument<Activity> parent = new DelegateInArgument<Activity>();
-            DelegateInArgument<Activity> child = new DelegateInArgument<Activity>();
-            Variable<IOperationActivity> sendRequest = new Variable<IOperationActivity>();
-            Variable<Type> workflowCallbackInterfaceType = new Variable<Type>();
-            Variable<Type> requestParameterType = new Variable<Type>();
-            Variable<Type> responseResultType = new Variable<Type>();
+            var parent = new DelegateInArgument<Activity>();
+            var child = new DelegateInArgument<Activity>();
+            var sendRequest = new Variable<IOperationActivity>();
+            var workflowCallbackInterfaceType = new Variable<Type>();
+            var requestParameterType = new Variable<Type>();
+            var responseResultType = new Variable<Type>();
 
             return new Constraint<SendRequestReceiveResponseScope>
             {
@@ -243,10 +243,10 @@ namespace Orleans.Activities.Helpers
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Maintainability", "CA1506:AvoidExcessiveClassCoupling")]
         public static Constraint SetSendRequestReceiveResponseScopeExecutionPropertyFactory()
         {
-            DelegateInArgument<SendRequestReceiveResponseScope> element = new DelegateInArgument<SendRequestReceiveResponseScope>();
-            DelegateInArgument<ValidationContext> context = new DelegateInArgument<ValidationContext>();
+            var element = new DelegateInArgument<SendRequestReceiveResponseScope>();
+            var context = new DelegateInArgument<ValidationContext>();
 
-            DelegateInArgument<Activity> child = new DelegateInArgument<Activity>();
+            var child = new DelegateInArgument<Activity>();
 
             return new Constraint<SendRequestReceiveResponseScope>
             {

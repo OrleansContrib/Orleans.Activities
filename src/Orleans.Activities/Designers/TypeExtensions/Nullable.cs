@@ -26,7 +26,7 @@ namespace Orleans.Activities.Designers.TypeExtensions
 
         public override object ProvideValue(IServiceProvider serviceProvider)
         {
-            Type basis = (Type)base.ProvideValue(serviceProvider);
+            var basis = (Type)base.ProvideValue(serviceProvider);
             return typeof(Nullable<>).MakeGenericType(basis);
         }
     }

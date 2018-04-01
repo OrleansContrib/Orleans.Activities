@@ -45,22 +45,22 @@ namespace Orleans.Activities
 
         public SendRequest()
         {
-            OperationNames = new ObservableCollection<string>();
-            Constraints.Add(OperationActivityHelper.VerifyParentIsWorkflowActivity());
-            Constraints.Add(OperationActivityHelper.VerifyParentIsSendRequestReceiveResponseScope());
-            Constraints.Add(OperationActivityHelper.VerifyIsOperationNameSetAndValid());
+            this.OperationNames = new ObservableCollection<string>();
+            this.Constraints.Add(OperationActivityHelper.VerifyParentIsWorkflowActivity());
+            this.Constraints.Add(OperationActivityHelper.VerifyParentIsSendRequestReceiveResponseScope());
+            this.Constraints.Add(OperationActivityHelper.VerifyIsOperationNameSetAndValid());
         }
 
         // This will start/schedule the OnOperationAsync task, but won't wait for it, the task will be an implicit (single threaded reentrant) parallel activity.
         // The Scope is responsible to handle the outstanding task in case of Abort, Cancellation or Termination.
         protected override void Execute(NativeActivityContext context)
         {
-            SendRequestReceiveResponseScopeExecutionProperty executionProperty = context.GetSendRequestReceiveResponseScopeExecutionProperty();
-            IActivityContext activityContext = context.GetActivityContext();
-            executionProperty.StartOnOperationAsync(activityContext, OperationName);
+            var executionProperty = context.GetSendRequestReceiveResponseScopeExecutionProperty();
+            var activityContext = context.GetActivityContext();
+            executionProperty.StartOnOperationAsync(activityContext, this.OperationName);
 
             if (activityContext.TrackingEnabled)
-                context.Track(new SendRequestRecord(OperationName));
+                context.Track(new SendRequestRecord(this.OperationName));
         }
     }
 
@@ -93,23 +93,23 @@ namespace Orleans.Activities
 
         public SendRequest()
         {
-            OperationNames = new ObservableCollection<string>();
-            Constraints.Add(OperationActivityHelper.VerifyParentIsWorkflowActivity());
-            Constraints.Add(OperationActivityHelper.VerifyParentIsSendRequestReceiveResponseScope());
-            Constraints.Add(OperationActivityHelper.VerifyIsOperationNameSetAndValid());
+            this.OperationNames = new ObservableCollection<string>();
+            this.Constraints.Add(OperationActivityHelper.VerifyParentIsWorkflowActivity());
+            this.Constraints.Add(OperationActivityHelper.VerifyParentIsSendRequestReceiveResponseScope());
+            this.Constraints.Add(OperationActivityHelper.VerifyIsOperationNameSetAndValid());
         }
 
         // This will start/schedule the OnOperationAsync task, but won't wait for it, the task will be an implicit (single threaded reentrant) parallel activity.
         // The Scope is responsible to handle the outstanding task in case of Abort, Cancellation or Termination.
         protected override void Execute(NativeActivityContext context)
         {
-            SendRequestReceiveResponseScopeExecutionProperty executionProperty = context.GetSendRequestReceiveResponseScopeExecutionProperty();
-            IActivityContext activityContext = context.GetActivityContext();
-            TRequestParameter requestParameter = RequestParameter.Get(context);
-            executionProperty.StartOnOperationAsync(activityContext, OperationName, requestParameter);
+            var executionProperty = context.GetSendRequestReceiveResponseScopeExecutionProperty();
+            var activityContext = context.GetActivityContext();
+            var requestParameter = this.RequestParameter.Get(context);
+            executionProperty.StartOnOperationAsync(activityContext, this.OperationName, requestParameter);
 
             if (activityContext.TrackingEnabled)
-                context.Track(new SendRequestRecord(OperationName, requestParameter));
+                context.Track(new SendRequestRecord(this.OperationName, requestParameter));
         }
     }
 }

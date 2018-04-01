@@ -38,33 +38,33 @@ namespace Orleans.Activities.Hosting
             switch (instanceValues[WorkflowNamespace.Status].Value as string)
             {
                 case WorkflowStatus.Closed:
-                    Dictionary<string, object> outputArgumentsRead = new Dictionary<string, object>();
-                    foreach (KeyValuePair<XName, InstanceValue> kvp in instanceValues.Where((iv) => iv.Key.Namespace == WorkflowNamespace.OutputPath))
+                    var outputArgumentsRead = new Dictionary<string, object>();
+                    foreach (var kvp in instanceValues.Where((iv) => iv.Key.Namespace == WorkflowNamespace.OutputPath))
                         outputArgumentsRead.Add(kvp.Key.LocalName, kvp.Value.Value);
                     if (outputArgumentsRead.Count > 0)
-                        outputArguments = outputArgumentsRead;
-                    completionState = ActivityInstanceState.Closed;
+                        this.outputArguments = outputArgumentsRead;
+                    this.completionState = ActivityInstanceState.Closed;
                     break;
                 case WorkflowStatus.Canceled:
-                    completionState = ActivityInstanceState.Canceled;
+                    this.completionState = ActivityInstanceState.Canceled;
                     break;
                 case WorkflowStatus.Faulted:
-                    terminationException = instanceValues[WorkflowNamespace.Exception].Value as Exception;
-                    completionState = ActivityInstanceState.Faulted;
+                    this.terminationException = instanceValues[WorkflowNamespace.Exception].Value as Exception;
+                    this.completionState = ActivityInstanceState.Faulted;
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(WorkflowNamespace.Status.ToString());
             }
 
             // Yes, IEnumerable<object> is ugly, but there is nothing common in IPersistenceParticipant and PersistenceParticipant.
-            IEnumerable<object> persistenceParticipants =
+            var persistenceParticipants =
                 ((IEnumerable<object>)extensions.OfType<System.Activities.Persistence.PersistenceParticipant>())
                 .Concat(
                 ((IEnumerable<object>)extensions.OfType<IPersistenceParticipant>()));
             // If the persistenceParticipants throw during OnLoadAsync(), the pipeline will rethrow
             if (persistenceParticipants.Any())
             {
-                PersistencePipeline persistencePipeline = new PersistencePipeline(persistenceParticipants, instanceValues);
+                var persistencePipeline = new PersistencePipeline(persistenceParticipants, instanceValues);
                 await persistencePipeline.OnLoadAsync(parameters.ExtensionsPersistenceTimeout);
                 persistencePipeline.Publish();
             }
@@ -75,11 +75,11 @@ namespace Orleans.Activities.Hosting
         {
             get
             {
-                if (completionState == ActivityInstanceState.Faulted)
-                    throw terminationException;
-                if (completionState == ActivityInstanceState.Canceled)
+                if (this.completionState == ActivityInstanceState.Faulted)
+                    throw this.terminationException;
+                if (this.completionState == ActivityInstanceState.Canceled)
                     throw new OperationCanceledException("Workflow is canceled.");
-                return outputArguments;
+                return this.outputArguments;
             }
         }
     }

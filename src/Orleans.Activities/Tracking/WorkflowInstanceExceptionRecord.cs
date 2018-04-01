@@ -32,34 +32,28 @@ namespace Orleans.Activities.Tracking
         {
             if (string.IsNullOrEmpty(activityDefinitionId))
                 throw new ArgumentNullException(nameof(activityDefinitionId));
-            Exception = exception ?? throw new ArgumentNullException(nameof(exception));
-            Level = TraceLevel.Error;
+            this.Exception = exception ?? throw new ArgumentNullException(nameof(exception));
+            this.Level = TraceLevel.Error;
         }
 
         public WorkflowInstanceExceptionRecord(Guid instanceId, string activityDefinitionId, Exception exception, WorkflowIdentity workflowDefinitionIdentity)
             : this(instanceId, activityDefinitionId, exception)
-        {
-            WorkflowDefinitionIdentity = workflowDefinitionIdentity;
-        }
+            => this.WorkflowDefinitionIdentity = workflowDefinitionIdentity;
 
         public WorkflowInstanceExceptionRecord(Guid instanceId, long recordNumber, string activityDefinitionId, Exception exception, WorkflowIdentity workflowDefinitionIdentity)
             : this(instanceId, recordNumber, activityDefinitionId, exception)
-        {
-            WorkflowDefinitionIdentity = workflowDefinitionIdentity;
-        }
+            => this.WorkflowDefinitionIdentity = workflowDefinitionIdentity;
 
         private WorkflowInstanceExceptionRecord(WorkflowInstanceExceptionRecord record)
             : base(record)
-        {
-            Exception = record.Exception;
-        }
+            => this.Exception = record.Exception;
 
         protected override TrackingRecord Clone() => new WorkflowInstanceExceptionRecord(this);
 
-        public override string ToString() =>
+        public override string ToString()
             // For backward compatibility, the ToString() does not return WorkflowIdentity, if it is null.
-            WorkflowDefinitionIdentity == null
-                ? $"WorkflowInstanceExceptionRecord {{ InstanceId = {InstanceId}, RecordNumber = {RecordNumber}, EventTime = {EventTime}, ActivityDefinitionId = {ActivityDefinitionId}, Exception = {Exception} }} "
-                : $"WorkflowInstanceExceptionRecord {{ InstanceId = {InstanceId}, RecordNumber = {RecordNumber}, EventTime = {EventTime}, ActivityDefinitionId = {ActivityDefinitionId}, Exception = {Exception}, WorkflowDefinitionIdentity = {WorkflowDefinitionIdentity} }} ";
+            => this.WorkflowDefinitionIdentity == null
+                ? $"WorkflowInstanceExceptionRecord {{ InstanceId = {this.InstanceId}, RecordNumber = {this.RecordNumber}, EventTime = {this.EventTime}, ActivityDefinitionId = {this.ActivityDefinitionId}, Exception = {this.Exception} }} "
+                : $"WorkflowInstanceExceptionRecord {{ InstanceId = {this.InstanceId}, RecordNumber = {this.RecordNumber}, EventTime = {this.EventTime}, ActivityDefinitionId = {this.ActivityDefinitionId}, Exception = {this.Exception}, WorkflowDefinitionIdentity = {this.WorkflowDefinitionIdentity} }} ";
     }
 }

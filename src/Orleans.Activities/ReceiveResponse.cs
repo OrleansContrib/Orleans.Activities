@@ -36,8 +36,8 @@ namespace Orleans.Activities
 
         // Called by SendRequestReceiveResponseScope, to create the SendRequestReceiveResponseScopeExecutionPropertyFactory with the proper TResponseResult type.
         // Later SendRequest will set the Task in it to receive the result or let scope consume and propagate unhandled exceptions.
-        Func<SendRequestReceiveResponseScopeExecutionProperty> IReceiveResponse.CreateSendRequestReceiveResponseScopeExecutionPropertyFactory() =>
-            () => new SendRequestReceiveResponseScopeExecutionPropertyWithoutResult();
+        Func<SendRequestReceiveResponseScopeExecutionProperty> IReceiveResponse.CreateSendRequestReceiveResponseScopeExecutionPropertyFactory()
+            => () => new SendRequestReceiveResponseScopeExecutionPropertyWithoutResult();
 
         private ActivityFunc<Task<Func<Task>>, Func<Task>> responseResultWaiter;
         private ActivityAction<Func<Task>> responseResultEvaluator;
@@ -46,27 +46,27 @@ namespace Orleans.Activities
 
         public ReceiveResponse()
         {
-            responseResultWaiter = TaskFuncTaskWaiter.CreateActivityDelegate();
-            responseResultEvaluator = TaskFuncEvaluator.CreateActivityDelegate();
-            Constraints.Add(OperationActivityHelper.VerifyParentIsWorkflowActivity());
-            Constraints.Add(OperationActivityHelper.VerifyParentIsSendRequestReceiveResponseScope());
+            this.responseResultWaiter = TaskFuncTaskWaiter.CreateActivityDelegate();
+            this.responseResultEvaluator = TaskFuncEvaluator.CreateActivityDelegate();
+            this.Constraints.Add(OperationActivityHelper.VerifyParentIsWorkflowActivity());
+            this.Constraints.Add(OperationActivityHelper.VerifyParentIsSendRequestReceiveResponseScope());
         }
 
         protected override void CacheMetadata(NativeActivityMetadata metadata)
         {
-            metadata.AddImplementationDelegate(responseResultWaiter);
-            metadata.AddImplementationDelegate(responseResultEvaluator);
+            metadata.AddImplementationDelegate(this.responseResultWaiter);
+            metadata.AddImplementationDelegate(this.responseResultEvaluator);
             base.CacheMetadata(metadata);
         }
 
         protected override void Execute(NativeActivityContext context)
         {
-            SendRequestReceiveResponseScopeExecutionPropertyWithoutResult executionProperty =
+            var executionProperty =
                 context.GetSendRequestReceiveResponseScopeExecutionPropertyWithoutResult();
             executionProperty.AssertIsStarted();
 
             // Schedules an awaiter for the outgoing request, ie. the appropriate TWorkflowCallbackInterface operation.
-            context.ScheduleFunc(responseResultWaiter, executionProperty.OnOperationTask, WaiterCompletionCallback);
+            context.ScheduleFunc(this.responseResultWaiter, executionProperty.OnOperationTask, this.WaiterCompletionCallback);
             executionProperty.OnOperationTaskWaiterIsScheduled();
         }
 
@@ -74,7 +74,7 @@ namespace Orleans.Activities
         {
             // When the outgoing request is completed, schedules the request's result delegate.
             if (completedInstance.State == ActivityInstanceState.Closed)
-                context.ScheduleAction(responseResultEvaluator, result, EvaluatorCompletionCallback);
+                context.ScheduleAction(this.responseResultEvaluator, result, this.EvaluatorCompletionCallback);
         }
     
         private void EvaluatorCompletionCallback(NativeActivityContext context, ActivityInstance completedInstance)
@@ -102,8 +102,8 @@ namespace Orleans.Activities
 
         // Called by SendRequestReceiveResponseScope, to create the SendRequestReceiveResponseScopeExecutionPropertyFactory with the proper TResponseResult type.
         // Later SendRequest will set the Task in it to receive the result or let scope consume and propagate unhandled exceptions.
-        Func<SendRequestReceiveResponseScopeExecutionProperty> IReceiveResponse.CreateSendRequestReceiveResponseScopeExecutionPropertyFactory() =>
-            () => new SendRequestReceiveResponseScopeExecutionPropertyWithResult<TResponseResult>();
+        Func<SendRequestReceiveResponseScopeExecutionProperty> IReceiveResponse.CreateSendRequestReceiveResponseScopeExecutionPropertyFactory()
+            => () => new SendRequestReceiveResponseScopeExecutionPropertyWithResult<TResponseResult>();
 
         [RequiredArgument]
         [Category(Constants.RequiredCategoryName)]
@@ -117,27 +117,26 @@ namespace Orleans.Activities
 
         public ReceiveResponse()
         {
-            responseResultWaiter = TaskFuncTaskWaiter<TResponseResult>.CreateActivityDelegate();
-            responseResultEvaluator = TaskFuncEvaluator<TResponseResult>.CreateActivityDelegate();
-            Constraints.Add(OperationActivityHelper.VerifyParentIsWorkflowActivity());
-            Constraints.Add(OperationActivityHelper.VerifyParentIsSendRequestReceiveResponseScope());
+            this.responseResultWaiter = TaskFuncTaskWaiter<TResponseResult>.CreateActivityDelegate();
+            this.responseResultEvaluator = TaskFuncEvaluator<TResponseResult>.CreateActivityDelegate();
+            this.Constraints.Add(OperationActivityHelper.VerifyParentIsWorkflowActivity());
+            this.Constraints.Add(OperationActivityHelper.VerifyParentIsSendRequestReceiveResponseScope());
         }
 
         protected override void CacheMetadata(NativeActivityMetadata metadata)
         {
-            metadata.AddImplementationDelegate(responseResultWaiter);
-            metadata.AddImplementationDelegate(responseResultEvaluator);
+            metadata.AddImplementationDelegate(this.responseResultWaiter);
+            metadata.AddImplementationDelegate(this.responseResultEvaluator);
             base.CacheMetadata(metadata);
         }
 
         protected override void Execute(NativeActivityContext context)
         {
-            SendRequestReceiveResponseScopeExecutionPropertyWithResult<TResponseResult> executionProperty =
-                context.GetSendRequestReceiveResponseScopeExecutionPropertyWithResult<TResponseResult>();
+            var executionProperty = context.GetSendRequestReceiveResponseScopeExecutionPropertyWithResult<TResponseResult>();
             executionProperty.AssertIsStarted();
 
             // Schedules an awaiter for the outgoing request, ie. the appropriate TWorkflowCallbackInterface operation.
-            context.ScheduleFunc(responseResultWaiter, executionProperty.OnOperationTask, WaiterCompletionCallback);
+            context.ScheduleFunc(this.responseResultWaiter, executionProperty.OnOperationTask, this.WaiterCompletionCallback);
             executionProperty.OnOperationTaskWaiterIsScheduled();
         }
 
@@ -145,7 +144,7 @@ namespace Orleans.Activities
         {
             // When the outgoing request is completed, schedules the request's result delegate.
             if (completedInstance.State == ActivityInstanceState.Closed)
-                context.ScheduleFunc(responseResultEvaluator, result, EvaluatorCompletionCallback);
+                context.ScheduleFunc(this.responseResultEvaluator, result, this.EvaluatorCompletionCallback);
         }
 
         private void EvaluatorCompletionCallback(NativeActivityContext context, ActivityInstance completedInstance, TResponseResult result)
@@ -154,7 +153,7 @@ namespace Orleans.Activities
             if (completedInstance.State == ActivityInstanceState.Closed)
             {
                 // Sets the result of the outgoing request's processing.
-                ResponseResult.Set(context, result);
+                this.ResponseResult.Set(context, result);
 
                 if (context.GetActivityContext().TrackingEnabled)
                     context.Track(new ReceiveResponseRecord(result));

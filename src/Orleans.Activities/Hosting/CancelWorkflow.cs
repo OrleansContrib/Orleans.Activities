@@ -15,9 +15,6 @@ namespace Orleans.Activities.Hosting
     /// </summary>
     public sealed class CancelWorkflow : NativeActivity
     {
-        protected override void Execute(NativeActivityContext context)
-        {
-            context.CancelWorkflow();
-        }
+        protected override void Execute(NativeActivityContext context) => context.CancelWorkflow();
     }
 }

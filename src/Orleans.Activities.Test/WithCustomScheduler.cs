@@ -20,6 +20,12 @@ using Orleans.Activities.Persistence;
 using System.Activities.Tracking;
 using Orleans.Activities.Configuration;
 
+#pragma warning disable IDE0007 // Use implicit type
+#pragma warning disable IDE0009 // Member access should be qualified.
+#pragma warning disable IDE0017 // Simplify object initialization
+#pragma warning disable IDE0022 // Use expression body for methods
+#pragma warning disable IDE1006 // Naming Styles
+
 namespace Orleans.Activities.Test
 {
     public static class AsyncResetEventExtensions
@@ -213,8 +219,7 @@ namespace Orleans.Activities.Test
 
         public Task RegisterOrUpdateReminderAsync(string reminderName, TimeSpan dueTime, TimeSpan period)
         {
-            TaskTimer timer;
-            if (timers.TryGetValue(reminderName, out timer))
+            if (timers.TryGetValue(reminderName, out var timer))
                 timer.Cancel();
             timers[reminderName] = new TaskTimer(() => WorkflowHost.ReminderAsync(reminderName), dueTime, period);
             return TaskConstants.Completed;
@@ -222,8 +227,7 @@ namespace Orleans.Activities.Test
 
         public Task UnregisterReminderAsync(string reminderName)
         {
-            TaskTimer timer;
-            if (timers.TryGetValue(reminderName, out timer))
+            if (timers.TryGetValue(reminderName, out var timer))
             {
                 timer.Cancel();
                 timers.Remove(reminderName);
@@ -238,20 +242,11 @@ namespace Orleans.Activities.Test
 
         public IParameters Parameters
         {
-            get
-            {
-                if (parameters == null)
-                    parameters = new Parameters();
-                return parameters;
-            }
-            set
-            {
-                if (value == null)
-                    throw new ArgumentNullException(nameof(value));
+            get => parameters ?? (parameters = new Parameters());
+            set => parameters = value ?? throw new ArgumentNullException(nameof(value));
                 //if (parameters != null)
                 //    throw new InvalidOperationException(nameof(Parameters) + " property is already set!");
-                parameters = value;
-            }
+
         }
 
         public Task OnUnhandledExceptionAsync(Exception exception, Activity source)
@@ -1769,8 +1764,7 @@ namespace Orleans.Activities.Test
                 Assert.AreEqual(false, grain.UnhandledException.IsSet);
 
                 Assert.IsNotNull(grain.OutputArguments);
-                object result;
-                Assert.IsTrue(grain.OutputArguments.TryGetValue("Result", out result));
+                Assert.IsTrue(grain.OutputArguments.TryGetValue("Result", out var result));
                 Assert.AreEqual("Canceled", (string)result);
             });
         }
@@ -1797,8 +1791,7 @@ namespace Orleans.Activities.Test
                 Assert.AreEqual(false, grain.UnhandledException.IsSet);
 
                 Assert.IsNotNull(grain.OutputArguments);
-                object result;
-                Assert.IsTrue(grain.OutputArguments.TryGetValue("Result", out result));
+                Assert.IsTrue(grain.OutputArguments.TryGetValue("Result", out var result));
                 Assert.AreEqual("Cancellation C;Cancellation;Confirmation A;Compensation B;Exception catched;", (string)result);
 
 
@@ -1845,9 +1838,8 @@ namespace Orleans.Activities.Test
                 Assert.AreEqual(false, grain.UnhandledException.IsSet);
 
                 Assert.IsNotNull(outputArguments);
-                object result;
-                Assert.IsTrue(outputArguments.TryGetValue("Result", out result));
-                Assert.AreEqual(4, (Int32)result);
+                Assert.IsTrue(outputArguments.TryGetValue("Result", out var result));
+                Assert.AreEqual(4, (int)result);
             });
         }
 
@@ -1874,9 +1866,8 @@ namespace Orleans.Activities.Test
                 Assert.AreEqual(false, grain.UnhandledException.IsSet);
 
                 Assert.IsNotNull(outputArguments);
-                object result;
-                Assert.IsTrue(outputArguments.TryGetValue("Result", out result));
-                Assert.AreEqual(4, (Int32)result);
+                Assert.IsTrue(outputArguments.TryGetValue("Result", out var result));
+                Assert.AreEqual(4, (int)result);
 
 
 
@@ -1897,7 +1888,7 @@ namespace Orleans.Activities.Test
 
                 Assert.IsNotNull(grain.OutputArguments);
                 Assert.IsTrue(grain.OutputArguments.TryGetValue("Result", out result));
-                Assert.AreEqual(4, (Int32)result);
+                Assert.AreEqual(4, (int)result);
 
 
 
@@ -1921,7 +1912,7 @@ namespace Orleans.Activities.Test
 
                 Assert.IsNotNull(outputArguments);
                 Assert.IsTrue(outputArguments.TryGetValue("Result", out result));
-                Assert.AreEqual(4, (Int32)result);
+                Assert.AreEqual(4, (int)result);
 
 
 
@@ -1941,7 +1932,7 @@ namespace Orleans.Activities.Test
 
                 Assert.IsNotNull(outputArguments);
                 Assert.IsTrue(outputArguments.TryGetValue("Result", out result));
-                Assert.AreEqual(4, (Int32)result);
+                Assert.AreEqual(4, (int)result);
             });
         }
 
@@ -2272,3 +2263,9 @@ namespace Orleans.Activities.Test
         }
     }
 }
+
+#pragma warning restore IDE1006 // Naming Styles
+#pragma warning restore IDE0022 // Use expression body for methods
+#pragma warning restore IDE0017 // Simplify object initialization
+#pragma warning restore IDE0009 // Member access should be qualified.
+#pragma warning restore IDE0007 // Use implicit type

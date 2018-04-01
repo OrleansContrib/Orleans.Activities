@@ -33,16 +33,16 @@ namespace Orleans.Activities.AsyncEx
         /// </summary>
         // MODIFIED
         //private TaskCompletionSource _tcs;
-        private TaskCompletionSource<object> _tcs;
+        private TaskCompletionSource<object> tcs;
 
         /// <summary>
         /// The semi-unique identifier for this instance. This is 0 if the id has not yet been created.
         /// </summary>
-        private int _id;
+        private int id;
 
         [DebuggerNonUserCode]
         private bool GetStateForDebugger =>
-            _tcs.Task.IsCompleted;
+            this.tcs.Task.IsCompleted;
 
         /// <summary>
         /// Creates an async-compatible manual-reset event.
@@ -53,13 +53,13 @@ namespace Orleans.Activities.AsyncEx
             // MODIFIED
             //_sync = new object();
             //_tcs = new TaskCompletionSource();
-            _tcs = new TaskCompletionSource<object>();
+            this.tcs = new TaskCompletionSource<object>();
             if (set)
             {
                 //Enlightenment.Trace.AsyncManualResetEvent_Set(this, _tcs.Task);
                 // MODIFIED
                 //_tcs.SetResult();
-                _tcs.SetResult(null);
+                this.tcs.SetResult(null);
             }
             else
             {
@@ -78,7 +78,7 @@ namespace Orleans.Activities.AsyncEx
         /// Gets a semi-unique identifier for this asynchronous manual-reset event.
         /// </summary>
         public int Id =>
-            IdManager<AsyncManualResetEvent>.GetId(ref _id);
+            IdManager<AsyncManualResetEvent>.GetId(ref this.id);
 
         /// <summary>
         /// Whether this event is currently set. This member is seldom used; code using this member has a high possibility of race conditions.
@@ -86,7 +86,7 @@ namespace Orleans.Activities.AsyncEx
         public bool IsSet =>
             // MODIFIED
             //get { lock (_sync) return _tcs.Task.IsCompleted; }
-            _tcs.Task.IsCompleted;
+            this.tcs.Task.IsCompleted;
 
         /// <summary>
         /// Asynchronously waits for this event to be set.
@@ -96,7 +96,7 @@ namespace Orleans.Activities.AsyncEx
             // MODIFIED
             //lock (_sync)
             //{
-                var ret = _tcs.Task;
+                var ret = this.tcs.Task;
                 //Enlightenment.Trace.AsyncManualResetEvent_Wait(this, ret);
                 return ret;
             //}
@@ -127,17 +127,17 @@ namespace Orleans.Activities.AsyncEx
         /// <summary>
         /// Sets the event, atomically completing every task returned by <see cref="WaitAsync"/>. If the event is already set, this method does nothing.
         /// </summary>
-        public void Set()
-        {
-            // MODIFIED
-            //lock (_sync)
-            //{
-                //Enlightenment.Trace.AsyncManualResetEvent_Set(this, _tcs.Task);
-                // MODIFIED
-                //_tcs.TrySetResultWithBackgroundContinuations();
-                _tcs.TrySetResult(null);
-            //}
-        }
+        public void Set() => this.tcs.TrySetResult(null);
+        //{
+        //    // MODIFIED
+        //    lock (_sync)
+        //    {
+        //        Enlightenment.Trace.AsyncManualResetEvent_Set(this, _tcs.Task);
+        //        // MODIFIED
+        //        // _tcs.TrySetResultWithBackgroundContinuations();
+        //        this._tcs.TrySetResult(null);
+        //    }
+        //}
 
         /// <summary>
         /// Resets the event. If the event is already reset, this method does nothing.
@@ -147,10 +147,10 @@ namespace Orleans.Activities.AsyncEx
             // MODIFIED
             //lock (_sync)
             //{
-                if (_tcs.Task.IsCompleted)
-                    // MODIFIED
-                    //_tcs = new TaskCompletionSource();
-                    _tcs = new TaskCompletionSource<object>();
+                if (this.tcs.Task.IsCompleted)
+                // MODIFIED
+                //_tcs = new TaskCompletionSource();
+                this.tcs = new TaskCompletionSource<object>();
                 //Enlightenment.Trace.AsyncManualResetEvent_Reset(this, _tcs.Task);
             //}
         }
@@ -159,18 +159,15 @@ namespace Orleans.Activities.AsyncEx
         [DebuggerNonUserCode]
         private sealed class DebugView
         {
-            private readonly AsyncManualResetEvent _mre;
+            private readonly AsyncManualResetEvent mre;
 
-            public DebugView(AsyncManualResetEvent mre)
-            {
-                _mre = mre;
-            }
+            public DebugView(AsyncManualResetEvent mre) => this.mre = mre;
 
-            public int Id => _mre.Id;
+            public int Id => this.mre.Id;
 
-            public bool IsSet => _mre.GetStateForDebugger;
+            public bool IsSet => this.mre.GetStateForDebugger;
 
-            public Task CurrentTask => _mre._tcs.Task;
+            public Task CurrentTask => this.mre.tcs.Task;
         }
         // ReSharper restore UnusedMember.Local
     }

@@ -20,9 +20,9 @@ namespace Orleans.Activities.Hosting
 
         static NativeActivityContextExtensions()
         {
-            ParameterExpression instance = Expression.Parameter(typeof(NativeActivityContext), "this");
-            FieldInfo executor = typeof(NativeActivityContext).GetField("executor", BindingFlags.Instance | BindingFlags.NonPublic);
-            MethodInfo cancelRootActivity = typeof(Activity).Assembly.GetType("System.Activities.Runtime.ActivityExecutor").GetMethod("CancelRootActivity", BindingFlags.Instance | BindingFlags.Public);
+            var instance = Expression.Parameter(typeof(NativeActivityContext), "this");
+            var executor = typeof(NativeActivityContext).GetField("executor", BindingFlags.Instance | BindingFlags.NonPublic);
+            var cancelRootActivity = typeof(Activity).Assembly.GetType("System.Activities.Runtime.ActivityExecutor").GetMethod("CancelRootActivity", BindingFlags.Instance | BindingFlags.Public);
 
             cancelWorkflow = Expression.Lambda<Action<NativeActivityContext>>(
                 Expression.Call(Expression.Field(instance, executor), cancelRootActivity), instance).Compile();
@@ -30,9 +30,6 @@ namespace Orleans.Activities.Hosting
 
         // TODO It is a brutal hack, but works. With one serious flaw: the completion state is Closed and not Canceled.
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void CancelWorkflow(this NativeActivityContext context)
-        {
-            cancelWorkflow(context);
-        }
+        public static void CancelWorkflow(this NativeActivityContext context) => cancelWorkflow(context);
     }
 }

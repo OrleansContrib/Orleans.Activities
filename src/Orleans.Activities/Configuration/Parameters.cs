@@ -16,7 +16,7 @@ namespace Orleans.Activities.Configuration
         public TimeSpan DefaultTimeoutDelay { get; }
 
         public TimeSpan DefaultRetryDelayStartValue { get; }
-        public Single DefaultRetryDelayDelayMultiplicator { get; }
+        public float DefaultRetryDelayDelayMultiplicator { get; }
         public TimeSpan DefaultRetryDelayMaxValue { get; }
 
         public TimeSpan ResumeOperationTimeout { get; }
@@ -38,7 +38,7 @@ namespace Orleans.Activities.Configuration
             TimeSpan? defaultTimeoutDelay = null,
 
             TimeSpan? defaultRetryDelayStartValue = null,
-            Single? defaultRetryDelayDelayMultiplicator = null,
+            float? defaultRetryDelayDelayMultiplicator = null,
             TimeSpan? defaultRetryDelayMaxValue = null,
 
             TimeSpan? resumeOperationTimeout = null,
@@ -52,22 +52,22 @@ namespace Orleans.Activities.Configuration
 
             UnhandledExceptionAction? unhandledExceptionAction = null)
         {
-            DefaultTimeoutDelay = defaultTimeoutDelay ?? TimeSpan.FromMinutes(5);
+            this.DefaultTimeoutDelay = defaultTimeoutDelay ?? TimeSpan.FromMinutes(5);
 
-            DefaultRetryDelayStartValue = defaultRetryDelayStartValue ?? TimeSpan.FromMinutes(1);
-            DefaultRetryDelayDelayMultiplicator = defaultRetryDelayDelayMultiplicator ?? 2.0f;
-            DefaultRetryDelayMaxValue = defaultRetryDelayMaxValue ?? TimeSpan.FromMinutes(60);
+            this.DefaultRetryDelayStartValue = defaultRetryDelayStartValue ?? TimeSpan.FromMinutes(1);
+            this.DefaultRetryDelayDelayMultiplicator = defaultRetryDelayDelayMultiplicator ?? 2.0f;
+            this.DefaultRetryDelayMaxValue = defaultRetryDelayMaxValue ?? TimeSpan.FromMinutes(60);
 
-            ResumeOperationTimeout = resumeOperationTimeout ?? TimeSpan.FromSeconds(30);
-            ResumeInfrastructureTimeout = resumeInfrastructureTimeout ?? TimeSpan.FromSeconds(30);
-            TrackingTimeout = trackingTimeout ?? TimeSpan.FromSeconds(30);
-            ReactivationReminderPeriod = reactivationReminderPeriod ?? TimeSpan.FromMinutes(2);
+            this.ResumeOperationTimeout = resumeOperationTimeout ?? TimeSpan.FromSeconds(30);
+            this.ResumeInfrastructureTimeout = resumeInfrastructureTimeout ?? TimeSpan.FromSeconds(30);
+            this.TrackingTimeout = trackingTimeout ?? TimeSpan.FromSeconds(30);
+            this.ReactivationReminderPeriod = reactivationReminderPeriod ?? TimeSpan.FromMinutes(2);
 
-            IdlePersistenceMode = idlePersistenceMode ?? IdlePersistenceMode.OnPersistableIdle | IdlePersistenceMode.OnCompleted;
-            PersistWriteOnlyValues = persistWriteOnlyValues ?? false;
-            ExtensionsPersistenceTimeout = extensionsPersistenceTimeout ?? TimeSpan.FromSeconds(30);
+            this.IdlePersistenceMode = idlePersistenceMode ?? IdlePersistenceMode.OnPersistableIdle | IdlePersistenceMode.OnCompleted;
+            this.PersistWriteOnlyValues = persistWriteOnlyValues ?? false;
+            this.ExtensionsPersistenceTimeout = extensionsPersistenceTimeout ?? TimeSpan.FromSeconds(30);
 
-            UnhandledExceptionAction = unhandledExceptionAction ?? UnhandledExceptionAction.Abort;
+            this.UnhandledExceptionAction = unhandledExceptionAction ?? UnhandledExceptionAction.Abort;
         }
     }
 }

@@ -17,14 +17,14 @@ namespace Orleans.Activities.Designers.Binding
     {
         public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
         {
-            ModelItem modelItem = value as ModelItem;
+            var modelItem = value as ModelItem;
             if (modelItem == null)
                 return System.Windows.Data.Binding.DoNothing;
 
             AttributeCollection attributes;
             if (parameter != null)
             {
-                ModelProperty modelProperty = modelItem.Properties[parameter.ToString()];
+                var modelProperty = modelItem.Properties[parameter.ToString()];
                 if (modelProperty == null)
                     return System.Windows.Data.Binding.DoNothing;
                 attributes = modelProperty.Attributes;
@@ -32,7 +32,7 @@ namespace Orleans.Activities.Designers.Binding
             else
                 attributes = modelItem.Source.Attributes;
 
-            DescriptionAttribute descriptionAttribute = attributes[typeof(DescriptionAttribute)] as DescriptionAttribute;
+            var descriptionAttribute = attributes[typeof(DescriptionAttribute)] as DescriptionAttribute;
             if (descriptionAttribute == null)
                 return System.Windows.Data.Binding.DoNothing;
             
@@ -40,8 +40,6 @@ namespace Orleans.Activities.Designers.Binding
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
-        {
-            throw new NotSupportedException();
-        }
+            => throw new NotSupportedException();
     }
 }

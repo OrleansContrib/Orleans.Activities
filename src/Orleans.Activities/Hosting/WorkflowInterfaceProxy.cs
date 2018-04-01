@@ -23,7 +23,7 @@ namespace Orleans.Activities.Hosting
 
         static WorkflowInterfaceProxy()
         {
-            foreach (MethodInfo methodInfo in typeof(IWorkflowHostOperations).GetMethods())
+            foreach (var methodInfo in typeof(IWorkflowHostOperations).GetMethods())
                 if (!methodInfo.ContainsGenericParameters)
                     operationAsync = methodInfo;
                 else if (!methodInfo.ReturnType.ContainsGenericParameters)
@@ -38,8 +38,8 @@ namespace Orleans.Activities.Hosting
         // The interfaceMethod parameter has to be a valid TWorkflowInterface interface method! Test TWorkflowInterface with WorkflowInterfaceInfo<TWorkflowInterface>.IsValidWorkflowInterface!
         public static MethodInfo GetWorkflowInterfaceMethodInfo(MethodInfo interfaceMethod)
         {
-            bool hasNoReturnType = interfaceMethod.ReturnType == typeof(Task);
-            bool hasNoParameterType = interfaceMethod.GetParameters()[0].ParameterType.GetGenericArguments()[0] == typeof(Task);
+            var hasNoReturnType = interfaceMethod.ReturnType == typeof(Task);
+            var hasNoParameterType = interfaceMethod.GetParameters()[0].ParameterType.GetGenericArguments()[0] == typeof(Task);
             if (hasNoReturnType)
                 if (hasNoParameterType)
                     return operationAsync;
@@ -91,8 +91,8 @@ namespace Orleans.Activities.Hosting
             if (!WorkflowInterfaceInfo<TWorkflowInterface>.IsValidWorkflowInterface)
                 throw new InvalidProgramException(WorkflowInterfaceInfo<TWorkflowInterface>.ValidationMessage);
 
-            string proxyName = "WorkflowInterfaceImplementationFor" + typeof(TWorkflowInterface).GetNongenericName();
-            TypeBuilder proxyTypeBuilder = AppDomain
+            var proxyName = "WorkflowInterfaceImplementationFor" + typeof(TWorkflowInterface).GetNongenericName();
+            var proxyTypeBuilder = AppDomain
                 .CurrentDomain
                 .DefineDynamicAssembly(new AssemblyName(proxyName), AssemblyBuilderAccess.Run)
                 .DefineDynamicModule(proxyName)
@@ -104,7 +104,7 @@ namespace Orleans.Activities.Hosting
 
             EmitWorkflowInterfaceProxyConstructor(proxyTypeBuilder, workflowHost);
 
-            foreach (MethodInfo method in OperationInfo<TWorkflowInterface>.OperationMethods)
+            foreach (var method in OperationInfo<TWorkflowInterface>.OperationMethods)
                 EmitWorkflowInterfaceProxyMethod(proxyTypeBuilder, workflowHost, method);
 
             createProxy = CompileCreateProxyDelegate(proxyTypeBuilder.CreateType());
@@ -115,13 +115,13 @@ namespace Orleans.Activities.Hosting
         /// </summary>
         /// <param name="workflowHost"></param>
         /// <returns></returns>
-        public static TWorkflowInterface CreateProxy(IWorkflowHostOperations workflowHost) =>
-            createProxy(workflowHost);
+        public static TWorkflowInterface CreateProxy(IWorkflowHostOperations workflowHost)
+            => createProxy(workflowHost);
 
         private static void EmitWorkflowInterfaceProxyConstructor(TypeBuilder proxyTypeBuilder, FieldInfo workflowHost)
         {
-            ConstructorBuilder ctorBuilder = proxyTypeBuilder.DefineConstructor(MethodAttributes.Public, CallingConventions.Standard, new Type[] { typeof(IWorkflowHostOperations) });
-            ILGenerator ctorIL = ctorBuilder.GetILGenerator();
+            var ctorBuilder = proxyTypeBuilder.DefineConstructor(MethodAttributes.Public, CallingConventions.Standard, new Type[] { typeof(IWorkflowHostOperations) });
+            var ctorIL = ctorBuilder.GetILGenerator();
             ctorIL.Emit(OpCodes.Ldarg_0);
             ctorIL.Emit(OpCodes.Call, typeof(object).GetConstructor(Type.EmptyTypes));
             ctorIL.Emit(OpCodes.Ldarg_0);
@@ -132,11 +132,11 @@ namespace Orleans.Activities.Hosting
 
         private static void EmitWorkflowInterfaceProxyMethod(TypeBuilder proxyTypeBuilder, FieldInfo workflowHost, MethodInfo method)
         {
-            MethodBuilder methodBuilder = proxyTypeBuilder.DefineMethod(method.DeclaringType.GetNongenericName() + "." + method.Name,
+            var methodBuilder = proxyTypeBuilder.DefineMethod(method.DeclaringType.GetNongenericName() + "." + method.Name,
                 MethodAttributes.Private | MethodAttributes.Virtual | MethodAttributes.Final,
                 method.ReturnType, new Type[] { method.GetParameters()[0].ParameterType });
             proxyTypeBuilder.DefineMethodOverride(methodBuilder, method);
-            ILGenerator methodIL = methodBuilder.GetILGenerator();
+            var methodIL = methodBuilder.GetILGenerator();
             methodIL.Emit(OpCodes.Ldarg_0);
             methodIL.Emit(OpCodes.Ldfld, workflowHost);
             methodIL.Emit(OpCodes.Ldstr, OperationInfo<TWorkflowInterface>.GetOperationName(method));
@@ -147,7 +147,7 @@ namespace Orleans.Activities.Hosting
 
         private static Func<IWorkflowHostOperations, TWorkflowInterface> CompileCreateProxyDelegate(Type proxyType)
         {
-            ConstructorInfo ctor = proxyType.GetConstructor(new Type[] { typeof(IWorkflowHostOperations) });
+            var ctor = proxyType.GetConstructor(new Type[] { typeof(IWorkflowHostOperations) });
             ParameterExpression workflowHost = Expression.Parameter(typeof(IWorkflowHostOperations), nameof(workflowHost));
             return Expression.Lambda<Func<IWorkflowHostOperations, TWorkflowInterface>>(Expression.New(ctor, workflowHost), workflowHost).Compile() as Func<IWorkflowHostOperations, TWorkflowInterface>;
         }

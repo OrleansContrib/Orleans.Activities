@@ -25,11 +25,8 @@ namespace Orleans.Activities
         [RequiredArgument]
         [Category(Constants.RequiredCategoryName)]
         [Description("It's true, if the workflow is loaded in a Runnable state (typically after an Abort, caused by an unhandled exception). Remains true until persisted.")]
-        public OutArgument<Boolean> IsReloaded { get; set; }
+        public OutArgument<bool> IsReloaded { get; set; }
 
-        protected override void Execute(CodeActivityContext context)
-        {
-            IsReloaded.Set(context, context.GetActivityContext().IsReloaded);
-        } 
+        protected override void Execute(CodeActivityContext context) => this.IsReloaded.Set(context, context.GetActivityContext().IsReloaded);
     }
 }

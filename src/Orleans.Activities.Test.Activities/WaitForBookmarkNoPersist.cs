@@ -16,28 +16,28 @@ namespace Orleans.Activities.Test.Activities
 
         public WaitForBookmarkNoPersist()
         {
-            noPersistHandle = new Variable<NoPersistHandle>();
-            bookmark = new Variable<Bookmark>();
+            this.noPersistHandle = new Variable<NoPersistHandle>();
+            this.bookmark = new Variable<Bookmark>();
         }
 
         protected override bool CanInduceIdle => true;
 
         protected override void CacheMetadata(NativeActivityMetadata metadata)
         {
-            metadata.AddImplementationVariable(noPersistHandle);
-            metadata.AddImplementationVariable(bookmark);
+            metadata.AddImplementationVariable(this.noPersistHandle);
+            metadata.AddImplementationVariable(this.bookmark);
             base.CacheMetadata(metadata);
         }
 
         protected override void Execute(NativeActivityContext context)
         {
-            string bookmarkName = BookmarkName.Get(context);
-            NoPersistHandle noPersistHandleToEnter = noPersistHandle.Get(context);
+            var bookmarkName = this.BookmarkName.Get(context);
+            var noPersistHandleToEnter = this.noPersistHandle.Get(context);
             noPersistHandleToEnter.Enter(context);
-            Bookmark bookmark = context.CreateBookmark(bookmarkName,
+            var bookmark = context.CreateBookmark(bookmarkName,
                 (NativeActivityContext _callbackContext, Bookmark _bookmark, object _state) =>
                 {
-                    NoPersistHandle noPersistHandleToExit = noPersistHandle.Get(_callbackContext);
+                    var noPersistHandleToExit = this.noPersistHandle.Get(_callbackContext);
                     noPersistHandleToExit.Exit(_callbackContext); 
                 });
             this.bookmark.Set(context, bookmark);
@@ -45,7 +45,7 @@ namespace Orleans.Activities.Test.Activities
 
         protected override void Cancel(NativeActivityContext context)
         {
-            Bookmark bookmark = this.bookmark.Get(context);
+            var bookmark = this.bookmark.Get(context);
             if (bookmark != null)
             {
                 context.RemoveBookmark(bookmark);
