@@ -42,7 +42,7 @@ namespace Orleans.Activities
     /// <para>IMPORTANT: The WorkflowGrain implementation must (if possible explicitly) implement the TWorkflowCallbackInterface interface!</para>
     /// </summary>
     /// <typeparam name="TGrain">TGrain must be the grain itself, and the grain must implement (if possible explicitly) the TWorkflowCallbackInterface interface.</typeparam>
-    /// <typeparam name="TGrainState">TGrainState must inherit from <see cref="GrainState"/>, and must implement <see cref="IWorkflowState"/>. Or use <see cref="WorkflowState"/> if your grain has no custom state properties.</typeparam>
+    /// <typeparam name="TGrainState">TGrainState must implement <see cref="IWorkflowState"/>. Or use <see cref="WorkflowState"/> if your grain has no custom state properties.</typeparam>
     /// <typeparam name="TWorkflowInterface">Defines the interface that contains the operations that the backing workflow can accept, ie. the incoming requests.
     /// These operations shouldn't be the same as the grain's public grain interface, it can contain more or less operations.
     /// And the signature of these operations are never the same as the grain's public grain interface's methods, they can have 1 parameter and can have 1 return value
