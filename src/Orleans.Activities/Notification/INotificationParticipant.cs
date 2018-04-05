@@ -22,7 +22,7 @@ namespace Orleans.Activities.Notification
     /// <summary>
     /// You don't need to use the abstract class, you can inherit from the interface also.
     /// </summary>
-    public abstract class PersistenceIOParticipant : INotificationParticipant
+    public abstract class NotificationParticipant : INotificationParticipant
     {
         public virtual Task OnPausedAsync(TimeSpan timeout) => TaskConstants.Completed;
 
