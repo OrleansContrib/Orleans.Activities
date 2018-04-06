@@ -40,7 +40,7 @@ namespace Orleans.Activities.Tracking
     /// <summary>
     /// Abstract base class for tracking operation responses.
     /// </summary>
-    public abstract class OperationResponseTrackingRecord : CustomTrackingRecord
+    public abstract class OperationResponseTrackingRecord : OperationTrackingRecord
     {
         protected OperationResponseTrackingRecord(string name)
             : base(name)
