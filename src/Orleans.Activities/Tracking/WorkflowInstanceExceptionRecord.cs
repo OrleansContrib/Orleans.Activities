@@ -21,7 +21,7 @@ namespace Orleans.Activities.Tracking
     public sealed class WorkflowInstanceExceptionRecord : WorkflowInstanceRecord
     {
         [DataMember(Name = nameof(Exception))]
-        public Exception Exception { get; }
+        public Exception Exception { get; private set; }
 
         public WorkflowInstanceExceptionRecord(Guid instanceId, string activityDefinitionId, Exception exception)
             : this(instanceId, 0, activityDefinitionId, exception)

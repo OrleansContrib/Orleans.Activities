@@ -37,9 +37,9 @@ namespace Orleans.Activities.Extensions
         [Serializable]
         protected abstract class ResponseParameter
         {
-            public bool IsCanceled { get; }
-            public Type Type { get; }
-            public object Value { get; }
+            public bool IsCanceled { get; private set; }
+            public Type Type { get; private set; }
+            public object Value { get; private set; }
 
             protected ResponseParameter(bool isCanceled, Type type, object value)
             {

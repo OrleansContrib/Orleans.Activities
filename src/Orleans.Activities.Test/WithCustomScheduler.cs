@@ -195,7 +195,7 @@ namespace Orleans.Activities.Test
 
         #region IWorkflowHostCallback members
 
-        public Guid PrimaryKey { get; }
+        public Guid PrimaryKey { get; private set; }
 
         public IWorkflowState WorkflowState => state;
 

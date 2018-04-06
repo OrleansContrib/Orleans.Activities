@@ -25,7 +25,7 @@ namespace Orleans.Activities.Extensions
     /// </summary>
     public class ActivityContextExtension
     {
-        public IActivityContext ActivityContext { get; }
+        public IActivityContext ActivityContext { get; private set; }
 
         public ActivityContextExtension(IActivityContext activityContext)
             => this.ActivityContext = activityContext;

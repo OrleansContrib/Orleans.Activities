@@ -20,7 +20,7 @@ namespace Orleans.Activities.Tracking
     public sealed class WorkflowInstanceReminderRecord : WorkflowInstanceRecord
     {
         [DataMember(Name = nameof(ReminderName))]
-        public string ReminderName { get; }
+        public string ReminderName { get; private set; }
 
         public WorkflowInstanceReminderRecord(Guid instanceId, string activityDefinitionId, string state, string reminderName)
             : this(instanceId, 0, activityDefinitionId, state, reminderName)

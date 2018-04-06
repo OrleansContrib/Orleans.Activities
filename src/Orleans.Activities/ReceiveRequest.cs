@@ -57,7 +57,7 @@ namespace Orleans.Activities
         // Set by validation constraints, used be the designer. This is a design time only property.
         [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public ObservableCollection<string> OperationNames { get; }
+        public ObservableCollection<string> OperationNames { get; private set; }
 
         // Called by ReceiveRequestSendResponseScope, to select the appropriate OperationNames for the ReceiveRequest activity.
         Type IReceiveRequest.RequestResultType => typeof(void);
@@ -125,7 +125,7 @@ namespace Orleans.Activities
         // Set by validation constraints, used be the designer. This is a design time only property.
         [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public ObservableCollection<string> OperationNames { get; }
+        public ObservableCollection<string> OperationNames { get; private set; }
 
         [RequiredArgument]
         [Category(Constants.RequiredCategoryName)]

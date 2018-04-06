@@ -14,8 +14,8 @@ namespace Orleans.Activities.Helpers
     /// <typeparam name="TWorkflowInterface"></typeparam>
     public static class WorkflowInterfaceInfo<TWorkflowInterface>
     {
-        public static bool IsValidWorkflowInterface { get; }
-        public static string ValidationMessage { get; }
+        public static bool IsValidWorkflowInterface { get; private set; }
+        public static string ValidationMessage { get; private set; }
 
         private static VirtualArray<Type, VirtualArray<Type, List<string>>> operationNames;
 

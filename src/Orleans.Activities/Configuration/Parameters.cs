@@ -13,22 +13,22 @@ namespace Orleans.Activities.Configuration
     /// </summary>
     public class Parameters : IParameters
     {
-        public TimeSpan DefaultTimeoutDelay { get; }
+        public TimeSpan DefaultTimeoutDelay { get; private set; }
 
-        public TimeSpan DefaultRetryDelayStartValue { get; }
-        public float DefaultRetryDelayDelayMultiplicator { get; }
-        public TimeSpan DefaultRetryDelayMaxValue { get; }
+        public TimeSpan DefaultRetryDelayStartValue { get; private set; }
+        public float DefaultRetryDelayDelayMultiplicator { get; private set; }
+        public TimeSpan DefaultRetryDelayMaxValue { get; private set; }
 
-        public TimeSpan ResumeOperationTimeout { get; }
-        public TimeSpan ResumeInfrastructureTimeout { get; }
-        public TimeSpan TrackingTimeout { get; }
-        public TimeSpan ReactivationReminderPeriod { get; }
+        public TimeSpan ResumeOperationTimeout { get; private set; }
+        public TimeSpan ResumeInfrastructureTimeout { get; private set; }
+        public TimeSpan TrackingTimeout { get; private set; }
+        public TimeSpan ReactivationReminderPeriod { get; private set; }
 
-        public IdlePersistenceMode IdlePersistenceMode { get; }
-        public bool PersistWriteOnlyValues { get; }
-        public TimeSpan ExtensionsPersistenceTimeout { get; }
+        public IdlePersistenceMode IdlePersistenceMode { get; private set; }
+        public bool PersistWriteOnlyValues { get; private set; }
+        public TimeSpan ExtensionsPersistenceTimeout { get; private set; }
 
-        public UnhandledExceptionAction UnhandledExceptionAction { get; }
+        public UnhandledExceptionAction UnhandledExceptionAction { get; private set; }
 
         /// <summary>
         /// See <see cref="Orleans.Activities.Configuration.IParameters"/> for parameter descriptions.

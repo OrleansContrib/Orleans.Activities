@@ -70,8 +70,8 @@ namespace Orleans.Activities.Extensions
 
         protected class ReminderInfo
         {
-            public Bookmark Bookmark { get; }
-            public DateTime DueTime { get; }
+            public Bookmark Bookmark { get; private set; }
+            public DateTime DueTime { get; private set; }
             public ReminderState ReminderState { get; set; }
 
             public ReminderInfo(Bookmark bookmark, ReminderState reminderState)

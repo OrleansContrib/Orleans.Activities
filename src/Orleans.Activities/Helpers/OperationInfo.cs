@@ -16,7 +16,7 @@ namespace Orleans.Activities.Helpers
     {
         private static bool isNamespaceRequiredForOperationNames;
 
-        public static IEnumerable<MethodInfo> OperationMethods { get; }
+        public static IEnumerable<MethodInfo> OperationMethods { get; private set; }
 
         static OperationInfo()
         {
