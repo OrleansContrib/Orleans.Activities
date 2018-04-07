@@ -124,12 +124,16 @@ namespace Orleans.Activities.Persistence
             try
             {
                 foreach (var persistenceParticipant in this.persistenceParticipants)
-                {
-                    if (persistenceParticipant is System.Activities.Persistence.PersistenceParticipant legacyPersistenceParticipant && legacyPersistenceParticipant.IsIOParticipant())
-                        await (legacyPersistenceParticipant as System.Activities.Persistence.PersistenceIOParticipant).OnSaveAsync(this.readWriteView, this.writeOnlyView, timeout);
+                    if (persistenceParticipant is System.Activities.Persistence.PersistenceParticipant legacyPersistenceParticipant)
+                    {
+                        if (legacyPersistenceParticipant.IsIOParticipant())
+                            await (legacyPersistenceParticipant as System.Activities.Persistence.PersistenceIOParticipant).OnSaveAsync(this.readWriteView, this.writeOnlyView, timeout);
+                    }
                     else
-                        await ((persistenceParticipant as IPersistenceIOParticipant)?.OnSaveAsync(this.readWriteView, this.writeOnlyView, timeout) ?? TaskConstants.Completed);
-                }
+                    {
+                        if (persistenceParticipant is IPersistenceIOParticipant persistenceIOParticipant)
+                            await persistenceIOParticipant.OnSaveAsync(this.readWriteView, this.writeOnlyView, timeout);
+                    }
             }
             catch
             {
@@ -146,7 +150,8 @@ namespace Orleans.Activities.Persistence
             {
                 // It has no legacy equivalent.
                 foreach (var persistenceParticipant in this.persistenceParticipants)
-                    await ((persistenceParticipant as IPersistenceIOParticipant)?.OnSavedAsync(timeout) ?? TaskConstants.Completed);
+                    if (persistenceParticipant is IPersistenceIOParticipant persistenceIOParticipant)
+                        await persistenceIOParticipant.OnSavedAsync(timeout);
             }
             catch
             {
@@ -162,12 +167,16 @@ namespace Orleans.Activities.Persistence
             try
             {
                 foreach (var persistenceParticipant in this.persistenceParticipants)
-                {
-                    if (persistenceParticipant is System.Activities.Persistence.PersistenceParticipant legacyPersistenceParticipant && legacyPersistenceParticipant.IsIOParticipant())
-                        await (legacyPersistenceParticipant as System.Activities.Persistence.PersistenceIOParticipant).OnLoadAsync(this.readWriteView, timeout);
+                    if (persistenceParticipant is System.Activities.Persistence.PersistenceParticipant legacyPersistenceParticipant)
+                    {
+                        if (legacyPersistenceParticipant.IsIOParticipant())
+                            await (legacyPersistenceParticipant as System.Activities.Persistence.PersistenceIOParticipant).OnLoadAsync(this.readWriteView, timeout);
+                    }
                     else
-                        await ((persistenceParticipant as IPersistenceIOParticipant)?.OnLoadAsync(this.readWriteView, timeout) ?? TaskConstants.Completed);
-                }
+                    {
+                        if (persistenceParticipant is IPersistenceIOParticipant persistenceIOParticipant)
+                            await persistenceIOParticipant.OnLoadAsync(this.readWriteView, timeout);
+                    }
             }
             catch
             {
@@ -180,24 +189,25 @@ namespace Orleans.Activities.Persistence
         public void Publish()
         {
             foreach (var persistenceParticipant in this.persistenceParticipants)
-            {
                 if (persistenceParticipant is System.Activities.Persistence.PersistenceParticipant legacyPersistenceParticipant)
                     legacyPersistenceParticipant.PublishValues(this.readWriteView);
                 else
                     (persistenceParticipant as IPersistenceParticipant)?.PublishValues(this.readWriteView);
-
-            }
         }
 
         protected void Abort()
         {
             foreach (var persistenceParticipant in this.persistenceParticipants)
-            {
-                if (persistenceParticipant is System.Activities.Persistence.PersistenceParticipant legacyPersistenceParticipant && legacyPersistenceParticipant.IsIOParticipant())
-                    (legacyPersistenceParticipant as System.Activities.Persistence.PersistenceIOParticipant).Abort();
+                if (persistenceParticipant is System.Activities.Persistence.PersistenceParticipant legacyPersistenceParticipant)
+                {
+                    if (legacyPersistenceParticipant.IsIOParticipant())
+                        (legacyPersistenceParticipant as System.Activities.Persistence.PersistenceIOParticipant).Abort();
+                }
                 else
-                    (persistenceParticipant as IPersistenceIOParticipant)?.Abort();
-            }
+                {
+                    if (persistenceParticipant is IPersistenceIOParticipant persistenceIOParticipant)
+                        persistenceIOParticipant.Abort();
+                }
         }
     }
 }
