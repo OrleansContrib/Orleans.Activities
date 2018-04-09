@@ -1,0 +1,96 @@
+﻿<Activity mc:Ignorable="sap sap2010 sads" x:Class="Orleans.Activities.Samples.HelloWorld.GrainImplementations.HelloActivity" sap2010:ExpressionActivityEditor.ExpressionActivityEditor="C#" sap2010:WorkflowViewState.IdRef="Orleans.Activities.Samples.HelloWorld.GrainImplementations.HelloActivity_1"
+ xmlns="http://schemas.microsoft.com/netfx/2009/xaml/activities"
+ xmlns:local="clr-namespace:Orleans.Activities.Samples.HelloWorld.GrainImplementations"
+ xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+ xmlns:mca="clr-namespace:Microsoft.CSharp.Activities;assembly=System.Activities"
+ xmlns:oa="clr-namespace:Orleans.Activities;assembly=Orleans.Activities"
+ xmlns:sads="http://schemas.microsoft.com/netfx/2010/xaml/activities/debugger"
+ xmlns:sap="http://schemas.microsoft.com/netfx/2009/xaml/activities/presentation"
+ xmlns:sap2010="http://schemas.microsoft.com/netfx/2010/xaml/activities/presentation"
+ xmlns:scg="clr-namespace:System.Collections.Generic;assembly=mscorlib"
+ xmlns:sco="clr-namespace:System.Collections.ObjectModel;assembly=mscorlib"
+ xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <TextExpression.NamespacesForImplementation>
+    <sco:Collection x:TypeArguments="x:String">
+      <x:String>System</x:String>
+      <x:String>System.Collections.Generic</x:String>
+      <x:String>System.Data</x:String>
+      <x:String>System.Linq</x:String>
+      <x:String>System.Text</x:String>
+    </sco:Collection>
+  </TextExpression.NamespacesForImplementation>
+  <TextExpression.ReferencesForImplementation>
+    <sco:Collection x:TypeArguments="AssemblyReference">
+        <AssemblyReference>mscorlib</AssemblyReference>
+        <AssemblyReference>System</AssemblyReference>
+        <AssemblyReference>System.Core</AssemblyReference>
+        <AssemblyReference>System.Data</AssemblyReference>
+        <AssemblyReference>System.ServiceModel</AssemblyReference>
+        <AssemblyReference>System.Xml</AssemblyReference>
+        <AssemblyReference>System.Xml.Linq</AssemblyReference>
+    </sco:Collection>
+  </TextExpression.ReferencesForImplementation>
+  <oa:WorkflowActivity x:TypeArguments="local:IHelloWorkflow, local:IHelloWorkflowCallback" sap2010:WorkflowViewState.IdRef="WorkflowActivity`2_1">
+    <Sequence sap2010:WorkflowViewState.IdRef="Sequence_6">
+      <oa:ReceiveRequestSendResponseScope sap2010:WorkflowViewState.IdRef="ReceiveRequestSendResponseScope_3">
+        <Sequence sap2010:WorkflowViewState.IdRef="Sequence_5">
+          <Sequence.Variables>
+            <Variable x:TypeArguments="x:String" Name="clientSaid" />
+            <Variable x:TypeArguments="x:String" Name="iSay" />
+          </Sequence.Variables>
+          <oa:ReceiveRequest x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="ReceiveRequest`1_3" OperationName="IHelloWorkflow.GreetClientAsync">
+            <oa:ReceiveRequest.RequestResult>
+              <OutArgument x:TypeArguments="x:String">
+                <mca:CSharpReference x:TypeArguments="x:String">clientSaid</mca:CSharpReference>
+              </OutArgument>
+            </oa:ReceiveRequest.RequestResult>
+          </oa:ReceiveRequest>
+          <oa:SendRequestReceiveResponseScope sap2010:WorkflowViewState.IdRef="SendRequestReceiveResponseScope_2">
+            <Sequence sap2010:WorkflowViewState.IdRef="Sequence_4">
+              <oa:SendRequest x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="SendRequest`1_2" OperationName="IHelloWorkflowCallback.WhatShouldISayAsync">
+                <oa:SendRequest.RequestParameter>
+                  <InArgument x:TypeArguments="x:String">
+                    <mca:CSharpValue x:TypeArguments="x:String">clientSaid</mca:CSharpValue>
+                  </InArgument>
+                </oa:SendRequest.RequestParameter>
+              </oa:SendRequest>
+              <oa:ReceiveResponse x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="ReceiveResponse`1_2">
+                <oa:ReceiveResponse.ResponseResult>
+                  <OutArgument x:TypeArguments="x:String">
+                    <mca:CSharpReference x:TypeArguments="x:String">iSay</mca:CSharpReference>
+                  </OutArgument>
+                </oa:ReceiveResponse.ResponseResult>
+              </oa:ReceiveResponse>
+            </Sequence>
+          </oa:SendRequestReceiveResponseScope>
+          <oa:SendResponse x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="SendResponse`1_3" Idempotent="True" ThrowIfReloaded="False">
+            <oa:SendResponse.ResponseParameter>
+              <InArgument x:TypeArguments="x:String">
+                <mca:CSharpValue x:TypeArguments="x:String">$"You said: '{clientSaid}', I say: '{iSay}'"</mca:CSharpValue>
+              </InArgument>
+            </oa:SendResponse.ResponseParameter>
+          </oa:SendResponse>
+        </Sequence>
+      </oa:ReceiveRequestSendResponseScope>
+      <oa:ReceiveRequestSendResponseScope sap2010:WorkflowViewState.IdRef="ReceiveRequestSendResponseScope_4">
+        <Pick sap2010:WorkflowViewState.IdRef="Pick_1">
+          <PickBranch DisplayName="Branch1" sap2010:WorkflowViewState.IdRef="PickBranch_1">
+            <PickBranch.Trigger>
+              <oa:ReceiveRequest sap2010:WorkflowViewState.IdRef="ReceiveRequest_1" OperationName="IHelloWorkflow.FarewellClientAsync" />
+            </PickBranch.Trigger>
+            <oa:SendResponse x:TypeArguments="x:String" sap2010:WorkflowViewState.IdRef="SendResponse`1_4" Idempotent="True" ResponseParameter="Bye, my friend!" ThrowIfReloaded="False" />
+          </PickBranch>
+          <PickBranch DisplayName="Branch2" sap2010:WorkflowViewState.IdRef="PickBranch_2">
+            <PickBranch.Trigger>
+              <Delay sap2010:WorkflowViewState.IdRef="Delay_1">
+                <InArgument x:TypeArguments="x:TimeSpan">
+                  <mca:CSharpValue x:TypeArguments="x:TimeSpan">TimeSpan.FromSeconds(5)</mca:CSharpValue>
+                </InArgument>
+              </Delay>
+            </PickBranch.Trigger>
+          </PickBranch>
+        </Pick>
+      </oa:ReceiveRequestSendResponseScope>
+    </Sequence>
+  </oa:WorkflowActivity>
+</Activity>
