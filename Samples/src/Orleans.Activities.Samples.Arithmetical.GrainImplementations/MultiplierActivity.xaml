@@ -11,9 +11,9 @@
  xmlns:sco="clr-namespace:System.Collections.ObjectModel;assembly=mscorlib"
  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
   <x:Members>
-    <x:Property Name="arg1" Type="InArgument(x:Int32)" />
-    <x:Property Name="arg2" Type="InArgument(x:Int32)" />
-    <x:Property Name="result" Type="OutArgument(x:Int32)" />
+    <x:Property Name="Arg1" Type="InArgument(x:Int32)" />
+    <x:Property Name="Arg2" Type="InArgument(x:Int32)" />
+    <x:Property Name="Result" Type="OutArgument(x:Int32)" />
   </x:Members>
   <TextExpression.NamespacesForImplementation>
     <sco:Collection x:TypeArguments="x:String">
@@ -44,12 +44,12 @@
     <Assign sap2010:WorkflowViewState.IdRef="Assign_1">
       <Assign.To>
         <OutArgument x:TypeArguments="x:Int32">
-          <mca:CSharpReference x:TypeArguments="x:Int32">result</mca:CSharpReference>
+          <mca:CSharpReference x:TypeArguments="x:Int32">Result</mca:CSharpReference>
         </OutArgument>
       </Assign.To>
       <Assign.Value>
         <InArgument x:TypeArguments="x:Int32">
-          <mca:CSharpValue x:TypeArguments="x:Int32">arg1 * arg2</mca:CSharpValue>
+          <mca:CSharpValue x:TypeArguments="x:Int32">Arg1 * Arg2</mca:CSharpValue>
         </InArgument>
       </Assign.Value>
     </Assign>

@@ -53,15 +53,15 @@
       <Link>Properties\GlobalAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="GrainTrackingParticipant.cs" />
-    <Compile Include="HelloActivity.cs" />
+    <None Include="HelloActivity.cs" />
     <Compile Include="HelloGrain.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="HelloActivity.xaml">
+    <XamlAppDef Include="HelloActivity.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
-    </None>
+    </XamlAppDef>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Orleans.Activities.Samples.HelloWorld.GrainInterfaces\Orleans.Activities.Samples.HelloWorld.GrainInterfaces.csproj">
