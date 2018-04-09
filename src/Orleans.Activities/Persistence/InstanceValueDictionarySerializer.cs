@@ -19,7 +19,7 @@ namespace Orleans.Activities.Persistence
     // ActivityExecutor works only with NetDataContractSerializer and Orleans fails on InstanceValue, that is not [Serializable].
     // Isn't is possible, to use Orleans serializers in some way?
 
-    [Serializer(typeof(IDictionary<XName, InstanceValue>))]
+    [Serializer(typeof(Dictionary<XName, InstanceValue>))]
     public static class InstanceValueDictionarySerializer
     {
         // TODO It supposes, that workflow state won't change during persistence. Is it true?
