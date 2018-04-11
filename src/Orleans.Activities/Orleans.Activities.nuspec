@@ -26,4 +26,7 @@
       </group>
     </dependencies>
   </metadata>
+  <files>
+    <file src="build\**" target="build" />
+  </files>
 </package>
