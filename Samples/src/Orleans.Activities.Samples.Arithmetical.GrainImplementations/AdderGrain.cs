@@ -25,7 +25,7 @@ namespace Orleans.Activities.Samples.Arithmetical.GrainImplementations
 
         private readonly ILogger logger;
 
-        public AdderGrain(ILogger<MultiplierGrain> logger)
+        public AdderGrain(ILogger<AdderGrain> logger)
             : base((grainState, workflowIdentity) => workflowDefinition, null)
         {
             this.logger = logger;

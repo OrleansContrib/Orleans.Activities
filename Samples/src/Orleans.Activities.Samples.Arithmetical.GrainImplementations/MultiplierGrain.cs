@@ -43,7 +43,7 @@ namespace Orleans.Activities.Samples.Arithmetical.GrainImplementations
             // to restart the workflow.
             this.WorkflowControl.CompletedAsync = (activityInstanceState, outputArguments, terminationException) =>
             {
-                this.subsManager.Notify(subscriber => subscriber.ReceiveResult((int)outputArguments[nameof(AdderActivity.Result)]));
+                this.subsManager.Notify(subscriber => subscriber.ReceiveResult((int)outputArguments[nameof(MultiplierActivity.Result)]));
                 return Task.CompletedTask;
             };
         }
