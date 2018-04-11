@@ -299,6 +299,7 @@
     <None Include="Orleans.Activities.nuspec">
       <SubType>Designer</SubType>
     </None>
+    <None Include="_NugetPackAsLocalDevPackage.cmd" />
     <None Include="_README.txt" />
   </ItemGroup>
   <ItemGroup>
