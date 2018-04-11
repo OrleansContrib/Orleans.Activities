@@ -17,6 +17,7 @@
       <frameworkAssembly assemblyName="System.Activities" targetFramework="net461" />
       <frameworkAssembly assemblyName="System.Data" targetFramework="net461" />
       <frameworkAssembly assemblyName="System.Drawing" targetFramework="net461" />
+      <frameworkAssembly assemblyName="System.Runtime.DurableInstancing" targetFramework="net461" />
       <frameworkAssembly assemblyName="System.Xaml" targetFramework="net461" />
       <frameworkAssembly assemblyName="System.Xml" targetFramework="net461" />
     </frameworkAssemblies>
