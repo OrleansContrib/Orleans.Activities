@@ -121,18 +121,18 @@ namespace DevClusterClient
             var multiplierGrain = client.GetGrain<IMultiplierGrain>(Guid.NewGuid());
 
             WriteLine("\n\nCalling AddAsync(2, 3)...\n\n");
-            WriteLine($"\n\nResult: {adderGrain.AddAsync(2, 3).Result}\n\n");
+            WriteLine($"\n\nResult: {await adderGrain.AddAsync(2, 3)}\n\n");
 
             WriteLine("Let see idempotent forward recovery, calling AddAsync(4, 5) again...\n\n");
-            WriteLine($"Result: {adderGrain.AddAsync(4, 5).Result}\n\n");
+            WriteLine($"Result: {await adderGrain.AddAsync(4, 5)}\n\n");
 
             WriteLine("Subscribing to Multiplier...\n\n");
             var multiplierResultReceiver = new MultiplierResultReceiver();
-            var obj = client.CreateObjectReference<IMultiplierResultReceiver>(multiplierResultReceiver).Result;
-            multiplierGrain.SubscribeAsync(obj).Wait();
+            var obj = await client.CreateObjectReference<IMultiplierResultReceiver>(multiplierResultReceiver);
+            await multiplierGrain.SubscribeAsync(obj);
 
             WriteLine("Calling MultiplyAsync(2, 3)...\n\n");
-            multiplierGrain.MultiplyAsync(2, 3).Wait();
+            await multiplierGrain.MultiplyAsync(2, 3);
 
             WriteLine("Waiting for result... (there is a 5s delay in the Activity, you know, multiplication is slow...)\n\n");
             multiplierResultReceiver.WaitForCompletion();
@@ -149,7 +149,7 @@ namespace DevClusterClient
             }
 
             WriteLine("\n\n\nCalling MultiplyAsync(4, 5) again...\n");
-            multiplierGrain.MultiplyAsync(4, 5).Wait();
+            await multiplierGrain.MultiplyAsync(4, 5);
 
             WriteLine("\nWaiting for result... (the timeout is 5s, be patient...)\n\n");
             WriteLine("--- Idempotent forward recovery is not applicable for this situation, grain would repeat the callback in case of failure after reactivation from it's previously persisted state. ---");
@@ -157,7 +157,7 @@ namespace DevClusterClient
             multiplierResultReceiver.WaitForCompletion();
 
             WriteLine("Unsubscribing from Multiplier...\n\n");
-            multiplierGrain.UnsubscribeAsync(obj).Wait();
+            await multiplierGrain.UnsubscribeAsync(obj);
         }
     }
 }
